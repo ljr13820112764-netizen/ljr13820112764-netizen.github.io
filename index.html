@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>刘久瑞 · AI 产品经理作品集</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif; color: #12263A; background: #F2F5F8; }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 20px; }
+  .hero { background: linear-gradient(135deg,#0E2A52 0%,#16406B 55%,#1B6FAC 100%); color: #fff; padding: 54px 0 42px; }
+  .hero .wrap { display: flex; justify-content: space-between; gap: 30px; flex-wrap: wrap; }
+  h1 { font-size: 40px; letter-spacing: 3px; }
+  .sub { color: #FFD9BF; margin-top: 8px; font-size: 15px; letter-spacing: 1px; }
+  .tagline { margin-top: 18px; font-size: 14.5px; color: #D9E9F5; line-height: 1.7; }
+  .hero-side { font-size: 12.5px; color: #BBD3E8; line-height: 2.05; border-left: 2px solid rgba(255,255,255,.25); padding-left: 16px; align-self: flex-end; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(300px,1fr)); gap: 18px; margin: 36px 0 8px; }
+  .card { background: #fff; border: 1px solid #DCE4EC; border-top: 3px solid #1B6FAC; border-radius: 8px;
+          padding: 22px 22px 20px; display: flex; flex-direction: column;
+          transition: transform .18s ease, box-shadow .18s ease; }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(14,42,82,.10); }
+  .badge { align-self: flex-start; font-size: 11.5px; color: #C75A17; background: #FFF1E8;
+           border: 1px solid #FFD9BF; border-radius: 20px; padding: 3px 11px; }
+  h2 { font-size: 18px; color: #0E2A52; margin: 11px 0 9px; }
+  .desc { font-size: 13.5px; color: #3D4D61; line-height: 1.7; }
+  ul { list-style: none; margin: 12px 0 16px; }
+  ul li { font-size: 12.8px; color: #3D4D61; line-height: 1.65; padding-left: 14px; position: relative; margin-bottom: 6px; }
+  ul li::before { content: ""; position: absolute; left: 0; top: .58em; width: 6px; height: 6px; border-radius: 50%; background: #FF6B2C; }
+  .links { margin-top: auto; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .btn { display: inline-block; background: #1B6FAC; color: #fff; text-decoration: none; font-size: 13px;
+         padding: 8px 16px; border-radius: 6px; transition: background .15s ease; }
+  .btn:hover { background: #125A8F; }
+  .btn.ghost { background: #fff; color: #1B6FAC; border: 1px solid #1B6FAC; }
+  .btn.ghost:hover { background: #F0F7FC; }
+  .note { font-size: 12px; color: #8A99AB; }
+  .resume-band { background: #fff; border: 1px solid #DCE4EC; border-left: 4px solid #FF6B2C;
+                 border-radius: 8px; padding: 20px 24px; display: flex; justify-content: space-between;
+                 align-items: center; gap: 16px; flex-wrap: wrap; margin: 18px 0 42px; }
+  .resume-band h2 { margin: 0 0 6px; }
+  .resume-band p { font-size: 13px; color: #5A6B7E; }
+  footer { background: #0E2A52; color: #BBD3E8; padding: 26px 0; font-size: 13px; }
+  .dim { opacity: .6; font-size: 12px; margin-top: 6px; }
+  @media (max-width: 640px) { h1 { font-size: 30px; } .hero { padding: 40px 0 30px; } .hero-side { align-self: flex-start; } }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <h1>刘久瑞</h1>
+      <p class="sub">AI 产品经理 · 求职作品集</p>
+      <p class="tagline">一线工程背景 × 独立 AI 产品交付<br>把真实现场的痛点，做成可演示、可验证的产品。</p>
+    </div>
+    <div class="hero-side">
+      「规答」AI 规范问答助手 —— PRD + 双端原型 + 95 项断言<br>
+      个人知识库系统 —— 62 来源 / 157 节点 3D 图谱<br>
+      AI 自动化工作流 —— 日报汇总 · 企业调查 · 离线问答
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="grid">
+
+    <article class="card">
+      <span class="badge">可交互 Demo</span>
+      <h2>「规答」AI 施工规范问答助手</h2>
+      <p class="desc">面向施工现场的规范问答工具：提问 → 条文溯源 → 存笔记 → AI 写作，一套信息架构贯穿双端。</p>
+      <ul>
+        <li>独立完成 PRD v1.2：功能清单、溯源引用机制、双端四模块同构</li>
+        <li>手写 HTML 双端高保真原型——本页 Demo 即原型，离线可用</li>
+        <li>Playwright 95 项自动化断言全部通过，修复 2 个真实缺陷</li>
+        <li>18 本规范、6 大类条文结构化，引用全溯源；演示数据均为示例</li>
+      </ul>
+      <div class="links">
+        <a class="btn" href="guanda/index.html">桌面端 Demo ↗</a>
+        <a class="btn ghost" href="guanda/mobile.html">移动端 Demo ↗</a>
+      </div>
+    </article>
+
+    <article class="card">
+      <span class="badge">可交互 Demo</span>
+      <h2>个人知识库系统</h2>
+      <p class="desc">从 0 到 1 搭建「原始材料 → 加工知识 → 衍生输出」三层知识系统，本页图谱即由它生成。</p>
+      <ul>
+        <li>62 来源 / 85 概念 / 9 实体；3D 图谱 157 节点 / 716 条关系</li>
+        <li>SHA-256 来源溯源 + 9 项自动健康检查，定期全库体检</li>
+        <li>BM25 + 向量混合检索；本地模型部署，数据不出本机</li>
+        <li>演示版图谱已隐去条目摘要与个人信息</li>
+      </ul>
+      <div class="links">
+        <a class="btn" href="kb/index.html">打开 3D 图谱 ↗</a>
+      </div>
+    </article>
+
+    <article class="card">
+      <span class="badge">企业日常在用</span>
+      <h2>AI 自动化工作流</h2>
+      <p class="desc">把重复工作工程化：翻资料、填表格、对数据的环节，能自动化的绝不手做。</p>
+      <ul>
+        <li>日报自动生成：多家分包日报 → 汇总表 + 日报 docx，日均 2 次、真实项目数据</li>
+        <li>企业信息调查：20 维采集 → 多源核验 → 分级入表 → 自动推送</li>
+        <li>离线 AI 问答：本地模型 + 混合检索，断网可用、数据不出本机</li>
+      </ul>
+      <div class="links">
+        <span class="note">* 均运行于企业真实环境，无可公开 Demo</span>
+      </div>
+    </article>
+
+  </section>
+
+  <section class="resume-band">
+    <div>
+      <h2>在线简历</h2>
+      <p>产品经理方向 · 3 页 A4（网页版与 PDF 同步）</p>
+    </div>
+    <div class="links">
+      <a class="btn" href="resume/index.html">网页版 ↗</a>
+      <a class="btn ghost" href="resume/liujiurui-resume-v8.pdf">下载 PDF ↓</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>刘久瑞 · 15620268266 · 2210293312@qq.com</p>
+    <p class="dim">本站为个人求职作品集，全部作品由本人独立完成。</p>
+  </div>
+</footer>
+
+</body>
+</html>

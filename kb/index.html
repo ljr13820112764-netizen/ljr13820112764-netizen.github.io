@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>知识库图谱 · 刘久瑞作品集</title>
+<style>
+  :root {
+    --bg: #0e1116;
+    --panel: #151a21;
+    --panel-border: #232b36;
+    --text: #d7dde6;
+    --text-dim: #8b93a1;
+    --accent: #4c8dff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+  }
+  #graph { flex: 1; height: 100vh; min-width: 0; }
+
+  #sidebar {
+    width: 340px; height: 100vh; overflow-y: auto; flex-shrink: 0;
+    background: var(--panel); border-right: 1px solid var(--panel-border);
+    padding: 18px 16px; display: flex; flex-direction: column; gap: 14px;
+  }
+  h1 { font-size: 17px; font-weight: 600; letter-spacing: .5px; }
+  h1 .sub { font-size: 12px; font-weight: 400; color: var(--text-dim); margin-left: 8px; }
+  .stats { font-size: 12px; color: var(--text-dim); line-height: 1.7; }
+  .stats b { color: var(--text); font-weight: 600; }
+
+  .section { font-size: 12px; }
+  .section h2 {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--text-dim); margin-bottom: 8px;
+  }
+
+  /* ---- 视图模式按钮组 ---- */
+  .btn-group { display: flex; gap: 6px; }
+  .btn-group button {
+    flex: 1; padding: 6px 0; font-size: 12px; cursor: pointer;
+    background: var(--bg); color: var(--text-dim);
+    border: 1px solid var(--panel-border); border-radius: 6px;
+  }
+  .btn-group button:hover { border-color: var(--accent); color: #fff; }
+  .btn-group button.active {
+    background: #1c3256; border-color: #2f4f83; color: #cfe0ff;
+  }
+
+  /* ---- 搜索 + 建议下拉 ---- */
+  .search-wrap { position: relative; }
+  #search {
+    width: 100%; padding: 8px 10px; font-size: 13px;
+    background: var(--bg); color: var(--text);
+    border: 1px solid var(--panel-border); border-radius: 6px; outline: none;
+  }
+  #search:focus { border-color: var(--accent); }
+  #suggest {
+    position: absolute; top: 36px; left: 0; right: 0; z-index: 20;
+    background: #1a212b; border: 1px solid var(--panel-border); border-radius: 6px;
+    max-height: 260px; overflow-y: auto; display: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,.5);
+  }
+  #suggest.open { display: block; }
+  .suggest-item {
+    display: flex; align-items: center; gap: 8px; cursor: pointer;
+    padding: 7px 10px; font-size: 12px; border-bottom: 1px solid var(--panel-border);
+  }
+  .suggest-item:last-child { border-bottom: none; }
+  .suggest-item:hover, .suggest-item.sel { background: #222c3a; }
+  .suggest-item .stype { color: var(--text-dim); font-size: 11px; margin-left: auto; flex-shrink: 0; }
+
+  .toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .toggle input { accent-color: var(--accent); }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; }
+  .filter-chip {
+    display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    padding: 5px 10px; border-radius: 20px; font-size: 12px;
+    border: 1px solid var(--panel-border); user-select: none;
+    transition: opacity .15s;
+  }
+  .filter-chip.off { opacity: .35; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+  .legend { display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
+  .legend-row { display: flex; align-items: center; gap: 8px; }
+  .legend .swatch { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+
+  #detail { border-top: 1px solid var(--panel-border); padding-top: 12px; }
+  #detail .empty { color: var(--text-dim); font-size: 12px; line-height: 1.6; }
+  #detail h3 { font-size: 15px; margin-bottom: 8px; word-break: break-all; }
+  #detail .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 10px;
+    background: var(--bg); border: 1px solid var(--panel-border);
+  }
+  .badge.high { border-color: #4c8dff; color: #8ab4ff; }
+  .badge.medium { border-color: #7aa7e8; color: #a9c4ef; }
+  .badge.low { border-color: #3a4657; color: var(--text-dim); }
+  .badge.old { border-color: #8a5a2b; color: #d8a860; }
+  #detail .summary {
+    font-size: 12px; color: var(--text-dim); line-height: 1.7;
+    margin-bottom: 10px; word-break: break-all;
+  }
+  #detail table { width: 100%; font-size: 12px; border-collapse: collapse; }
+  #detail td { padding: 3px 0; vertical-align: top; }
+  #detail td:first-child { color: var(--text-dim); width: 74px; flex-shrink: 0; }
+  #detail td:last-child { word-break: break-all; }
+  #detail .rel-title { font-size: 11px; color: var(--text-dim); margin: 10px 0 6px; }
+  #detail .rel { display: flex; flex-wrap: wrap; gap: 6px; }
+  .rel-chip {
+    display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
+    padding: 3px 9px; border-radius: 12px; font-size: 11px;
+    background: var(--bg); border: 1px solid var(--panel-border);
+    max-width: 100%;
+  }
+  .rel-chip:hover { border-color: var(--accent); color: #fff; }
+  .rel-chip .rdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .rel-chip .rname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #detail .actions { display: flex; gap: 8px; margin-top: 12px; }
+  #detail button {
+    flex: 1; padding: 7px 0; font-size: 12px; cursor: pointer;
+    background: var(--bg); color: var(--text);
+    border: 1px solid var(--panel-border); border-radius: 6px;
+  }
+  #detail button:hover { border-color: var(--accent); color: #fff; }
+  #detail button.primary { background: #1c3256; border-color: #2f4f83; }
+
+  .hint { font-size: 11px; color: var(--text-dim); line-height: 1.8; }
+
+  /* ---- 列表视图 ---- */
+  #listPanel { display: none; flex: 1; height: 100vh; min-width: 0; overflow-y: auto; padding: 20px 24px; }
+  #listPanel.open { display: block; }
+  #listPanel .lgroup { margin-bottom: 18px; }
+  #listPanel .lgroup h2 {
+    font-size: 12px; font-weight: 600; letter-spacing: 1px; color: var(--text-dim);
+    margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
+  }
+  #listPanel .lgroup h2 .cnt { font-weight: 400; }
+  #listPanel .lcards { display: flex; flex-wrap: wrap; gap: 10px; }
+  .lcard {
+    width: 260px; padding: 10px 12px; cursor: pointer;
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 8px;
+  }
+  .lcard:hover { border-color: var(--accent); }
+  .lcard .ltop { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+  .lcard .lname { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lcard .lbadge {
+    font-size: 10px; padding: 1px 7px; border-radius: 9px; flex-shrink: 0;
+    background: var(--bg); border: 1px solid var(--panel-border); color: var(--text-dim);
+  }
+  .lcard .lbadge.high { border-color: #4c8dff; color: #8ab4ff; }
+  .lcard .lbadge.medium { border-color: #7aa7e8; color: #a9c4ef; }
+  .lcard .lsum {
+    font-size: 11px; color: var(--text-dim); line-height: 1.6;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: #1c3256; border: 1px solid #2f4f83; color: #cfe0ff;
+    padding: 8px 16px; border-radius: 8px; font-size: 12px;
+    opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 10;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body><a class="pj-back" href="../index.html">← 返回作品集</a><style>.pj-back{position:fixed;top:12px;right:12px;z-index:99999;background:#0E2A52;color:#fff;font:13px/1 "Microsoft YaHei","PingFang SC",sans-serif;padding:9px 15px;border-radius:20px;text-decoration:none;box-shadow:0 4px 14px rgba(14,42,82,.35);border:1px solid rgba(255,255,255,.28);opacity:.95}.pj-back:hover{opacity:1}@media print{.pj-back{display:none}}</style>
+<div id="sidebar">
+  <h1>知识库图谱<span class="sub" id="gen-date"></span></h1>
+  <div class="stats" id="stats"></div>
+
+  <div class="section">
+    <h2>视图</h2>
+    <div class="btn-group">
+      <button id="vGraph" class="active">图谱</button>
+      <button id="vList">列表</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>视角</h2>
+    <div class="btn-group">
+      <button id="mLock" class="active" title="只能缩放和平移，不会乱转">锁定</button>
+      <button id="mFree" title="自由旋转">旋转</button>
+      <button id="mTop" title="从正上方俯视（2D）">俯视</button>
+      <button id="mReset" title="复位视角并适配全图">复位</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>搜索</h2>
+    <div class="search-wrap">
+      <input id="search" type="text" placeholder="搜索标题 / 别名 / 标签…" autocomplete="off">
+      <div id="suggest"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>类型筛选</h2>
+    <div class="filters" id="filters"></div>
+  </div>
+
+  <div class="section">
+    <h2>显示</h2>
+    <label class="toggle"><input type="checkbox" id="showLabels" checked> 节点名称标签（自动避让遮挡）</label>
+    <label class="toggle"><input type="checkbox" id="autoRotate"> 缓慢自动旋转（仅旋转视角）</label>
+  </div>
+
+  <div class="section">
+    <h2>图例</h2>
+    <div class="legend">
+      <div class="legend-row"><span class="swatch" style="background:#4c8dff"></span>概念 · high 置信（5+ 来源）</div>
+      <div class="legend-row"><span class="swatch" style="background:#7aa7e8"></span>概念 · medium（3+ 来源）</div>
+      <div class="legend-row"><span class="swatch" style="background:#a3bce0"></span>概念 · low（1–2 来源）</div>
+      <div class="legend-row"><span class="swatch" style="background:#3fbf8f"></span>实体（人物 / 机构 / 工具）</div>
+      <div class="legend-row"><span class="swatch" style="background:#8b93a1"></span>来源页</div>
+      <div class="legend-row"><span class="swatch" style="background:#5b616d"></span>来源页 · 可能过时（&gt;2 年）</div>
+      <div class="legend-row"><span class="swatch" style="background:#e8b64c"></span>综合页（synthesis）</div>
+    </div>
+  </div>
+
+  <div class="section" id="detail">
+    <h2>节点详情</h2>
+    <div class="empty">点击图谱或列表中的节点查看详情。滚轮缩放 · 拖拽平移 · 点击高亮关联。</div>
+  </div>
+
+  <div class="hint">
+    个人知识库 3D 图谱 · 演示版（已隐去条目摘要）<br>
+    节点按类型分层：概念（中）· 实体（上）· 来源（下）· 综合（顶）<br>
+    蓝色深浅 = 概念置信度 · 大小 = 来源数
+  </div>
+</div>
+
+<div id="graph"></div>
+<div id="listPanel"></div>
+<div class="toast" id="toast"></div>
+
+<script src="lib/three.min.js"></script>
+<script src="lib/3d-force-graph.min.js"></script>
+<script>
+const GRAPH_DATA = {"nodes":[{"id":"acceptance-criteria","label":"验收标准","type":"concept","path":"concepts/acceptance-criteria.md","date":"2026-08-15","tags":["产品管理","测试"],"aliases":["Acceptance Criteria","AC","验收条件"],"summary":"","confidence":"low","source_count":1},{"id":"adapter-tuning","label":"适配器微调","type":"concept","path":"concepts/adapter-tuning.md","date":"2026-08-31","tags":["大模型","微调","PEFT","Adapter","技术基础"],"aliases":["Adapter Tuning","Adapter","适配器","Adapter-tuning","适配器微调技术"],"summary":"","confidence":"low","source_count":2},{"id":"ai-industry-structure","label":"AI 产业结构","type":"concept","path":"concepts/ai-industry-structure.md","date":"2026-08-24","tags":["AI产业","商业模式"],"aliases":["AI Industry Structure","AI产业分类","行业+AI","AI+行业","基础平台"],"summary":"","confidence":"low","source_count":1},{"id":"ai-pm-capability-model","label":"AI 产品经理能力模型","type":"concept","path":"concepts/ai-pm-capability-model.md","date":"2026-08-24","tags":["AI产品经理","能力模型","求职"],"aliases":["AI PM Capability Model","AI产品经理四维能力","产品经理能力模型"],"summary":"","confidence":"low","source_count":3},{"id":"ai-product-evaluation","label":"AI 产品落地与评估","type":"concept","path":"concepts/ai-product-evaluation.md","date":"2026-08-15","tags":["产品管理","AI产品经理","数据分析","评价指标"],"aliases":["AI Product Evaluation","AI落地与评估","A/B测试"],"summary":"","confidence":"low","source_count":3},{"id":"ai-product-sense","label":"AI 产品感","type":"concept","path":"concepts/ai-product-sense.md","date":"2026-08-15","tags":["产品管理","AI产品经理"],"aliases":["AI Product Sense","产品感"],"summary":"","confidence":"low","source_count":1},{"id":"attention-mechanism","label":"注意力机制","type":"concept","path":"concepts/attention-mechanism.md","date":"2026-08-30","tags":["深度学习","序列建模","大模型基础"],"aliases":["Attention Mechanism","Attention","注意力","缩放点积注意力","Scaled Dot-Product Attention"],"summary":"","confidence":"medium","source_count":3},{"id":"chunking","label":"文档分块","type":"concept","path":"concepts/chunking.md","date":"2026-08-15","tags":["AI","技术方案"],"aliases":["Chunking","文本分块","文档切分"],"summary":"","confidence":"medium","source_count":8},{"id":"construction-to-ai-pm-transition","label":"土木转 AI 产品经理（转型实践）","type":"concept","path":"concepts/construction-to-ai-pm-transition.md","date":"2026-10-03","tags":["职业转型","AI产品经理","土木","作品集","进行中"],"aliases":["土木转AI产品经理","Construction to AI PM Transition","转型实践","职业转型"],"summary":"","confidence":"low","source_count":1},{"id":"data-annotation","label":"数据标注","type":"concept","path":"concepts/data-annotation.md","date":"2026-08-24","tags":["数据标注","数据闭环","数据质量"],"aliases":["Data Annotation","数据标注工作","标注规范"],"summary":"","confidence":"low","source_count":2},{"id":"data-mining","label":"数据挖掘","type":"concept","path":"concepts/data-mining.md","date":"2026-08-24","tags":["数据挖掘","需求发现","大数据"],"aliases":["Data Mining","DM","数据挖掘任务","关联分析","聚类分析"],"summary":"","confidence":"low","source_count":2},{"id":"dialogue-system-metrics","label":"对话系统评价指标","type":"concept","path":"concepts/dialogue-system-metrics.md","date":"2026-08-24","tags":["对话系统","评价指标","语音交互","Chatbot"],"aliases":["Dialogue System Metrics","对话系统指标","CPS","任务达成率","Chatbot评价"],"summary":"","confidence":"low","source_count":1},{"id":"emergent-abilities","label":"涌现能力","type":"concept","path":"concepts/emergent-abilities.md","date":"2026-08-31","tags":["AI","大模型","模型能力"],"aliases":["Emergent Capabilities","Emergent Abilities","能力涌现","涌现现象"],"summary":"","confidence":"low","source_count":2},{"id":"fitness-and-fat-loss","label":"健身减脂实践","type":"concept","path":"concepts/fitness-and-fat-loss.md","date":"2026-10-03","tags":["健身","减脂","健康","习惯"],"aliases":["健身减脂实践","Fitness and Fat Loss","健身","减脂"],"summary":"","confidence":"low","source_count":1},{"id":"five-w-two-h","label":"5W2H","type":"concept","path":"concepts/five-w-two-h.md","date":"2026-08-15","tags":["产品管理","需求分析"],"aliases":["5W2H分析法","七何分析法"],"summary":"","confidence":"low","source_count":1},{"id":"flare","label":"FLARE","type":"concept","path":"concepts/flare.md","date":"2026-08-31","tags":["AI","RAG","主动检索"],"aliases":["FLARE","Active Retrieval Augmented Generation","主动检索增强生成","主动召回","多次召回"],"summary":"","confidence":"low","source_count":1},{"id":"foundation-model","label":"基础模型","type":"concept","path":"concepts/foundation-model.md","date":"2026-08-15","tags":["AI","模型","微调"],"aliases":["Foundation Model","基础大模型","预训练大模型"],"summary":"","confidence":"high","source_count":6},{"id":"graph-rag","label":"Graph RAG","type":"concept","path":"concepts/graph-rag.md","date":"2026-08-31","tags":["AI","RAG","知识图谱","面试高频"],"aliases":["Graph RAG","GraphRAG","基于知识图谱的检索增强","知识图谱检索增强"],"summary":"","confidence":"low","source_count":1},{"id":"hallucination","label":"大模型幻觉","type":"concept","path":"concepts/hallucination.md","date":"2026-08-15","tags":["AI","风险控制"],"aliases":["Hallucination","AI幻觉","幻觉现象"],"summary":"","confidence":"high","source_count":8},{"id":"hard-negative-mining","label":"负难样本挖掘","type":"concept","path":"concepts/hard-negative-mining.md","date":"2026-08-31","tags":["AI","检索模型训练","对比学习","数据工程"],"aliases":["Hard Negative Mining","难负例挖掘","负样本挖掘","负难样本构建"],"summary":"","confidence":"low","source_count":1},{"id":"hybrid-search","label":"混合检索","type":"concept","path":"concepts/hybrid-search.md","date":"2026-08-31","tags":["AI","RAG","检索技术"],"aliases":["Hybrid Search","混合搜索","向量+关键词检索","多路召回"],"summary":"","confidence":"low","source_count":2},{"id":"incremental-pretraining","label":"增量预训练","type":"concept","path":"concepts/incremental-pretraining.md","date":"2026-08-31","tags":["AI","训练方法","领域模型","预训练"],"aliases":["Incremental Pretraining","Continual PreTraining","CPT","继续预训练","二次预训练","持续预训练"],"summary":"","confidence":"medium","source_count":4},{"id":"job-hunting-2026-spring","label":"2026 春招求职实录","type":"concept","path":"concepts/job-hunting-2026-spring.md","date":"2026-10-03","tags":["求职","面试","2026春招","个人经历","复盘"],"aliases":["2026春招求职实录","Job Hunting 2026","求职经历","春招求职"],"summary":"","confidence":"low","source_count":1},{"id":"knowledge-compilation","label":"知识编译","type":"concept","path":"concepts/knowledge-compilation.md","date":"2026-08-15","tags":["AI","知识管理"],"aliases":["Knowledge Compilation","知识编译模式"],"summary":"","confidence":"low","source_count":2},{"id":"knowledge-graph","label":"知识图谱","type":"concept","path":"concepts/knowledge-graph.md","date":"2026-08-31","tags":["AI","知识图谱","RAG"],"aliases":["Knowledge Graph","KG","知识图谱增强","图数据库知识"],"summary":"","confidence":"low","source_count":2},{"id":"layer-normalization","label":"层归一化","type":"concept","path":"concepts/layer-normalization.md","date":"2026-08-31","tags":["AI","模型架构","Transformer组件","训练稳定性"],"aliases":["Layer Normalization","LayerNorm","LN","层标准化","RMS Norm","Deep Norm","Pre-LN","Post-LN"],"summary":"","confidence":"low","source_count":1},{"id":"llm-agent","label":"智能体","type":"concept","path":"concepts/llm-agent.md","date":"2026-08-31","tags":["AI","LLM应用","智能体"],"aliases":["LLM Agent","Agent","智能代理","代理"],"summary":"","confidence":"low","source_count":2},{"id":"llm-evaluation","label":"大模型评测","type":"concept","path":"concepts/llm-evaluation.md","date":"2026-08-31","tags":["AI","LLM评测","benchmark","评估方法"],"aliases":["LLM Evaluation","模型评测","模型评估","LLM Benchmark"],"summary":"","confidence":"low","source_count":2},{"id":"llm-inference","label":"大模型推理","type":"concept","path":"concepts/llm-inference.md","date":"2026-08-31","tags":["AI","LLM推理","显存优化","量化","部署"],"aliases":["LLM Inference","推理优化","推理加速","模型推理","KV Cache"],"summary":"","confidence":"medium","source_count":3},{"id":"llm-security","label":"LLM 安全与越狱","type":"concept","path":"concepts/llm-security.md","date":"2026-09-01","tags":["AI","LLM","安全","风险控制"],"aliases":["LLM Security","LLM 安全","Jailbreak","越狱","Prompt Injection","提示注入","数据投毒"],"summary":"","confidence":"low","source_count":2},{"id":"llm-training-engineering","label":"大模型训练工程","type":"concept","path":"concepts/llm-training-engineering.md","date":"2026-08-31","tags":["AI","LLM训练","训练工程","分布式训练"],"aliases":["LLM Training Engineering","训练经验","训练工程实践","大模型训练实践"],"summary":"","confidence":"high","source_count":5},{"id":"llm-wiki","label":"LLM Wiki","type":"concept","path":"concepts/llm-wiki.md","date":"2026-08-15","tags":["AI","知识管理"],"aliases":["LLM Wiki 架构","Karpathy Wiki"],"summary":"","confidence":"low","source_count":2},{"id":"long-term-memory","label":"长期记忆","type":"concept","path":"concepts/long-term-memory.md","date":"2026-08-31","tags":["大模型","Agent","多轮对话","LangChain","记忆机制"],"aliases":["Long-term Memory","对话记忆","Conversation Memory","Agent 记忆","长期记忆机制","记忆维护"],"summary":"","confidence":"low","source_count":1},{"id":"lora","label":"LoRA","type":"concept","path":"concepts/lora.md","date":"2026-08-31","tags":["大模型","微调","LoRA","PEFT","技术基础"],"aliases":["Low-Rank Adaptation","低秩适配","LoRA 微调","洛拉","低秩分解微调"],"summary":"","confidence":"medium","source_count":5},{"id":"machine-learning-basics","label":"机器学习基础","type":"concept","path":"concepts/machine-learning-basics.md","date":"2026-08-24","tags":["机器学习","技术认知","算法","面试","相似度"],"aliases":["Machine Learning Basics","ML基础","机器学习分类","监督学习","无监督学习","强化学习"],"summary":"","confidence":"medium","source_count":5},{"id":"multi-head-attention","label":"多头注意力","type":"concept","path":"concepts/multi-head-attention.md","date":"2026-08-30","tags":["深度学习","Transformer","注意力机制"],"aliases":["Multi-Head Attention","MHA","多头注意力机制","多头自注意力"],"summary":"","confidence":"medium","source_count":3},{"id":"multimodal-rag","label":"多模态 RAG","type":"concept","path":"concepts/multimodal-rag.md","date":"2026-08-31","tags":["AI","RAG","多模态"],"aliases":["Multimodal RAG","多模态RAG","半结构化RAG","多向量检索器","Multi-Vector Retriever"],"summary":"","confidence":"low","source_count":1},{"id":"offshore-wind-construction","label":"海上风电施工","type":"concept","path":"concepts/offshore-wind-construction.md","date":"2026-10-03","tags":["海上风电","施工","职业领域","个人经历"],"aliases":["海上风电施工","Offshore Wind Construction","海上风电","海风施工"],"summary":"","confidence":"low","source_count":1},{"id":"parameter-efficient-finetuning","label":"参数高效微调","type":"concept","path":"concepts/parameter-efficient-finetuning.md","date":"2026-08-31","tags":["大模型","微调","PEFT","技术基础","面试"],"aliases":["Parameter-Efficient Fine-Tuning","PEFT","高效微调","delta tuning","参数高效微调技术"],"summary":"","confidence":"medium","source_count":5},{"id":"pdf-parsing","label":"PDF 解析","type":"concept","path":"concepts/pdf-parsing.md","date":"2026-08-31","tags":["RAG","文档处理","版面分析"],"aliases":["PDF Parsing","pdf解析","版面分析","Layout Analysis","文档解析"],"summary":"","confidence":"medium","source_count":3},{"id":"positional-encoding","label":"位置编码","type":"concept","path":"concepts/positional-encoding.md","date":"2026-08-30","tags":["深度学习","Transformer","序列建模"],"aliases":["Positional Encoding","Position Embedding","位置嵌入","PE","位置信息"],"summary":"","confidence":"medium","source_count":3},{"id":"postgraduate-exam-experience","label":"考研经历","type":"concept","path":"concepts/postgraduate-exam-experience.md","date":"2026-10-03","tags":["考研","个人经历","复盘"],"aliases":["考研经历","Postgraduate Entrance Exam Experience","考研二战","二战"],"summary":"","confidence":"low","source_count":1},{"id":"precision-recall","label":"精确率与召回率","type":"concept","path":"concepts/precision-recall.md","date":"2026-08-24","tags":["评价指标","精确率","召回率","面试高频"],"aliases":["Precision and Recall","Precision","Recall","准确率","召回率","F1值"],"summary":"","confidence":"medium","source_count":4},{"id":"product-evolvability","label":"产品可演进性","type":"concept","path":"concepts/product-evolvability.md","date":"2026-08-24","tags":["可演进性","产品路径","盖尔定律","康威定律"],"aliases":["Product Evolvability","Evolvability","可演进性","产品演化"],"summary":"","confidence":"low","source_count":2},{"id":"product-requirements-document","label":"产品需求文档","type":"concept","path":"concepts/product-requirements-document.md","date":"2026-08-15","tags":["产品管理","文档"],"aliases":["PRD","Product Requirements Document"],"summary":"","confidence":"low","source_count":1},{"id":"prompt-compression","label":"提示压缩","type":"concept","path":"concepts/prompt-compression.md","date":"2026-08-31","tags":["AI","RAG","检索优化"],"aliases":["Prompt Compression","上下文压缩","Context Compression","LLMLingua","LongLLMLingua"],"summary":"","confidence":"low","source_count":2},{"id":"prompt-template","label":"提示模板","type":"concept","path":"concepts/prompt-template.md","date":"2026-08-31","tags":["AI","Prompt工程","LLM应用"],"aliases":["Prompt Template","提示词模板","prompt模板"],"summary":"","confidence":"medium","source_count":3},{"id":"quant-investing-learning","label":"量化投资学习","type":"concept","path":"concepts/quant-investing-learning.md","date":"2026-10-03","tags":["量化投资","学习","副业探索"],"aliases":["量化投资学习","Quantitative Investing Learning","量化交易","量化课"],"summary":"","confidence":"low","source_count":1},{"id":"query-rewriting","label":"查询重写","type":"concept","path":"concepts/query-rewriting.md","date":"2026-08-31","tags":["RAG","检索优化","语义空间"],"aliases":["Query Rewriting","Query Transformation","查询改写","查询转换","查询优化","查询扩展","Query Expansion","查询增强","HyDE"],"summary":"","confidence":"medium","source_count":6},{"id":"rag-evaluation","label":"RAG 评测","type":"concept","path":"concepts/rag-evaluation.md","date":"2026-08-31","tags":["RAG","评估指标","评测框架"],"aliases":["RAG Evaluation","RAG评估","检索增强生成评测"],"summary":"","confidence":"low","source_count":1},{"id":"rag-fusion","label":"RAG Fusion","type":"concept","path":"concepts/rag-fusion.md","date":"2026-08-31","tags":["AI","RAG","检索优化"],"aliases":["RAG Fusion","RAG-Fusion","多查询融合","倒数排名融合","RRF"],"summary":"","confidence":"low","source_count":2},{"id":"reasoning-models","label":"推理模型","type":"concept","path":"concepts/reasoning-models.md","date":"2026-09-01","tags":["AI","LLM","推理","思考"],"aliases":["Reasoning Models","推理模型","思维链推理","思考模型","深思模型"],"summary":"","confidence":"medium","source_count":3},{"id":"requirement-description","label":"需求描述","type":"concept","path":"concepts/requirement-description.md","date":"2026-08-15","tags":["产品管理","需求分析"],"aliases":["Requirement Description","需求规格说明"],"summary":"","confidence":"low","source_count":1},{"id":"requirement-prioritization","label":"需求优先级","type":"concept","path":"concepts/requirement-prioritization.md","date":"2026-08-15","tags":["产品管理","范围管理"],"aliases":["Prioritization","P0P1P2","优先级划分"],"summary":"","confidence":"low","source_count":2},{"id":"requirement-understanding","label":"需求理解","type":"concept","path":"concepts/requirement-understanding.md","date":"2026-08-15","tags":["产品管理","需求分析"],"aliases":["Requirement Understanding","需求分析"],"summary":"","confidence":"low","source_count":5},{"id":"reranking","label":"重排序","type":"concept","path":"concepts/reranking.md","date":"2026-08-31","tags":["RAG","检索优化","后检索处理"],"aliases":["Reranking","Rerank","重排","后检索处理"],"summary":"","confidence":"medium","source_count":4},{"id":"retrieval-augmented-generation","label":"检索增强生成","type":"concept","path":"concepts/retrieval-augmented-generation.md","date":"2026-08-15","tags":["AI","技术方案"],"aliases":["RAG","Retrieval-Augmented Generation"],"summary":"","confidence":"medium","source_count":19},{"id":"rlhf","label":"RLHF（基于人类反馈的强化学习）","type":"concept","path":"concepts/rlhf.md","date":"2026-09-01","tags":["AI","LLM","训练","强化学习"],"aliases":["RLHF","Reinforcement Learning from Human Feedback","基于人类反馈的强化学习","Reward Modeling","奖励建模"],"summary":"","confidence":"medium","source_count":3},{"id":"scaling-laws","label":"缩放定律","type":"concept","path":"concepts/scaling-laws.md","date":"2026-09-01","tags":["AI","LLM","训练","规模"],"aliases":["Scaling Laws","缩放定律","规模法则","Chinchilla","规模化定律"],"summary":"","confidence":"low","source_count":1},{"id":"schema-behavior-contract","label":"Schema 行为契约","type":"concept","path":"concepts/schema-behavior-contract.md","date":"2026-08-15","tags":["AI","知识管理","LLM工程"],"aliases":["Schema Behavior Contract","Schema 驱动","AGENTS.md"],"summary":"","confidence":"low","source_count":2},{"id":"self-attention","label":"自注意力机制","type":"concept","path":"concepts/self-attention.md","date":"2026-08-30","tags":["深度学习","Transformer","序列建模"],"aliases":["Self-Attention","自注意力","Masked Self-Attention","掩码自注意力"],"summary":"","confidence":"medium","source_count":3},{"id":"self-rag","label":"Self-RAG","type":"concept","path":"concepts/self-rag.md","date":"2026-08-31","tags":["AI","RAG","主动检索"],"aliases":["Self-RAG","自我反思RAG","反思字符","Reflection Tokens","按需检索"],"summary":"","confidence":"low","source_count":1},{"id":"sft-data-engineering","label":"SFT 数据工程","type":"concept","path":"concepts/sft-data-engineering.md","date":"2026-08-31","tags":["AI","数据工程","SFT","主动学习"],"aliases":["SFT Data Engineering","训练数据构建","指令数据构建","微调数据工程"],"summary":"","confidence":"low","source_count":2},{"id":"similarity-functions","label":"相似度函数","type":"concept","path":"concepts/similarity-functions.md","date":"2026-08-31","tags":["相似度","向量检索","数学基础","面试"],"aliases":["Similarity Functions","相似度","相似度计算方法","Cosine Similarity","余弦相似度","向量相似度"],"summary":"","confidence":"low","source_count":1},{"id":"software-2-0","label":"软件 2.0","type":"concept","path":"concepts/software-2-0.md","date":"2026-08-15","tags":["AI","软件开发范式"],"aliases":["Software 2.0","软件2.0"],"summary":"","confidence":"low","source_count":2},{"id":"speech-recognition","label":"语音识别","type":"concept","path":"concepts/speech-recognition.md","date":"2026-08-24","tags":["语音识别","ASR","语音交互"],"aliases":["Speech Recognition","ASR","Automatic Speech Recognition","语音识别技术"],"summary":"","confidence":"low","source_count":2},{"id":"speech-synthesis","label":"语音合成","type":"concept","path":"concepts/speech-synthesis.md","date":"2026-08-24","tags":["语音合成","TTS","语音交互"],"aliases":["Speech Synthesis","TTS","Text-To-Speech","语音合成技术"],"summary":"","confidence":"low","source_count":1},{"id":"supervised-fine-tuning","label":"监督微调","type":"concept","path":"concepts/supervised-fine-tuning.md","date":"2026-08-31","tags":["AI","训练方法","微调"],"aliases":["Supervised Fine-Tuning","SFT","微调","Fine-Tuning"],"summary":"","confidence":"high","source_count":9},{"id":"systematic-thinking","label":"系统化思维","type":"concept","path":"concepts/systematic-thinking.md","date":"2026-08-24","tags":["系统思维","方法论","问题拆解"],"aliases":["Systematic Thinking","系统化思维方法","最小子系统","经验与方法论"],"summary":"","confidence":"low","source_count":2},{"id":"table-recognition","label":"表格识别","type":"concept","path":"concepts/table-recognition.md","date":"2026-08-31","tags":["RAG","文档处理","版面分析","OCR"],"aliases":["Table Recognition","表格检测","表格结构识别","Table Detection","Table Structure Recognition"],"summary":"","confidence":"low","source_count":1},{"id":"tabular-data-qa","label":"结构化数据问答","type":"concept","path":"concepts/tabular-data-qa.md","date":"2026-08-31","tags":["AI","RAG","结构化数据","表格"],"aliases":["Tabular Data QA","表格问答","结构化数据查询","Chain-of-Table","表格链"],"summary":"","confidence":"low","source_count":1},{"id":"technical-intuition","label":"技术直觉","type":"concept","path":"concepts/technical-intuition.md","date":"2026-08-15","tags":["产品管理","AI产品经理","面试","语音识别"],"aliases":["Technical Intuition","技术直觉与认知边界"],"summary":"","confidence":"low","source_count":2},{"id":"text-degeneration","label":"文本退化","type":"concept","path":"concepts/text-degeneration.md","date":"2026-08-31","tags":["AI","LLM生成","解码策略","复读机问题"],"aliases":["Text Degeneration","复读机问题","重复生成","生成单调","Repetition Problem"],"summary":"","confidence":"low","source_count":2},{"id":"text-embedding","label":"文本嵌入","type":"concept","path":"concepts/text-embedding.md","date":"2026-08-15","tags":["AI","技术方案","向量检索","相似度"],"aliases":["Text Embedding","Embedding","向量嵌入"],"summary":"","confidence":"medium","source_count":10},{"id":"tokenization","label":"分词器","type":"concept","path":"concepts/tokenization.md","date":"2026-09-01","tags":["AI","LLM","数据处理","分词"],"aliases":["Tokenization","BPE","Byte Pair Encoding","分词","分词器","tokenizer"],"summary":"","confidence":"low","source_count":2},{"id":"tool-use","label":"工具使用","type":"concept","path":"concepts/tool-use.md","date":"2026-09-01","tags":["AI","LLM","应用","工具调用"],"aliases":["Tool Use","工具使用","工具调用","Function Calling","函数调用","RAG LM"],"summary":"","confidence":"low","source_count":2},{"id":"training-as-compression","label":"训练即压缩","type":"concept","path":"concepts/training-as-compression.md","date":"2026-09-01","tags":["AI","LLM","训练","心智模型"],"aliases":["Training as Compression","训练即压缩","有损知识压缩","知识压缩"],"summary":"","confidence":"low","source_count":2},{"id":"transformer","label":"Transformer","type":"concept","path":"concepts/transformer.md","date":"2026-08-30","tags":["深度学习","大模型架构","NLP"],"aliases":["Transformer 架构","Transformer模型","变换器","转换器","Encoder-Decoder"],"summary":"","confidence":"medium","source_count":8},{"id":"user-as-demand-set","label":"用户即需求集合","type":"concept","path":"concepts/user-as-demand-set.md","date":"2026-08-15","tags":["产品管理","用户研究"],"aliases":["User as Demand Set","用户不是人","需求的集合"],"summary":"","confidence":"low","source_count":2},{"id":"user-research","label":"用户调研","type":"concept","path":"concepts/user-research.md","date":"2026-08-15","tags":["产品管理","调研"],"aliases":["User Research","用户研究"],"summary":"","confidence":"low","source_count":2},{"id":"user-story","label":"用户故事","type":"concept","path":"concepts/user-story.md","date":"2026-08-15","tags":["产品管理","需求分析"],"aliases":["User Story","用户故事三句式"],"summary":"","confidence":"low","source_count":1},{"id":"user-value-formula","label":"用户价值公式","type":"concept","path":"concepts/user-value-formula.md","date":"2026-08-15","tags":["产品管理","方法论"],"aliases":["User Value Formula","产品价值公式","俞军产品公式"],"summary":"","confidence":"low","source_count":2},{"id":"vector-database","label":"向量数据库","type":"concept","path":"concepts/vector-database.md","date":"2026-08-31","tags":["RAG","数据库","基础设施"],"aliases":["Vector Database","Vector DB","向量索引","向量存储"],"summary":"","confidence":"medium","source_count":5},{"id":"working-memory-in-llms","label":"工作记忆与参数化知识","type":"concept","path":"concepts/working-memory-in-llms.md","date":"2026-09-01","tags":["AI","LLM","认知","局限"],"aliases":["Working Memory","工作记忆","参数化知识","知识记忆区分","Working Memory vs Parametric Knowledge"],"summary":"","confidence":"low","source_count":2},{"id":"andrej-karpathy","label":"Andrej Karpathy","type":"entity","path":"entities/andrej-karpathy.md","date":"2026-08-15","tags":["AI","人物"],"aliases":["Karpathy","卡帕西","安德烈·卡帕西"],"summary":"","entity_type":"person"},{"id":"chroma","label":"Chroma","type":"entity","path":"entities/chroma.md","date":"2026-08-31","tags":["AI","向量数据库","开源"],"aliases":["ChromaDB","chromadb"],"summary":"","entity_type":"tool"},{"id":"guida","label":"规答","type":"entity","path":"entities/guida.md","date":"2026-10-03","tags":["AI产品","作品集","施工规范","自研项目"],"aliases":["规答","Guida","规答AI","施工规范问答助手"],"summary":"","entity_type":"tool"},{"id":"langchain","label":"LangChain","type":"entity","path":"entities/langchain.md","date":"2026-08-31","tags":["AI","框架","工具"],"aliases":["Langchain","兰链"],"summary":"","entity_type":"tool"},{"id":"llamaindex","label":"LlamaIndex","type":"entity","path":"entities/llamaindex.md","date":"2026-08-31","tags":["AI","框架","工具"],"aliases":["Llama Index","GPT Index","LlamaIndex框架"],"summary":"","entity_type":"tool"},{"id":"pinecone","label":"Pinecone","type":"entity","path":"entities/pinecone.md","date":"2026-08-15","tags":["AI","公司","工具厂商"],"aliases":["Pinecone公司"],"summary":"","entity_type":"institution"},{"id":"tencent","label":"腾讯","type":"entity","path":"entities/tencent.md","date":"2026-08-15","tags":["公司","方法论来源"],"aliases":["Tencent","腾讯公司"],"summary":"","entity_type":"institution"},{"id":"yujun","label":"俞军","type":"entity","path":"entities/yujun.md","date":"2026-08-15","tags":["产品管理","人物"],"aliases":["Yu Jun","俞军老师"],"summary":"","entity_type":"person"},{"id":"adapter-tuning-interview","label":"适配器微调（Adapter-tuning）篇","type":"source","path":"sources/adapter-tuning-interview.md","date":"2026-08-31","tags":["面试题","Adapter","微调","PEFT","大模型","技术基础"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"ai-empower-pm-book","label":"AI赋能：AI重新定义产品经理（书）","type":"source","path":"sources/ai-empower-pm-book.md","date":2019,"tags":["AI赋能","产品经理转型","机器学习","书籍"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"ai-pm-core-abilities-2026","label":"面了200+AI产品经理后，我发现能\"拿Offer\"的这3项能力很强！","type":"source","path":"sources/ai-pm-core-abilities-2026.md","date":"2025-12-14","tags":["ai-pm","career-transition","capability-model"],"aliases":[],"summary":"","possibly_outdated":false,"language":"zh"},{"id":"ai-pm-interview-100q-scan","label":"AI产品经理面试高频100题（问题+答案）","type":"source","path":"sources/ai-pm-interview-100q-scan.md","date":2024,"tags":["面试","面试题库","机器学习","产品方法论"],"aliases":[],"summary":"","possibly_outdated":false,"language":"zh"},{"id":"ai-pm-interview-guide-scan","label":"AI产品经理面试宝典（实为智泊 AI 课程宣传册）","type":"source","path":"sources/ai-pm-interview-guide-scan.md","date":2026,"tags":["课程宣传","智泊AI","MoPaaS","命名不符"],"aliases":[],"summary":"","possibly_outdated":false,"language":"zh"},{"id":"ai-pm-intro-handbook","label":"AI产品经理入门手册（上、下册）","type":"source","path":"sources/ai-pm-intro-handbook.md","date":2024,"tags":["AI产品经理","能力模型","机器学习","大模型"],"aliases":[],"summary":"","possibly_outdated":false,"language":"zh"},{"id":"ai-pm-systematic-thinking","label":"AI产品经理的必修课：系统化思维","type":"source","path":"sources/ai-pm-systematic-thinking.md","date":2019,"tags":["系统思维","AI产品经理","方法论"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"ai-product-evolvability","label":"AI时代的产品经理：应重视产品的可演进性","type":"source","path":"sources/ai-product-evolvability.md","date":"2017-05-13","tags":["可演进性","产品路径","盖尔定律","康威定律"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"attention-upgrade-aigc","label":"4-Attention 升级面（AiGC 面试宝典）","type":"source","path":"sources/attention-upgrade-aigc.md","date":"2023-09-29","tags":["面试题","注意力机制","推理优化","KV Cache"],"aliases":[],"summary":"","possibly_outdated":false,"language":"zh"},{"id":"data-annotation-intro","label":"AI产品经理需要了解的数据标注工作入门","type":"source","path":"sources/data-annotation-intro.md","date":2018,"tags":["数据标注","数据闭环","精确率","召回率"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"data-mining-for-ai-pm","label":"AI产品经理，如何面对数据挖掘？","type":"source","path":"sources/data-mining-for-ai-pm.md","date":2018,"tags":["数据挖掘","需求发现","大数据"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"from-construction-drawing-to-prd","label":"从施工图到 PRD：土木工程师转 AI 产品经理入门指南","type":"source","path":"sources/from-construction-drawing-to-prd.md","date":"2026-08-15","tags":["prd","需求分析","ai产品经理","职业转型"],"aliases":[],"summary":"","possibly_outdated":false,"language":"zh"},{"id":"graph-rag-interview","label":"25-Graph RAG 面 — 一种 基于知识图谱的大模型检索增强实现策略","type":"source","path":"sources/graph-rag-interview.md","date":"2026-08-31","tags":["面试题","Graph RAG","知识图谱","八股文"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"karpathy-busy-persons-intro-llms","label":"The Busy Person's Intro to LLMs（Director's Cut 笔记）","type":"source","path":"sources/karpathy-busy-persons-intro-llms.md","date":"2023-11-30","tags":["llm","karpathy","inference","scaling","jailbreak"],"aliases":[],"summary":"","possibly_outdated":true,"language":"en"},{"id":"karpathy-deep-dive-llms","label":"Deep Dive into LLMs like ChatGPT（演讲课程笔记）","type":"source","path":"sources/karpathy-deep-dive-llms.md","date":"2025-02-01","tags":["llm","karpathy","training-pipeline","tokenization"],"aliases":[],"summary":"","possibly_outdated":false,"language":"en"},{"id":"karpathy-state-of-gpt","label":"State of GPT（Microsoft Build 2023 演讲笔记）","type":"source","path":"sources/karpathy-state-of-gpt.md","date":"2023-05-24","tags":["llm","karpathy","rlhf","training-pipeline","prompt-engineering"],"aliases":[],"summary":"","possibly_outdated":true,"language":"en"},{"id":"langchain-rag-qa-practice","label":"13-基于langchain RAG问答应用实战","type":"source","path":"sources/langchain-rag-qa-practice.md","date":"2026-08-31","tags":["LangChain","RAG","实战教程","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"layer-normalization-interview","label":"2-Layer normalization 篇","type":"source","path":"sources/layer-normalization-interview.md","date":"2026-08-31","tags":["LayerNorm","模型架构","面试题","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"llm-activation-functions","label":"3-LLMs 激活函数篇","type":"source","path":"sources/llm-activation-functions.md","date":"2026-08-31","tags":["激活函数","FFN","模型架构","面试题","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"llm-advanced-interview","label":"8-大模型（LLMs）进阶面","type":"source","path":"sources/llm-advanced-interview.md","date":"2026-08-31","tags":["LLM进阶","复读机问题","解码策略","长文本","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"llm-assisted-recall-optimization","label":"19-大模型外挂知识库优化——如何利用大模型辅助召回？","type":"source","path":"sources/llm-assisted-recall-optimization.md","date":"2026-08-31","tags":["面试题","RAG","召回优化","HyDE","FLARE","八股文"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"llm-basics-interview","label":"1-大模型（LLMs）基础面","type":"source","path":"sources/llm-basics-interview.md","date":"2026-08-31","tags":["LLM基础","模型架构","面试题","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"llm-bible-transformer-foundation","label":"LLM 大模型学习圣经（卷1）：从0到1吃透 Transformer 技术底座","type":"source","path":"sources/llm-bible-transformer-foundation.md","date":"2024-04-01","tags":["教程","Transformer","深度学习基础","注意力机制"],"aliases":[],"summary":"","possibly_outdated":false,"language":"zh"},{"id":"llm-course-2026-index","label":"大模型官方课程资料总索引（2026）","type":"source","path":"sources/llm-course-2026-index.md","date":"2026-08-24","tags":["课程资料","索引","学习路线","求职"],"aliases":[],"summary":"","possibly_outdated":false,"language":"zh"},{"id":"llm-doc-chat-pdf-parsing","label":"16-LLM文档对话 —— pdf解析关键问题","type":"source","path":"sources/llm-doc-chat-pdf-parsing.md","date":"2026-08-31","tags":["PDF解析","文档对话","面试题","版面分析"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"llm-evaluation-interview","label":"35-大模型（LLMs）评测面","type":"source","path":"sources/llm-evaluation-interview.md","date":"2026-08-31","tags":["LLM评测","benchmark","评估方法","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"llm-finetuning-interview","label":"9-大模型（LLMs）微调面","type":"source","path":"sources/llm-finetuning-interview.md","date":"2026-08-31","tags":["SFT","微调","领域模型","训练参数","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"llm-generated-sft-data","label":"41-大模型（LLMs）LLM生成SFT数据方法面","type":"source","path":"sources/llm-generated-sft-data.md","date":"2026-08-31","tags":["SFT数据","Self-Instruct","数据生成","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"llm-incremental-pretraining","label":"32-大模型（LLMs）增量预训练篇","type":"source","path":"sources/llm-incremental-pretraining.md","date":"2026-08-31","tags":["增量预训练","CPT","训练参数","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"llm-inference-interview","label":"31-大模型（LLMs）推理面","type":"source","path":"sources/llm-inference-interview.md","date":"2026-08-31","tags":["LLM推理","显存","量化","生成参数","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"llm-langchain-interview","label":"11-大模型（LLMs）langchain 面","type":"source","path":"sources/llm-langchain-interview.md","date":"2026-08-31","tags":["LangChain","面试题","LLM应用开发","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"llm-long-term-memory-dialogue","label":"多轮对话中让AI保持长期记忆的8种优化方式篇","type":"source","path":"sources/llm-long-term-memory-dialogue.md","date":"2026-08-31","tags":["面试题","长期记忆","Agent","LangChain","多轮对话","记忆机制"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"llm-loss-functions","label":"6-LLMs 损失函数篇","type":"source","path":"sources/llm-loss-functions.md","date":"2026-08-31","tags":["损失函数","机器学习基础","面试题","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"llm-training-data-interview","label":"40-大模型（LLMs）训练集面","type":"source","path":"sources/llm-training-data-interview.md","date":"2026-08-31","tags":["训练数据","SFT数据","主动学习","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"llm-training-experience","label":"10-LLMs 训练经验帖","type":"source","path":"sources/llm-training-experience.md","date":"2026-08-31","tags":["LLM训练","训练工程","分布式训练","经验","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"llm-vector-db-dialogue-experience","label":"14-基于LLM+向量库的文档对话 经验面","type":"source","path":"sources/llm-vector-db-dialogue-experience.md","date":"2026-08-31","tags":["RAG","文档对话","向量库","经验面","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"llm-wiki-karpathy-gist","label":"LLM Wiki（Karpathy 原始设计文档）","type":"source","path":"sources/llm-wiki-karpathy-gist.md","date":"2026-04-02","tags":["llm-wiki","knowledge-management","karpathy"],"aliases":[],"summary":"","possibly_outdated":false,"language":"en"},{"id":"llm-wiki-practice","label":"Karpathy LLM Wiki 实践：用\"知识编译\"替代 RAG，构建个人知识库","type":"source","path":"sources/llm-wiki-practice.md","date":"2026-04-22","tags":["llm-wiki","rag","knowledge-management"],"aliases":[],"summary":"","possibly_outdated":false,"language":"zh"},{"id":"lora-llama2-pretraining","label":"34-基于lora的llama2二次预训练","type":"source","path":"sources/lora-llama2-pretraining.md","date":"2026-08-31","tags":["LoRA","llama2","二次预训练","中文语料","实战","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"lora-series-interview","label":"LoRA 系列篇","type":"source","path":"sources/lora-series-interview.md","date":"2026-08-31","tags":["面试题","LoRA","QLoRA","AdaLoRA","微调","大模型","技术基础"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"peft-interview","label":"大模型（LLMs）参数高效微调(PEFT) 面","type":"source","path":"sources/peft-interview.md","date":"2026-08-31","tags":["面试题","PEFT","微调","LoRA","大模型","技术基础"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"peft-lora-practice","label":"30-如何使用 PEFT库 中 LoRA？","type":"source","path":"sources/peft-lora-practice.md","date":"2026-08-31","tags":["LoRA","PEFT","显存优化","量化","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"pretrain-sample-concatenation","label":"33-增量预训练（Pretrain）样本拼接篇","type":"source","path":"sources/pretrain-sample-concatenation.md","date":"2026-08-31","tags":["增量预训练","数据工程","样本拼接","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"prompt-learning-methods","label":"28-提示学习（Prompting）篇","type":"source","path":"sources/prompt-learning-methods.md","date":"2026-08-31","tags":["Prompt学习","PEFT","提示微调","面试题","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"rag-evaluation-interview","label":"21-RAG（Retrieval-Augmented Generation）评测面","type":"source","path":"sources/rag-evaluation-interview.md","date":"2026-08-31","tags":["RAG评测","面试题","评估指标","RAGAS"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"rag-experience-interview","label":"15-大模型 RAG 经验面","type":"source","path":"sources/rag-experience-interview.md","date":"2026-08-31","tags":["RAG","面试题","检索增强","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"rag-fusion-interview","label":"24-大模型（LLMs）RAG 优化策略 —— RAG-Fusion篇","type":"source","path":"sources/rag-fusion-interview.md","date":"2026-08-31","tags":["RAG","检索优化","RAG-Fusion","面试题","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"rag-hard-negative-mining","label":"20-大模型外挂知识库优化——负样本样本挖掘篇","type":"source","path":"sources/rag-hard-negative-mining.md","date":"2026-08-31","tags":["RAG","检索模型训练","负样本","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"rag-optimization-strategies","label":"22-检索增强生成(RAG) 优化策略篇","type":"source","path":"sources/rag-optimization-strategies.md","date":"2026-08-31","tags":["面试题","RAG","检索优化","八股文"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"rag-pain-points-solutions","label":"23-大模型（LLMs）RAG —— 关键痛点及对应解决方案","type":"source","path":"sources/rag-pain-points-solutions.md","date":"2026-08-31","tags":["面试题","RAG","痛点","解决方案","八股文"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"rag-table-recognition-interview","label":"17-大模型（LLMs）RAG 版面分析——表格识别方法篇","type":"source","path":"sources/rag-table-recognition-interview.md","date":"2026-08-31","tags":["RAG","版面分析","表格识别","面试题","AiGC面试宝典"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"rag-text-chunking-interview","label":"18-大模型（LLMs）RAG 版面分析——文本分块面","type":"source","path":"sources/rag-text-chunking-interview.md","date":"2026-08-31","tags":["文本分块","RAG","面试题","Chunking"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"similarity-functions-interview","label":"相似度函数篇","type":"source","path":"sources/similarity-functions-interview.md","date":"2026-08-31","tags":["面试题","相似度","对比学习","向量检索","技术基础"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"software-2-0-karpathy","label":"（译）Software 2.0","type":"source","path":"sources/software-2-0-karpathy.md","date":"2018-03-24","tags":["AI","软件开发","神经网络"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"speech-recognition-basics","label":"AI产品经理需了解的技术知识：语音识别技术","type":"source","path":"sources/speech-recognition-basics.md","date":2018,"tags":["语音识别","ASR","技术认知"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"transformer-interview-summary","label":"Transformer 面试题总结","type":"source","path":"sources/transformer-interview-summary.md","date":"2026-08-24","tags":["面试题","Transformer","注意力机制","BERT","技术基础"],"aliases":[],"summary":"","possibly_outdated":false,"language":"zh"},{"id":"transformers-ops-aigc","label":"5-transformers 操作篇（AiGC 面试宝典）","type":"source","path":"sources/transformers-ops-aigc.md","date":"2024-01-28","tags":["面试题","HuggingFace","BERT","实操"],"aliases":[],"summary":"","possibly_outdated":false,"language":"zh"},{"id":"voice-interaction-metrics","label":"AI产品经理需要了解的语音交互评价指标","type":"source","path":"sources/voice-interaction-metrics.md","date":2018,"tags":["语音交互","评价指标","ASR","TTS","对话系统"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"what-is-rag-pinecone","label":"What is Retrieval-Augmented Generation (RAG)?","type":"source","path":"sources/what-is-rag-pinecone.md","date":"2026-08-15","tags":["AI","RAG","LLM"],"aliases":[],"summary":"","possibly_outdated":false,"language":"en"},{"id":"yujun-critique-of-methodology","label":"为什么我会对俞军的产品方法产生这两点怀疑？","type":"source","path":"sources/yujun-critique-of-methodology.md","date":"2016-12-28","tags":["yujun","product-methodology","critique"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"},{"id":"yujun-value-formula","label":"破除误解，重读俞军的产品价值公式","type":"source","path":"sources/yujun-value-formula.md","date":"2019-11-06","tags":["yujun","product-methodology","user-value"],"aliases":[],"summary":"","possibly_outdated":true,"language":"zh"}],"links":[{"source":"acceptance-criteria","target":"from-construction-drawing-to-prd"},{"source":"adapter-tuning","target":"parameter-efficient-finetuning"},{"source":"adapter-tuning","target":"lora"},{"source":"adapter-tuning","target":"adapter-tuning-interview"},{"source":"adapter-tuning","target":"peft-interview"},{"source":"ai-industry-structure","target":"ai-pm-intro-handbook"},{"source":"ai-pm-capability-model","target":"user-value-formula"},{"source":"ai-pm-capability-model","target":"ai-pm-intro-handbook"},{"source":"ai-pm-capability-model","target":"ai-empower-pm-book"},{"source":"ai-pm-capability-model","target":"ai-pm-interview-100q-scan"},{"source":"ai-product-evaluation","target":"ai-pm-core-abilities-2026"},{"source":"ai-product-evaluation","target":"voice-interaction-metrics"},{"source":"ai-product-evaluation","target":"ai-pm-interview-100q-scan"},{"source":"ai-product-sense","target":"requirement-understanding"},{"source":"ai-product-sense","target":"ai-pm-core-abilities-2026"},{"source":"attention-mechanism","target":"transformer-interview-summary"},{"source":"attention-mechanism","target":"attention-upgrade-aigc"},{"source":"attention-mechanism","target":"llm-bible-transformer-foundation"},{"source":"chunking","target":"text-embedding"},{"source":"chunking","target":"what-is-rag-pinecone"},{"source":"chunking","target":"rag-experience-interview"},{"source":"chunking","target":"llm-doc-chat-pdf-parsing"},{"source":"chunking","target":"rag-text-chunking-interview"},{"source":"chunking","target":"rag-optimization-strategies"},{"source":"chunking","target":"rag-pain-points-solutions"},{"source":"chunking","target":"llm-vector-db-dialogue-experience"},{"source":"chunking","target":"langchain-rag-qa-practice"},{"source":"construction-to-ai-pm-transition","target":"guida"},{"source":"construction-to-ai-pm-transition","target":"from-construction-drawing-to-prd"},{"source":"data-annotation","target":"precision-recall"},{"source":"data-annotation","target":"data-annotation-intro"},{"source":"data-annotation","target":"ai-pm-interview-100q-scan"},{"source":"data-mining","target":"data-mining-for-ai-pm"},{"source":"data-mining","target":"ai-empower-pm-book"},{"source":"dialogue-system-metrics","target":"voice-interaction-metrics"},{"source":"emergent-abilities","target":"llm-basics-interview"},{"source":"emergent-abilities","target":"karpathy-deep-dive-llms"},{"source":"emergent-abilities","target":"training-as-compression"},{"source":"five-w-two-h","target":"from-construction-drawing-to-prd"},{"source":"flare","target":"self-rag"},{"source":"flare","target":"query-rewriting"},{"source":"flare","target":"llm-assisted-recall-optimization"},{"source":"foundation-model","target":"parameter-efficient-finetuning"},{"source":"foundation-model","target":"emergent-abilities"},{"source":"foundation-model","target":"karpathy-state-of-gpt"},{"source":"foundation-model","target":"karpathy-busy-persons-intro-llms"},{"source":"foundation-model","target":"training-as-compression"},{"source":"foundation-model","target":"what-is-rag-pinecone"},{"source":"foundation-model","target":"peft-interview"},{"source":"foundation-model","target":"llm-basics-interview"},{"source":"foundation-model","target":"llm-advanced-interview"},{"source":"graph-rag","target":"knowledge-graph"},{"source":"graph-rag","target":"graph-rag-interview"},{"source":"hallucination","target":"graph-rag"},{"source":"hallucination","target":"flare"},{"source":"hallucination","target":"working-memory-in-llms"},{"source":"hallucination","target":"karpathy-deep-dive-llms"},{"source":"hallucination","target":"training-as-compression"},{"source":"hallucination","target":"karpathy-busy-persons-intro-llms"},{"source":"hallucination","target":"from-construction-drawing-to-prd"},{"source":"hallucination","target":"what-is-rag-pinecone"},{"source":"hallucination","target":"rag-experience-interview"},{"source":"hallucination","target":"rag-pain-points-solutions"},{"source":"hallucination","target":"graph-rag-interview"},{"source":"hallucination","target":"llm-assisted-recall-optimization"},{"source":"hard-negative-mining","target":"rag-hard-negative-mining"},{"source":"hard-negative-mining","target":"text-embedding"},{"source":"hybrid-search","target":"reranking"},{"source":"hybrid-search","target":"text-embedding"},{"source":"hybrid-search","target":"knowledge-graph"},{"source":"hybrid-search","target":"rag-optimization-strategies"},{"source":"hybrid-search","target":"rag-pain-points-solutions"},{"source":"incremental-pretraining","target":"llm-incremental-pretraining"},{"source":"incremental-pretraining","target":"lora"},{"source":"incremental-pretraining","target":"pretrain-sample-concatenation"},{"source":"incremental-pretraining","target":"lora-llama2-pretraining"},{"source":"incremental-pretraining","target":"retrieval-augmented-generation"},{"source":"incremental-pretraining","target":"llm-finetuning-interview"},{"source":"job-hunting-2026-spring","target":"quant-investing-learning"},{"source":"job-hunting-2026-spring","target":"construction-to-ai-pm-transition"},{"source":"knowledge-compilation","target":"llm-wiki-karpathy-gist"},{"source":"knowledge-compilation","target":"llm-wiki-practice"},{"source":"knowledge-graph","target":"graph-rag"},{"source":"knowledge-graph","target":"hybrid-search"},{"source":"knowledge-graph","target":"rag-optimization-strategies"},{"source":"knowledge-graph","target":"graph-rag-interview"},{"source":"layer-normalization","target":"layer-normalization-interview"},{"source":"layer-normalization","target":"transformer"},{"source":"llm-agent","target":"llm-langchain-interview"},{"source":"llm-agent","target":"query-rewriting"},{"source":"llm-agent","target":"karpathy-state-of-gpt"},{"source":"llm-agent","target":"tool-use"},{"source":"llm-evaluation","target":"llm-evaluation-interview"},{"source":"llm-evaluation","target":"rag-evaluation"},{"source":"llm-evaluation","target":"karpathy-busy-persons-intro-llms"},{"source":"llm-inference","target":"llm-inference-interview"},{"source":"llm-inference","target":"lora"},{"source":"llm-inference","target":"text-degeneration"},{"source":"llm-inference","target":"karpathy-busy-persons-intro-llms"},{"source":"llm-inference","target":"karpathy-deep-dive-llms"},{"source":"llm-security","target":"karpathy-busy-persons-intro-llms"},{"source":"llm-security","target":"karpathy-state-of-gpt"},{"source":"llm-security","target":"hallucination"},{"source":"llm-training-engineering","target":"llm-training-experience"},{"source":"llm-training-engineering","target":"lora"},{"source":"llm-training-engineering","target":"karpathy-state-of-gpt"},{"source":"llm-training-engineering","target":"karpathy-deep-dive-llms"},{"source":"llm-training-engineering","target":"llm-finetuning-interview"},{"source":"llm-training-engineering","target":"llm-incremental-pretraining"},{"source":"llm-wiki","target":"llm-wiki-karpathy-gist"},{"source":"llm-wiki","target":"llm-wiki-practice"},{"source":"long-term-memory","target":"langchain"},{"source":"long-term-memory","target":"retrieval-augmented-generation"},{"source":"long-term-memory","target":"llm-long-term-memory-dialogue"},{"source":"lora","target":"supervised-fine-tuning"},{"source":"lora","target":"transformer"},{"source":"lora","target":"parameter-efficient-finetuning"},{"source":"lora","target":"adapter-tuning"},{"source":"lora","target":"lora-series-interview"},{"source":"lora","target":"peft-interview"},{"source":"lora","target":"peft-lora-practice"},{"source":"lora","target":"adapter-tuning-interview"},{"source":"lora","target":"lora-llama2-pretraining"},{"source":"machine-learning-basics","target":"similarity-functions"},{"source":"machine-learning-basics","target":"ai-pm-intro-handbook"},{"source":"machine-learning-basics","target":"ai-empower-pm-book"},{"source":"machine-learning-basics","target":"ai-pm-interview-100q-scan"},{"source":"machine-learning-basics","target":"similarity-functions-interview"},{"source":"machine-learning-basics","target":"llm-loss-functions"},{"source":"multi-head-attention","target":"self-attention"},{"source":"multi-head-attention","target":"attention-upgrade-aigc"},{"source":"multi-head-attention","target":"transformer-interview-summary"},{"source":"multi-head-attention","target":"llm-bible-transformer-foundation"},{"source":"multimodal-rag","target":"rag-optimization-strategies"},{"source":"parameter-efficient-finetuning","target":"supervised-fine-tuning"},{"source":"parameter-efficient-finetuning","target":"foundation-model"},{"source":"parameter-efficient-finetuning","target":"peft-interview"},{"source":"parameter-efficient-finetuning","target":"lora-series-interview"},{"source":"parameter-efficient-finetuning","target":"adapter-tuning-interview"},{"source":"parameter-efficient-finetuning","target":"prompt-learning-methods"},{"source":"parameter-efficient-finetuning","target":"lora-llama2-pretraining"},{"source":"pdf-parsing","target":"table-recognition"},{"source":"pdf-parsing","target":"llm-doc-chat-pdf-parsing"},{"source":"pdf-parsing","target":"rag-experience-interview"},{"source":"pdf-parsing","target":"rag-table-recognition-interview"},{"source":"positional-encoding","target":"transformer-interview-summary"},{"source":"positional-encoding","target":"llm-bible-transformer-foundation"},{"source":"positional-encoding","target":"llm-advanced-interview"},{"source":"precision-recall","target":"data-annotation"},{"source":"precision-recall","target":"data-mining-for-ai-pm"},{"source":"precision-recall","target":"data-annotation-intro"},{"source":"precision-recall","target":"ai-pm-interview-100q-scan"},{"source":"precision-recall","target":"rag-evaluation-interview"},{"source":"precision-recall","target":"rag-optimization-strategies"},{"source":"product-evolvability","target":"user-value-formula"},{"source":"product-evolvability","target":"ai-product-evolvability"},{"source":"product-evolvability","target":"ai-pm-systematic-thinking"},{"source":"product-requirements-document","target":"from-construction-drawing-to-prd"},{"source":"prompt-compression","target":"reranking"},{"source":"prompt-compression","target":"chunking"},{"source":"prompt-compression","target":"rag-optimization-strategies"},{"source":"prompt-compression","target":"rag-pain-points-solutions"},{"source":"prompt-template","target":"llm-vector-db-dialogue-experience"},{"source":"prompt-template","target":"langchain-rag-qa-practice"},{"source":"prompt-template","target":"llm-langchain-interview"},{"source":"query-rewriting","target":"rag-fusion"},{"source":"query-rewriting","target":"rag-experience-interview"},{"source":"query-rewriting","target":"rag-optimization-strategies"},{"source":"query-rewriting","target":"rag-pain-points-solutions"},{"source":"query-rewriting","target":"llm-assisted-recall-optimization"},{"source":"query-rewriting","target":"langchain-rag-qa-practice"},{"source":"query-rewriting","target":"rag-fusion-interview"},{"source":"rag-evaluation","target":"rag-evaluation-interview"},{"source":"rag-fusion","target":"query-rewriting"},{"source":"rag-fusion","target":"reranking"},{"source":"rag-fusion","target":"rag-fusion-interview"},{"source":"rag-fusion","target":"rag-optimization-strategies"},{"source":"reasoning-models","target":"karpathy-busy-persons-intro-llms"},{"source":"reasoning-models","target":"karpathy-deep-dive-llms"},{"source":"reasoning-models","target":"karpathy-state-of-gpt"},{"source":"reasoning-models","target":"rlhf"},{"source":"requirement-description","target":"from-construction-drawing-to-prd"},{"source":"requirement-prioritization","target":"from-construction-drawing-to-prd"},{"source":"requirement-prioritization","target":"ai-pm-interview-100q-scan"},{"source":"requirement-understanding","target":"user-as-demand-set"},{"source":"requirement-understanding","target":"from-construction-drawing-to-prd"},{"source":"requirement-understanding","target":"ai-pm-core-abilities-2026"},{"source":"requirement-understanding","target":"yujun-value-formula"},{"source":"requirement-understanding","target":"yujun-critique-of-methodology"},{"source":"requirement-understanding","target":"ai-pm-interview-100q-scan"},{"source":"reranking","target":"hybrid-search"},{"source":"reranking","target":"rag-experience-interview"},{"source":"reranking","target":"rag-optimization-strategies"},{"source":"reranking","target":"rag-pain-points-solutions"},{"source":"reranking","target":"graph-rag-interview"},{"source":"retrieval-augmented-generation","target":"knowledge-compilation"},{"source":"retrieval-augmented-generation","target":"long-term-memory"},{"source":"retrieval-augmented-generation","target":"query-rewriting"},{"source":"retrieval-augmented-generation","target":"chunking"},{"source":"retrieval-augmented-generation","target":"vector-database"},{"source":"retrieval-augmented-generation","target":"reranking"},{"source":"retrieval-augmented-generation","target":"supervised-fine-tuning"},{"source":"retrieval-augmented-generation","target":"pdf-parsing"},{"source":"retrieval-augmented-generation","target":"rag-evaluation"},{"source":"retrieval-augmented-generation","target":"graph-rag"},{"source":"retrieval-augmented-generation","target":"flare"},{"source":"retrieval-augmented-generation","target":"hard-negative-mining"},{"source":"retrieval-augmented-generation","target":"rag-fusion"},{"source":"retrieval-augmented-generation","target":"from-construction-drawing-to-prd"},{"source":"retrieval-augmented-generation","target":"what-is-rag-pinecone"},{"source":"retrieval-augmented-generation","target":"llm-wiki-practice"},{"source":"retrieval-augmented-generation","target":"ai-pm-core-abilities-2026"},{"source":"retrieval-augmented-generation","target":"llm-long-term-memory-dialogue"},{"source":"retrieval-augmented-generation","target":"rag-experience-interview"},{"source":"retrieval-augmented-generation","target":"llm-doc-chat-pdf-parsing"},{"source":"retrieval-augmented-generation","target":"rag-text-chunking-interview"},{"source":"retrieval-augmented-generation","target":"rag-evaluation-interview"},{"source":"retrieval-augmented-generation","target":"rag-optimization-strategies"},{"source":"retrieval-augmented-generation","target":"rag-pain-points-solutions"},{"source":"retrieval-augmented-generation","target":"graph-rag-interview"},{"source":"retrieval-augmented-generation","target":"llm-assisted-recall-optimization"},{"source":"retrieval-augmented-generation","target":"llm-langchain-interview"},{"source":"retrieval-augmented-generation","target":"langchain-rag-qa-practice"},{"source":"retrieval-augmented-generation","target":"llm-vector-db-dialogue-experience"},{"source":"retrieval-augmented-generation","target":"rag-table-recognition-interview"},{"source":"retrieval-augmented-generation","target":"rag-hard-negative-mining"},{"source":"retrieval-augmented-generation","target":"rag-fusion-interview"},{"source":"rlhf","target":"supervised-fine-tuning"},{"source":"rlhf","target":"karpathy-deep-dive-llms"},{"source":"rlhf","target":"karpathy-state-of-gpt"},{"source":"rlhf","target":"karpathy-busy-persons-intro-llms"},{"source":"scaling-laws","target":"karpathy-busy-persons-intro-llms"},{"source":"scaling-laws","target":"karpathy-state-of-gpt"},{"source":"scaling-laws","target":"emergent-abilities"},{"source":"scaling-laws","target":"karpathy-deep-dive-llms"},{"source":"schema-behavior-contract","target":"llm-wiki-karpathy-gist"},{"source":"schema-behavior-contract","target":"llm-wiki-practice"},{"source":"self-attention","target":"attention-mechanism"},{"source":"self-attention","target":"llm-bible-transformer-foundation"},{"source":"self-attention","target":"transformer-interview-summary"},{"source":"self-attention","target":"attention-upgrade-aigc"},{"source":"self-rag","target":"flare"},{"source":"self-rag","target":"rag-optimization-strategies"},{"source":"sft-data-engineering","target":"llm-training-data-interview"},{"source":"sft-data-engineering","target":"llm-generated-sft-data"},{"source":"sft-data-engineering","target":"supervised-fine-tuning"},{"source":"similarity-functions","target":"text-embedding"},{"source":"similarity-functions","target":"similarity-functions-interview"},{"source":"software-2-0","target":"karpathy-busy-persons-intro-llms"},{"source":"software-2-0","target":"software-2-0-karpathy"},{"source":"speech-recognition","target":"speech-recognition-basics"},{"source":"speech-recognition","target":"voice-interaction-metrics"},{"source":"speech-synthesis","target":"voice-interaction-metrics"},{"source":"supervised-fine-tuning","target":"incremental-pretraining"},{"source":"supervised-fine-tuning","target":"lora"},{"source":"supervised-fine-tuning","target":"sft-data-engineering"},{"source":"supervised-fine-tuning","target":"karpathy-state-of-gpt"},{"source":"supervised-fine-tuning","target":"karpathy-deep-dive-llms"},{"source":"supervised-fine-tuning","target":"karpathy-busy-persons-intro-llms"},{"source":"supervised-fine-tuning","target":"rlhf"},{"source":"supervised-fine-tuning","target":"llm-finetuning-interview"},{"source":"supervised-fine-tuning","target":"retrieval-augmented-generation"},{"source":"supervised-fine-tuning","target":"rag-experience-interview"},{"source":"supervised-fine-tuning","target":"llm-incremental-pretraining"},{"source":"supervised-fine-tuning","target":"lora-llama2-pretraining"},{"source":"supervised-fine-tuning","target":"llm-training-data-interview"},{"source":"supervised-fine-tuning","target":"llm-generated-sft-data"},{"source":"systematic-thinking","target":"product-evolvability"},{"source":"systematic-thinking","target":"ai-pm-systematic-thinking"},{"source":"systematic-thinking","target":"ai-product-evolvability"},{"source":"table-recognition","target":"rag-table-recognition-interview"},{"source":"table-recognition","target":"pdf-parsing"},{"source":"table-recognition","target":"tabular-data-qa"},{"source":"tabular-data-qa","target":"chunking"},{"source":"tabular-data-qa","target":"multimodal-rag"},{"source":"tabular-data-qa","target":"rag-pain-points-solutions"},{"source":"technical-intuition","target":"ai-pm-core-abilities-2026"},{"source":"technical-intuition","target":"speech-recognition-basics"},{"source":"text-degeneration","target":"llm-advanced-interview"},{"source":"text-degeneration","target":"llm-inference-interview"},{"source":"text-embedding","target":"chunking"},{"source":"text-embedding","target":"similarity-functions"},{"source":"text-embedding","target":"long-term-memory"},{"source":"text-embedding","target":"knowledge-graph"},{"source":"text-embedding","target":"hybrid-search"},{"source":"text-embedding","target":"hard-negative-mining"},{"source":"text-embedding","target":"what-is-rag-pinecone"},{"source":"text-embedding","target":"similarity-functions-interview"},{"source":"text-embedding","target":"llm-long-term-memory-dialogue"},{"source":"text-embedding","target":"rag-experience-interview"},{"source":"text-embedding","target":"rag-text-chunking-interview"},{"source":"text-embedding","target":"rag-optimization-strategies"},{"source":"text-embedding","target":"rag-pain-points-solutions"},{"source":"text-embedding","target":"llm-vector-db-dialogue-experience"},{"source":"text-embedding","target":"rag-hard-negative-mining"},{"source":"text-embedding","target":"langchain-rag-qa-practice"},{"source":"tokenization","target":"karpathy-state-of-gpt"},{"source":"tokenization","target":"karpathy-deep-dive-llms"},{"source":"tool-use","target":"working-memory-in-llms"},{"source":"tool-use","target":"karpathy-busy-persons-intro-llms"},{"source":"tool-use","target":"karpathy-state-of-gpt"},{"source":"tool-use","target":"retrieval-augmented-generation"},{"source":"tool-use","target":"llm-agent"},{"source":"training-as-compression","target":"karpathy-busy-persons-intro-llms"},{"source":"training-as-compression","target":"karpathy-state-of-gpt"},{"source":"training-as-compression","target":"foundation-model"},{"source":"training-as-compression","target":"karpathy-deep-dive-llms"},{"source":"training-as-compression","target":"hallucination"},{"source":"transformer","target":"positional-encoding"},{"source":"transformer","target":"attention-mechanism"},{"source":"transformer","target":"layer-normalization"},{"source":"transformer","target":"llm-bible-transformer-foundation"},{"source":"transformer","target":"transformer-interview-summary"},{"source":"transformer","target":"attention-upgrade-aigc"},{"source":"transformer","target":"transformers-ops-aigc"},{"source":"transformer","target":"llm-basics-interview"},{"source":"transformer","target":"layer-normalization-interview"},{"source":"transformer","target":"llm-activation-functions"},{"source":"transformer","target":"llm-advanced-interview"},{"source":"user-as-demand-set","target":"requirement-understanding"},{"source":"user-as-demand-set","target":"yujun-critique-of-methodology"},{"source":"user-as-demand-set","target":"yujun-value-formula"},{"source":"user-research","target":"from-construction-drawing-to-prd"},{"source":"user-research","target":"ai-pm-interview-100q-scan"},{"source":"user-story","target":"from-construction-drawing-to-prd"},{"source":"user-value-formula","target":"yujun-value-formula"},{"source":"user-value-formula","target":"yujun-critique-of-methodology"},{"source":"vector-database","target":"chroma"},{"source":"vector-database","target":"rag-experience-interview"},{"source":"vector-database","target":"rag-text-chunking-interview"},{"source":"vector-database","target":"rag-evaluation-interview"},{"source":"vector-database","target":"langchain-rag-qa-practice"},{"source":"vector-database","target":"llm-vector-db-dialogue-experience"},{"source":"working-memory-in-llms","target":"training-as-compression"},{"source":"working-memory-in-llms","target":"karpathy-deep-dive-llms"},{"source":"working-memory-in-llms","target":"hallucination"},{"source":"working-memory-in-llms","target":"karpathy-busy-persons-intro-llms"},{"source":"working-memory-in-llms","target":"tool-use"},{"source":"working-memory-in-llms","target":"retrieval-augmented-generation"},{"source":"working-memory-in-llms","target":"karpathy-state-of-gpt"},{"source":"working-memory-in-llms","target":"long-term-memory"},{"source":"andrej-karpathy","target":"software-2-0"},{"source":"andrej-karpathy","target":"llm-wiki"},{"source":"andrej-karpathy","target":"knowledge-compilation"},{"source":"andrej-karpathy","target":"rlhf"},{"source":"andrej-karpathy","target":"reasoning-models"},{"source":"andrej-karpathy","target":"training-as-compression"},{"source":"andrej-karpathy","target":"software-2-0-karpathy"},{"source":"andrej-karpathy","target":"llm-wiki-practice"},{"source":"andrej-karpathy","target":"llm-wiki-karpathy-gist"},{"source":"andrej-karpathy","target":"karpathy-deep-dive-llms"},{"source":"andrej-karpathy","target":"karpathy-busy-persons-intro-llms"},{"source":"andrej-karpathy","target":"karpathy-state-of-gpt"},{"source":"chroma","target":"vector-database"},{"source":"chroma","target":"retrieval-augmented-generation"},{"source":"chroma","target":"text-embedding"},{"source":"chroma","target":"langchain-rag-qa-practice"},{"source":"guida","target":"construction-to-ai-pm-transition"},{"source":"guida","target":"retrieval-augmented-generation"},{"source":"guida","target":"product-requirements-document"},{"source":"langchain","target":"retrieval-augmented-generation"},{"source":"langchain","target":"chunking"},{"source":"langchain","target":"vector-database"},{"source":"langchain","target":"pdf-parsing"},{"source":"langchain","target":"llm-agent"},{"source":"langchain","target":"prompt-template"},{"source":"langchain","target":"rag-experience-interview"},{"source":"langchain","target":"rag-text-chunking-interview"},{"source":"langchain","target":"rag-evaluation-interview"},{"source":"langchain","target":"llm-doc-chat-pdf-parsing"},{"source":"langchain","target":"llm-langchain-interview"},{"source":"langchain","target":"langchain-rag-qa-practice"},{"source":"langchain","target":"llm-vector-db-dialogue-experience"},{"source":"llamaindex","target":"graph-rag"},{"source":"llamaindex","target":"retrieval-augmented-generation"},{"source":"llamaindex","target":"chunking"},{"source":"llamaindex","target":"text-embedding"},{"source":"llamaindex","target":"reranking"},{"source":"llamaindex","target":"prompt-compression"},{"source":"llamaindex","target":"query-rewriting"},{"source":"llamaindex","target":"tabular-data-qa"},{"source":"llamaindex","target":"hybrid-search"},{"source":"llamaindex","target":"rag-optimization-strategies"},{"source":"llamaindex","target":"rag-pain-points-solutions"},{"source":"llamaindex","target":"graph-rag-interview"},{"source":"pinecone","target":"text-embedding"},{"source":"pinecone","target":"retrieval-augmented-generation"},{"source":"pinecone","target":"rag-evaluation"},{"source":"pinecone","target":"what-is-rag-pinecone"},{"source":"pinecone","target":"rag-evaluation-interview"},{"source":"tencent","target":"product-requirements-document"},{"source":"tencent","target":"five-w-two-h"},{"source":"tencent","target":"from-construction-drawing-to-prd"},{"source":"yujun","target":"user-value-formula"},{"source":"yujun","target":"user-as-demand-set"},{"source":"yujun","target":"yujun-value-formula"},{"source":"yujun","target":"yujun-critique-of-methodology"},{"source":"adapter-tuning-interview","target":"adapter-tuning"},{"source":"adapter-tuning-interview","target":"parameter-efficient-finetuning"},{"source":"adapter-tuning-interview","target":"peft-interview"},{"source":"ai-empower-pm-book","target":"machine-learning-basics"},{"source":"ai-empower-pm-book","target":"ai-pm-capability-model"},{"source":"ai-empower-pm-book","target":"data-mining"},{"source":"ai-empower-pm-book","target":"data-mining-for-ai-pm"},{"source":"ai-pm-core-abilities-2026","target":"technical-intuition"},{"source":"ai-pm-core-abilities-2026","target":"ai-product-sense"},{"source":"ai-pm-core-abilities-2026","target":"ai-product-evaluation"},{"source":"ai-pm-core-abilities-2026","target":"retrieval-augmented-generation"},{"source":"ai-pm-core-abilities-2026","target":"what-is-rag-pinecone"},{"source":"ai-pm-core-abilities-2026","target":"requirement-understanding"},{"source":"ai-pm-interview-100q-scan","target":"machine-learning-basics"},{"source":"ai-pm-interview-100q-scan","target":"precision-recall"},{"source":"ai-pm-interview-100q-scan","target":"ai-pm-capability-model"},{"source":"ai-pm-interview-100q-scan","target":"ai-product-evaluation"},{"source":"ai-pm-interview-100q-scan","target":"requirement-understanding"},{"source":"ai-pm-interview-100q-scan","target":"requirement-prioritization"},{"source":"ai-pm-interview-100q-scan","target":"user-research"},{"source":"ai-pm-interview-100q-scan","target":"data-annotation"},{"source":"ai-pm-interview-guide-scan","target":"ai-pm-interview-100q-scan"},{"source":"ai-pm-intro-handbook","target":"ai-industry-structure"},{"source":"ai-pm-intro-handbook","target":"ai-pm-capability-model"},{"source":"ai-pm-intro-handbook","target":"machine-learning-basics"},{"source":"ai-pm-intro-handbook","target":"foundation-model"},{"source":"ai-pm-intro-handbook","target":"yujun-critique-of-methodology"},{"source":"ai-pm-systematic-thinking","target":"systematic-thinking"},{"source":"ai-pm-systematic-thinking","target":"product-evolvability"},{"source":"ai-product-evolvability","target":"product-evolvability"},{"source":"ai-product-evolvability","target":"systematic-thinking"},{"source":"attention-upgrade-aigc","target":"attention-mechanism"},{"source":"attention-upgrade-aigc","target":"multi-head-attention"},{"source":"attention-upgrade-aigc","target":"transformer-interview-summary"},{"source":"data-annotation-intro","target":"data-annotation"},{"source":"data-annotation-intro","target":"precision-recall"},{"source":"data-mining-for-ai-pm","target":"data-mining"},{"source":"data-mining-for-ai-pm","target":"precision-recall"},{"source":"from-construction-drawing-to-prd","target":"product-requirements-document"},{"source":"from-construction-drawing-to-prd","target":"requirement-understanding"},{"source":"from-construction-drawing-to-prd","target":"requirement-description"},{"source":"from-construction-drawing-to-prd","target":"user-story"},{"source":"from-construction-drawing-to-prd","target":"acceptance-criteria"},{"source":"from-construction-drawing-to-prd","target":"user-research"},{"source":"from-construction-drawing-to-prd","target":"requirement-prioritization"},{"source":"from-construction-drawing-to-prd","target":"five-w-two-h"},{"source":"from-construction-drawing-to-prd","target":"retrieval-augmented-generation"},{"source":"from-construction-drawing-to-prd","target":"hallucination"},{"source":"from-construction-drawing-to-prd","target":"tencent"},{"source":"graph-rag-interview","target":"graph-rag"},{"source":"graph-rag-interview","target":"knowledge-graph"},{"source":"graph-rag-interview","target":"hallucination"},{"source":"graph-rag-interview","target":"reranking"},{"source":"graph-rag-interview","target":"llamaindex"},{"source":"graph-rag-interview","target":"what-is-rag-pinecone"},{"source":"karpathy-busy-persons-intro-llms","target":"llm-evaluation"},{"source":"karpathy-busy-persons-intro-llms","target":"llm-inference"},{"source":"karpathy-busy-persons-intro-llms","target":"training-as-compression"},{"source":"karpathy-busy-persons-intro-llms","target":"supervised-fine-tuning"},{"source":"karpathy-busy-persons-intro-llms","target":"rlhf"},{"source":"karpathy-busy-persons-intro-llms","target":"scaling-laws"},{"source":"karpathy-busy-persons-intro-llms","target":"tool-use"},{"source":"karpathy-busy-persons-intro-llms","target":"llm-security"},{"source":"karpathy-busy-persons-intro-llms","target":"reasoning-models"},{"source":"karpathy-busy-persons-intro-llms","target":"software-2-0"},{"source":"karpathy-busy-persons-intro-llms","target":"hallucination"},{"source":"karpathy-busy-persons-intro-llms","target":"andrej-karpathy"},{"source":"karpathy-busy-persons-intro-llms","target":"karpathy-deep-dive-llms"},{"source":"karpathy-busy-persons-intro-llms","target":"karpathy-state-of-gpt"},{"source":"karpathy-deep-dive-llms","target":"tokenization"},{"source":"karpathy-deep-dive-llms","target":"llm-training-engineering"},{"source":"karpathy-deep-dive-llms","target":"supervised-fine-tuning"},{"source":"karpathy-deep-dive-llms","target":"rlhf"},{"source":"karpathy-deep-dive-llms","target":"reasoning-models"},{"source":"karpathy-deep-dive-llms","target":"working-memory-in-llms"},{"source":"karpathy-deep-dive-llms","target":"hallucination"},{"source":"karpathy-deep-dive-llms","target":"llm-inference"},{"source":"karpathy-deep-dive-llms","target":"emergent-abilities"},{"source":"karpathy-deep-dive-llms","target":"foundation-model"},{"source":"karpathy-deep-dive-llms","target":"training-as-compression"},{"source":"karpathy-deep-dive-llms","target":"andrej-karpathy"},{"source":"karpathy-deep-dive-llms","target":"karpathy-state-of-gpt"},{"source":"karpathy-state-of-gpt","target":"llm-training-engineering"},{"source":"karpathy-state-of-gpt","target":"foundation-model"},{"source":"karpathy-state-of-gpt","target":"tokenization"},{"source":"karpathy-state-of-gpt","target":"supervised-fine-tuning"},{"source":"karpathy-state-of-gpt","target":"rlhf"},{"source":"karpathy-state-of-gpt","target":"tool-use"},{"source":"karpathy-state-of-gpt","target":"reasoning-models"},{"source":"karpathy-state-of-gpt","target":"parameter-efficient-finetuning"},{"source":"karpathy-state-of-gpt","target":"lora"},{"source":"karpathy-state-of-gpt","target":"llm-agent"},{"source":"karpathy-state-of-gpt","target":"hallucination"},{"source":"karpathy-state-of-gpt","target":"working-memory-in-llms"},{"source":"karpathy-state-of-gpt","target":"andrej-karpathy"},{"source":"karpathy-state-of-gpt","target":"llamaindex"},{"source":"karpathy-state-of-gpt","target":"karpathy-deep-dive-llms"},{"source":"karpathy-state-of-gpt","target":"karpathy-busy-persons-intro-llms"},{"source":"langchain-rag-qa-practice","target":"retrieval-augmented-generation"},{"source":"langchain-rag-qa-practice","target":"chunking"},{"source":"langchain-rag-qa-practice","target":"text-embedding"},{"source":"langchain-rag-qa-practice","target":"vector-database"},{"source":"langchain-rag-qa-practice","target":"query-rewriting"},{"source":"langchain-rag-qa-practice","target":"prompt-template"},{"source":"langchain-rag-qa-practice","target":"langchain"},{"source":"langchain-rag-qa-practice","target":"chroma"},{"source":"layer-normalization-interview","target":"layer-normalization"},{"source":"layer-normalization-interview","target":"transformer"},{"source":"llm-activation-functions","target":"transformer"},{"source":"llm-advanced-interview","target":"text-degeneration"},{"source":"llm-advanced-interview","target":"foundation-model"},{"source":"llm-advanced-interview","target":"transformer"},{"source":"llm-advanced-interview","target":"positional-encoding"},{"source":"llm-assisted-recall-optimization","target":"retrieval-augmented-generation"},{"source":"llm-assisted-recall-optimization","target":"query-rewriting"},{"source":"llm-assisted-recall-optimization","target":"flare"},{"source":"llm-assisted-recall-optimization","target":"what-is-rag-pinecone"},{"source":"llm-basics-interview","target":"foundation-model"},{"source":"llm-basics-interview","target":"transformer"},{"source":"llm-basics-interview","target":"emergent-abilities"},{"source":"llm-bible-transformer-foundation","target":"attention-mechanism"},{"source":"llm-bible-transformer-foundation","target":"self-attention"},{"source":"llm-bible-transformer-foundation","target":"multi-head-attention"},{"source":"llm-bible-transformer-foundation","target":"positional-encoding"},{"source":"llm-bible-transformer-foundation","target":"transformer"},{"source":"llm-bible-transformer-foundation","target":"transformer-interview-summary"},{"source":"llm-course-2026-index","target":"ai-pm-capability-model"},{"source":"llm-course-2026-index","target":"retrieval-augmented-generation"},{"source":"llm-course-2026-index","target":"foundation-model"},{"source":"llm-doc-chat-pdf-parsing","target":"pdf-parsing"},{"source":"llm-doc-chat-pdf-parsing","target":"chunking"},{"source":"llm-doc-chat-pdf-parsing","target":"retrieval-augmented-generation"},{"source":"llm-doc-chat-pdf-parsing","target":"langchain"},{"source":"llm-evaluation-interview","target":"llm-evaluation"},{"source":"llm-finetuning-interview","target":"supervised-fine-tuning"},{"source":"llm-finetuning-interview","target":"incremental-pretraining"},{"source":"llm-finetuning-interview","target":"llm-training-engineering"},{"source":"llm-finetuning-interview","target":"parameter-efficient-finetuning"},{"source":"llm-generated-sft-data","target":"sft-data-engineering"},{"source":"llm-generated-sft-data","target":"supervised-fine-tuning"},{"source":"llm-incremental-pretraining","target":"incremental-pretraining"},{"source":"llm-incremental-pretraining","target":"llm-training-engineering"},{"source":"llm-incremental-pretraining","target":"supervised-fine-tuning"},{"source":"llm-inference-interview","target":"llm-inference"},{"source":"llm-inference-interview","target":"text-degeneration"},{"source":"llm-inference-interview","target":"lora"},{"source":"llm-langchain-interview","target":"llm-agent"},{"source":"llm-langchain-interview","target":"prompt-template"},{"source":"llm-langchain-interview","target":"retrieval-augmented-generation"},{"source":"llm-langchain-interview","target":"text-embedding"},{"source":"llm-langchain-interview","target":"vector-database"},{"source":"llm-langchain-interview","target":"langchain"},{"source":"llm-langchain-interview","target":"llamaindex"},{"source":"llm-long-term-memory-dialogue","target":"long-term-memory"},{"source":"llm-long-term-memory-dialogue","target":"retrieval-augmented-generation"},{"source":"llm-long-term-memory-dialogue","target":"text-embedding"},{"source":"llm-long-term-memory-dialogue","target":"langchain"},{"source":"llm-loss-functions","target":"machine-learning-basics"},{"source":"llm-training-data-interview","target":"sft-data-engineering"},{"source":"llm-training-data-interview","target":"supervised-fine-tuning"},{"source":"llm-training-experience","target":"llm-training-engineering"},{"source":"llm-vector-db-dialogue-experience","target":"retrieval-augmented-generation"},{"source":"llm-vector-db-dialogue-experience","target":"chunking"},{"source":"llm-vector-db-dialogue-experience","target":"text-embedding"},{"source":"llm-vector-db-dialogue-experience","target":"hallucination"},{"source":"llm-vector-db-dialogue-experience","target":"prompt-template"},{"source":"llm-vector-db-dialogue-experience","target":"vector-database"},{"source":"llm-vector-db-dialogue-experience","target":"langchain"},{"source":"llm-wiki-karpathy-gist","target":"llm-wiki-practice"},{"source":"llm-wiki-karpathy-gist","target":"llm-wiki"},{"source":"llm-wiki-karpathy-gist","target":"knowledge-compilation"},{"source":"llm-wiki-karpathy-gist","target":"schema-behavior-contract"},{"source":"llm-wiki-karpathy-gist","target":"retrieval-augmented-generation"},{"source":"llm-wiki-karpathy-gist","target":"andrej-karpathy"},{"source":"llm-wiki-practice","target":"llm-wiki"},{"source":"llm-wiki-practice","target":"knowledge-compilation"},{"source":"llm-wiki-practice","target":"schema-behavior-contract"},{"source":"llm-wiki-practice","target":"retrieval-augmented-generation"},{"source":"llm-wiki-practice","target":"andrej-karpathy"},{"source":"llm-wiki-practice","target":"what-is-rag-pinecone"},{"source":"lora-llama2-pretraining","target":"lora"},{"source":"lora-llama2-pretraining","target":"incremental-pretraining"},{"source":"lora-llama2-pretraining","target":"parameter-efficient-finetuning"},{"source":"lora-series-interview","target":"lora"},{"source":"lora-series-interview","target":"parameter-efficient-finetuning"},{"source":"lora-series-interview","target":"transformer"},{"source":"lora-series-interview","target":"peft-interview"},{"source":"peft-interview","target":"parameter-efficient-finetuning"},{"source":"peft-interview","target":"lora"},{"source":"peft-interview","target":"adapter-tuning"},{"source":"peft-interview","target":"foundation-model"},{"source":"peft-interview","target":"lora-series-interview"},{"source":"peft-lora-practice","target":"lora"},{"source":"peft-lora-practice","target":"parameter-efficient-finetuning"},{"source":"peft-lora-practice","target":"lora-series-interview"},{"source":"pretrain-sample-concatenation","target":"incremental-pretraining"},{"source":"prompt-learning-methods","target":"parameter-efficient-finetuning"},{"source":"rag-evaluation-interview","target":"rag-evaluation"},{"source":"rag-evaluation-interview","target":"precision-recall"},{"source":"rag-evaluation-interview","target":"retrieval-augmented-generation"},{"source":"rag-evaluation-interview","target":"vector-database"},{"source":"rag-evaluation-interview","target":"langchain"},{"source":"rag-evaluation-interview","target":"pinecone"},{"source":"rag-experience-interview","target":"retrieval-augmented-generation"},{"source":"rag-experience-interview","target":"chunking"},{"source":"rag-experience-interview","target":"text-embedding"},{"source":"rag-experience-interview","target":"hallucination"},{"source":"rag-experience-interview","target":"query-rewriting"},{"source":"rag-experience-interview","target":"reranking"},{"source":"rag-experience-interview","target":"vector-database"},{"source":"rag-experience-interview","target":"supervised-fine-tuning"},{"source":"rag-experience-interview","target":"pdf-parsing"},{"source":"rag-experience-interview","target":"langchain"},{"source":"rag-fusion-interview","target":"rag-fusion"},{"source":"rag-fusion-interview","target":"query-rewriting"},{"source":"rag-fusion-interview","target":"retrieval-augmented-generation"},{"source":"rag-fusion-interview","target":"hybrid-search"},{"source":"rag-fusion-interview","target":"rag-optimization-strategies"},{"source":"rag-hard-negative-mining","target":"hard-negative-mining"},{"source":"rag-hard-negative-mining","target":"text-embedding"},{"source":"rag-hard-negative-mining","target":"retrieval-augmented-generation"},{"source":"rag-optimization-strategies","target":"retrieval-augmented-generation"},{"source":"rag-optimization-strategies","target":"chunking"},{"source":"rag-optimization-strategies","target":"text-embedding"},{"source":"rag-optimization-strategies","target":"hybrid-search"},{"source":"rag-optimization-strategies","target":"reranking"},{"source":"rag-optimization-strategies","target":"query-rewriting"},{"source":"rag-optimization-strategies","target":"self-rag"},{"source":"rag-optimization-strategies","target":"rag-fusion"},{"source":"rag-optimization-strategies","target":"prompt-compression"},{"source":"rag-optimization-strategies","target":"knowledge-graph"},{"source":"rag-optimization-strategies","target":"multimodal-rag"},{"source":"rag-optimization-strategies","target":"precision-recall"},{"source":"rag-optimization-strategies","target":"llamaindex"},{"source":"rag-optimization-strategies","target":"llm-wiki-practice"},{"source":"rag-pain-points-solutions","target":"retrieval-augmented-generation"},{"source":"rag-pain-points-solutions","target":"hallucination"},{"source":"rag-pain-points-solutions","target":"chunking"},{"source":"rag-pain-points-solutions","target":"hybrid-search"},{"source":"rag-pain-points-solutions","target":"reranking"},{"source":"rag-pain-points-solutions","target":"query-rewriting"},{"source":"rag-pain-points-solutions","target":"prompt-compression"},{"source":"rag-pain-points-solutions","target":"tabular-data-qa"},{"source":"rag-pain-points-solutions","target":"llamaindex"},{"source":"rag-pain-points-solutions","target":"what-is-rag-pinecone"},{"source":"rag-table-recognition-interview","target":"table-recognition"},{"source":"rag-table-recognition-interview","target":"pdf-parsing"},{"source":"rag-table-recognition-interview","target":"retrieval-augmented-generation"},{"source":"rag-text-chunking-interview","target":"chunking"},{"source":"rag-text-chunking-interview","target":"text-embedding"},{"source":"rag-text-chunking-interview","target":"vector-database"},{"source":"rag-text-chunking-interview","target":"retrieval-augmented-generation"},{"source":"rag-text-chunking-interview","target":"langchain"},{"source":"similarity-functions-interview","target":"similarity-functions"},{"source":"similarity-functions-interview","target":"text-embedding"},{"source":"similarity-functions-interview","target":"machine-learning-basics"},{"source":"software-2-0-karpathy","target":"software-2-0"},{"source":"software-2-0-karpathy","target":"andrej-karpathy"},{"source":"software-2-0-karpathy","target":"from-construction-drawing-to-prd"},{"source":"speech-recognition-basics","target":"speech-recognition"},{"source":"speech-recognition-basics","target":"technical-intuition"},{"source":"speech-recognition-basics","target":"voice-interaction-metrics"},{"source":"transformer-interview-summary","target":"attention-mechanism"},{"source":"transformer-interview-summary","target":"self-attention"},{"source":"transformer-interview-summary","target":"multi-head-attention"},{"source":"transformer-interview-summary","target":"positional-encoding"},{"source":"transformer-interview-summary","target":"transformer"},{"source":"transformer-interview-summary","target":"llm-bible-transformer-foundation"},{"source":"transformers-ops-aigc","target":"transformer"},{"source":"voice-interaction-metrics","target":"speech-recognition"},{"source":"voice-interaction-metrics","target":"speech-synthesis"},{"source":"voice-interaction-metrics","target":"dialogue-system-metrics"},{"source":"voice-interaction-metrics","target":"ai-product-evaluation"},{"source":"voice-interaction-metrics","target":"speech-recognition-basics"},{"source":"what-is-rag-pinecone","target":"retrieval-augmented-generation"},{"source":"what-is-rag-pinecone","target":"hallucination"},{"source":"what-is-rag-pinecone","target":"foundation-model"},{"source":"what-is-rag-pinecone","target":"text-embedding"},{"source":"what-is-rag-pinecone","target":"chunking"},{"source":"what-is-rag-pinecone","target":"pinecone"},{"source":"what-is-rag-pinecone","target":"from-construction-drawing-to-prd"},{"source":"what-is-rag-pinecone","target":"software-2-0-karpathy"},{"source":"yujun-critique-of-methodology","target":"user-value-formula"},{"source":"yujun-critique-of-methodology","target":"user-as-demand-set"},{"source":"yujun-critique-of-methodology","target":"yujun"},{"source":"yujun-critique-of-methodology","target":"yujun-value-formula"},{"source":"yujun-value-formula","target":"user-value-formula"},{"source":"yujun-value-formula","target":"user-as-demand-set"},{"source":"yujun-value-formula","target":"yujun"},{"source":"yujun-value-formula","target":"yujun-critique-of-methodology"}]};
+
+const TYPE_META = {
+  concept:  { label: '概念', color: '#4c8dff' },
+  entity:   { label: '实体', color: '#3fbf8f' },
+  source:   { label: '来源', color: '#8b93a1' },
+  synthesis:{ label: '综合', color: '#e8b64c' },
+};
+const CONF_COLOR = { high: '#4c8dff', medium: '#7aa7e8', low: '#a3bce0' };
+// 类型分层：概念居中，实体在上，来源在下，综合在顶（z 弱力拉回本层）
+const LAYER_Z = { concept: 0, entity: 95, source: -115, synthesis: 190 };
+const WIKI_BASE = '';
+const FILE_BASE = '';
+const VSCODE_BASE = '';
+
+// ---- 预计算：度数 / 邻居 / 重要度 ----
+const degreeOf = {};
+GRAPH_DATA.nodes.forEach(n => degreeOf[n.id] = 0);
+GRAPH_DATA.links.forEach(l => { degreeOf[l.source]++; degreeOf[l.target]++; });
+const neighborsOf = {};
+GRAPH_DATA.nodes.forEach(n => neighborsOf[n.id] = []);
+GRAPH_DATA.links.forEach(l => {
+  neighborsOf[l.source].push(l.target);
+  neighborsOf[l.target].push(l.source);
+});
+// 重要度：决定标签遮挡时谁留下、详情里相关节点排序
+const importance = n => {
+  let v = degreeOf[n.id] * 2;
+  if (n.type === 'concept') {
+    v += (n.source_count || 0) * 3;
+    if (n.confidence === 'high') v += 6;
+    if (n.confidence === 'medium') v += 3;
+  }
+  return v;
+};
+
+// ---- 统计 ----
+const linkedIds = new Set();
+GRAPH_DATA.links.forEach(l => { linkedIds.add(l.source); linkedIds.add(l.target); });
+const isolated = GRAPH_DATA.nodes.filter(n => !linkedIds.has(n.id)).length;
+const byType = {};
+GRAPH_DATA.nodes.forEach(n => byType[n.type] = (byType[n.type] || 0) + 1);
+document.getElementById('stats').innerHTML =
+  '共 <b>' + GRAPH_DATA.nodes.length + '</b> 个节点（' +
+  (byType.concept||0) + ' 概念 / ' + (byType.entity||0) + ' 实体 / ' +
+  (byType.source||0) + ' 来源 / ' + (byType.synthesis||0) + ' 综合）<br>' +
+  '链接 <b>' + GRAPH_DATA.links.length + '</b> 条 · 孤立节点 <b>' + isolated + '</b> 个';
+document.getElementById('gen-date').textContent =
+  '生成于 ' + new Date().toLocaleDateString('zh-CN');
+
+// ---- 辅助：节点半径 / 标签颜色 / 文字 sprite ----
+const nodeRadius = d => {
+  if (d.type === 'concept') return 1.5 + (d.source_count || 0) * 0.9;
+  if (d.type === 'source') return d.possibly_outdated ? 2 : 2.5;
+  return 4;
+};
+const labelColor = d => {
+  if (d.type === 'concept') return '#c7d7f2';
+  if (d.type === 'entity') return '#bfe8d8';
+  if (d.type === 'source') return '#c3c9d4';
+  return '#f0ddb8';
+};
+const SPRITE_H = 4.5; // 标签世界单位高度
+function makeTextSprite(text, color) {
+  const canvas = document.createElement('canvas');
+  const fontPx = 34;
+  const c2d = canvas.getContext('2d');
+  c2d.font = '600 ' + fontPx + 'px "Microsoft YaHei", sans-serif';
+  const w = c2d.measureText(text).width;
+  const pad = 10;
+  canvas.width = Math.ceil(w) + pad * 2;
+  canvas.height = fontPx + pad * 2;
+  c2d.font = '600 ' + fontPx + 'px "Microsoft YaHei", sans-serif';
+  c2d.fillStyle = color;
+  c2d.textAlign = 'center';
+  c2d.textBaseline = 'middle';
+  c2d.fillText(text, canvas.width / 2, canvas.height / 2 + 2);
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: new THREE.CanvasTexture(canvas),
+    depthWrite: false, transparent: true,
+  }));
+  sprite.scale.set(canvas.width / canvas.height * SPRITE_H, SPRITE_H, 1);
+  return sprite;
+}
+// 标签注册表：id -> {node, sprite, ratio}，供遮挡检测
+const labelSprites = new Map();
+function labelFor(d) {
+  const s = makeTextSprite(d.label, labelColor(d));
+  s.position.y = nodeRadius(d) + 5.5; // 悬在球体上方
+  s.userData.node = d;
+  labelSprites.set(d.id, { node: d, sprite: s, ratio: s.scale.x / s.scale.y });
+  return s;
+}
+
+// ---- 高亮：hover 临时 / 点击持久，共用同一逻辑 ----
+// 3d-force-graph 无 highlightNodes/highlightLinks API；用颜色访问器 + 重设刷新实现
+let selected = null;
+let hovered = null;
+let hlNodes = new Set();
+let hlLinks = new Set();
+function lid(x) { return (x && typeof x === 'object') ? x.id : x; } // 库会把 source/target 改写成节点对象
+function applyHl(nodesSet, linksSet) {
+  hlNodes = nodesSet;
+  hlLinks = linksSet;
+  Graph.nodeColor(Graph.nodeColor());
+  Graph.linkColor(Graph.linkColor());
+}
+function setHighlight(node) {
+  if (!node) { applyHl(new Set(), new Set()); return; }
+  const nb = new Set(neighborsOf[node.id] || []);
+  nb.add(node.id);
+  applyHl(nb, new Set(GRAPH_DATA.links
+    .filter(l => lid(l.source) === node.id || lid(l.target) === node.id)));
+}
+
+// ---- 布局：分层弱力 + 向心力 + 更散的间距 ----
+let flat2D = false;
+const layoutForce = alpha => {
+  for (const n of GRAPH_DATA.nodes) {
+    const zTarget = flat2D ? 0 : LAYER_Z[n.type];
+    n.vz += (zTarget - n.z) * alpha * 0.32;
+    n.vx += (0 - n.x) * alpha * 0.006;
+    n.vy += (0 - n.y) * alpha * 0.006;
+  }
+};
+
+// ---- 图谱 ----
+let showLabels = true;
+const Graph = ForceGraph3D()(document.getElementById('graph'))
+  .backgroundColor('#0e1116')
+  .graphData(GRAPH_DATA)
+  .nodeVal(nodeRadius)
+  .nodeColor(d => {
+    if (hlNodes.size && !hlNodes.has(d.id)) return '#333b49';
+    if (d.type === 'concept') return CONF_COLOR[d.confidence] || CONF_COLOR.low;
+    if (d.type === 'source' && d.possibly_outdated) return '#5b616d';
+    return TYPE_META[d.type].color;
+  })
+  .nodeLabel(d => d.label + '（' + TYPE_META[d.type].label + '）')
+  .nodeThreeObject(d => showLabels ? labelFor(d) : null)
+  .nodeResolution(16)
+  .linkColor(l => (hlNodes.size && !hlLinks.has(l)) ? 'rgba(125,145,180,0.05)' : 'rgba(125,145,180,0.22)')
+  .linkWidth(0.6)
+  .linkOpacity(0.5)
+  .onNodeHover(node => {
+    document.getElementById('graph').style.cursor = node ? 'pointer' : 'default';
+    hovered = node;
+    setHighlight(node || selected); // 移出后恢复点击态高亮
+  })
+  .onNodeClick(node => selectNode(node))
+  .onBackgroundClick(() => selectNode(null));
+
+// 力导向参数：d3Force(name) 返回 force 对象而非图对象，必须独立调用
+Graph.d3Force('charge').strength(-130);
+Graph.d3Force('link').distance(90);
+Graph.d3Force('layoutForce', layoutForce);
+
+// 锁定模式：OrbitControls 只缩放/平移，不旋转
+const controls = Graph.controls();
+controls.enableRotate = false;
+controls.autoRotate = false;
+
+// ---- 统一选中：高亮 + 详情 + 聚焦 ----
+function selectNode(node) {
+  selected = node;
+  setHighlight(node);
+  showDetail(node);
+  if (node) focusNode(node);
+}
+
+// ---- 标签遮挡检测：屏幕投影 + 贪心保留重要标签 ----
+let tickCount = 0;
+function occlusionPass() {
+  if (!showLabels) return;
+  const items = [...labelSprites.values()];
+  items.sort((a, b) => importance(b.node) - importance(a.node));
+  const kept = [];
+  for (const it of items) {
+    const box = screenBox(it);
+    const pinned = it.node === selected || it.node === hovered;
+    if (!box) { it.sprite.visible = false; continue; }
+    const overlap = kept.some(k => boxesOverlap(k, box));
+    it.sprite.visible = pinned || !overlap;
+    if (it.sprite.visible) kept.push(box);
+  }
+}
+function screenBox(it) {
+  const n = it.node;
+  const anchor = Graph.graph2ScreenCoords(n.x, n.y + nodeRadius(n) + 5.5, n.z);
+  const top = Graph.graph2ScreenCoords(n.x, n.y + nodeRadius(n) + 5.5 + SPRITE_H, n.z);
+  if (!anchor || !top) return null;
+  const h = Math.abs(top.y - anchor.y);
+  const w = h * it.ratio;
+  return { x: anchor.x - w / 2, y: anchor.y - h, w, h };
+}
+function boxesOverlap(a, b) {
+  const pad = 6;
+  return a.x < b.x + b.w + pad && a.x + a.w + pad > b.x &&
+         a.y < b.y + b.h + pad && a.y + a.h + pad > b.y;
+}
+Graph.onEngineTick(() => {
+  if (++tickCount % 5 === 0) occlusionPass(); // 每 5 帧一次避让检测
+});
+
+// ---- 标签开关 ----
+document.getElementById('showLabels').addEventListener('change', e => {
+  showLabels = e.target.checked;
+  if (!showLabels) labelSprites.clear();
+  Graph.nodeThreeObject(d => showLabels ? labelFor(d) : null);
+});
+
+// ---- 自动旋转 ----
+document.getElementById('autoRotate').addEventListener('change', e => {
+  controls.autoRotate = e.target.checked && viewMode === 'free';
+});
+
+// ---- 视角模式：锁定 / 旋转 / 俯视 / 复位 ----
+let viewMode = 'lock';
+function setMode(mode) {
+  viewMode = mode;
+  if (mode === 'top') {
+    flat2D = true;
+    controls.enableRotate = false;
+    controls.autoRotate = false;
+    document.getElementById('autoRotate').checked = false;
+    setTimeout(() => { // 等 z 力把图压平后，从正上方适配
+      Graph.zoomToFit(400, 30);
+      const dist = Graph.camera().position.length();
+      Graph.cameraPosition({ x: 0, y: 0, z: dist }, { x: 0, y: 0, z: 0 }, 500);
+    }, 350);
+  } else {
+    flat2D = false;
+    controls.enableRotate = mode === 'free';
+    controls.autoRotate = mode === 'free' && document.getElementById('autoRotate').checked;
+  }
+  ['mLock','mFree','mTop'].forEach(id => {
+    document.getElementById(id).classList.toggle('active', id === 'm' + mode[0].toUpperCase() + mode.slice(1));
+  });
+  if (mode === 'top') { // 俯视时相机从上方看
+    setTimeout(() => Graph.zoomToFit(400, 30), 400);
+  }
+}
+document.getElementById('mLock').onclick = () => setMode('lock');
+document.getElementById('mFree').onclick = () => setMode('free');
+document.getElementById('mTop').onclick = () => setMode('top');
+document.getElementById('mReset').onclick = () => {
+  flat2D = false;
+  controls.enableRotate = false;
+  controls.autoRotate = false;
+  document.getElementById('autoRotate').checked = false;
+  viewMode = 'lock';
+  ['mLock','mFree','mTop'].forEach(id => {
+    document.getElementById(id).classList.toggle('active', id === 'mLock');
+  });
+  Graph.zoomToFit(400, 60);
+};
+
+// ---- 图谱 / 列表视图切换 ----
+function switchView(v) {
+  const isList = v === 'list';
+  document.getElementById('graph').style.display = isList ? 'none' : '';
+  document.getElementById('listPanel').classList.toggle('open', isList);
+  document.getElementById('vGraph').classList.toggle('active', !isList);
+  document.getElementById('vList').classList.toggle('active', isList);
+  if (isList) renderList();
+}
+document.getElementById('vGraph').onclick = () => switchView('graph');
+document.getElementById('vList').onclick = () => switchView('list');
+
+// ---- 列表视图：按类型分组，点击直达节点 ----
+const GROUP_ORDER = ['concept', 'entity', 'synthesis', 'source'];
+function renderList() {
+  const groups = { concept: [], entity: [], source: [], synthesis: [] };
+  GRAPH_DATA.nodes.forEach(n => groups[n.type].push(n));
+  groups.concept.sort((a, b) => importance(b) - importance(a));
+  ['entity','source','synthesis'].forEach(t =>
+    groups[t].sort((a, b) => a.label.localeCompare(b.label, 'zh')));
+  document.getElementById('listPanel').innerHTML = GROUP_ORDER.map(t => {
+    const list = groups[t];
+    if (!list.length) return '';
+    return '<div class="lgroup"><h2><span class="dot" style="background:' +
+      TYPE_META[t].color + '"></span>' + TYPE_META[t].label +
+      '<span class="cnt">· ' + list.length + '</span></h2><div class="lcards">' +
+      list.map(n => {
+        let badge = '';
+        if (n.type === 'concept' && n.confidence) {
+          badge = '<span class="lbadge ' + n.confidence + '">' + n.confidence + '</span>';
+        }
+        if (n.possibly_outdated) badge += '<span class="lbadge old">可能过时</span>';
+        return '<div class="lcard" onclick="selectNodeById(\'' + n.id + '\')">' +
+          '<div class="ltop"><span class="dot" style="background:' +
+          (n.type === 'concept' ? (CONF_COLOR[n.confidence] || CONF_COLOR.low) :
+           (n.type === 'source' && n.possibly_outdated ? '#5b616d' : TYPE_META[n.type].color)) +
+          ';flex-shrink:0"></span><span class="lname">' + escapeHtml(n.label) +
+          '</span>' + badge + '</div>' +
+          (n.summary ? '<div class="lsum">' + escapeHtml(n.summary) + '</div>' : '') + '</div>';
+      }).join('') + '</div></div>';
+  }).join('');
+}
+const nodeById = {};
+GRAPH_DATA.nodes.forEach(n => nodeById[n.id] = n);
+function selectNodeById(id) {
+  const n = nodeById[id];
+  if (!n) return;
+  switchView('graph');
+  selectNode(n);
+}
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ---- 搜索：即时建议下拉 ----
+const searchBox = document.getElementById('search');
+const suggestBox = document.getElementById('suggest');
+let suggestSel = -1;
+function searchHits(q) {
+  q = q.toLowerCase();
+  return GRAPH_DATA.nodes.filter(n =>
+    n.id.toLowerCase().includes(q) ||
+    n.label.toLowerCase().includes(q) ||
+    (n.aliases || []).some(a => a.toLowerCase().includes(q)) ||
+    (n.tags || []).some(t => t.toLowerCase().includes(q))
+  ).sort((a, b) => importance(b) - importance(a)).slice(0, 8);
+}
+let composing = false;
+searchBox.addEventListener('compositionstart', () => composing = true);
+searchBox.addEventListener('compositionend', () => { composing = false; onSearchInput(); });
+function onSearchInput() {
+  if (composing) return;
+  const q = searchBox.value.trim();
+  suggestSel = -1;
+  if (!q) {
+    suggestBox.classList.remove('open');
+    applyHl(new Set(), new Set());
+    return;
+  }
+  const hits = searchHits(q);
+  suggestBox.innerHTML = hits.map((n, i) =>
+    '<div class="suggest-item" data-id="' + n.id + '" data-i="' + i + '">' +
+    '<span class="dot" style="background:' +
+    (n.type === 'concept' ? (CONF_COLOR[n.confidence] || CONF_COLOR.low) :
+     (n.type === 'source' && n.possibly_outdated ? '#5b616d' : TYPE_META[n.type].color)) +
+    '"></span><span>' + escapeHtml(n.label) +
+    '</span><span class="stype">' + TYPE_META[n.type].label + '</span></div>'
+  ).join('') || '<div class="suggest-item">无匹配</div>';
+  suggestBox.classList.add('open');
+  // 图谱上同时高亮命中
+  const ids = new Set(hits.map(n => n.id));
+  applyHl(ids, new Set(GRAPH_DATA.links.filter(l =>
+    ids.has(lid(l.source)) && ids.has(lid(l.target)))));
+}
+searchBox.addEventListener('input', onSearchInput);
+suggestBox.addEventListener('click', e => {
+  const item = e.target.closest('.suggest-item');
+  if (!item || !item.dataset.id) return;
+  searchBox.value = '';
+  suggestBox.classList.remove('open');
+  selectNode(nodeById[item.dataset.id]);
+});
+searchBox.addEventListener('keydown', e => {
+  const items = [...suggestBox.querySelectorAll('.suggest-item[data-id]')];
+  if (!items.length) return;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    suggestSel = e.key === 'ArrowDown'
+      ? Math.min(suggestSel + 1, items.length - 1)
+      : Math.max(suggestSel - 1, 0);
+    items.forEach((el, i) => el.classList.toggle('sel', i === suggestSel));
+  } else if (e.key === 'Enter' && suggestSel >= 0) {
+    e.preventDefault();
+    items[suggestSel].click();
+  } else if (e.key === 'Escape') {
+    suggestBox.classList.remove('open');
+  }
+});
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap')) suggestBox.classList.remove('open');
+});
+
+// ---- 类型筛选 ----
+const visible = new Set(Object.keys(TYPE_META));
+const filtersBox = document.getElementById('filters');
+Object.entries(TYPE_META).forEach(([type, meta]) => {
+  const chip = document.createElement('span');
+  chip.className = 'filter-chip';
+  chip.innerHTML = '<span class="dot" style="background:' + meta.color + '"></span>' + meta.label;
+  chip.onclick = () => {
+    visible.has(type) ? visible.delete(type) : visible.add(type);
+    chip.classList.toggle('off', !visible.has(type));
+    Graph.nodeVisibility(d => visible.has(d.type));
+  };
+  filtersBox.appendChild(chip);
+});
+Graph.nodeVisibility(d => visible.has(d.type));
+
+// ---- 节点详情 ----
+function showDetail(node) {
+  const box = document.getElementById('detail');
+  if (!node) {
+    box.innerHTML = '<div class="empty">点击图谱或列表中的节点查看详情。滚轮缩放 · 拖拽平移 · 点击高亮关联。</div>';
+    return;
+  }
+  const rows = [];
+  const addRow = (k, v) => { if (v !== '' && v != null) rows.push('<tr><td>' + k + '</td><td>' + v + '</td></tr>'); };
+  let badges = '<span class="badge">' + TYPE_META[node.type].label + '</span>';
+  if (node.confidence) badges += '<span class="badge ' + node.confidence + '">confidence: ' + node.confidence + '</span>';
+  if (node.type === 'concept') badges += '<span class="badge">' + (node.source_count || 0) + ' 来源</span>';
+  if (node.possibly_outdated) badges += '<span class="badge old">可能过时</span>';
+  if (node.entity_type) badges += '<span class="badge">' + node.entity_type + '</span>';
+
+  const abs = WIKI_BASE + node.path;
+  const fileUrl = FILE_BASE + node.path.split('/').map(encodeURIComponent).join('/');
+  const vscUrl = VSCODE_BASE + node.path.split('/').map(encodeURIComponent).join('/');
+  addRow('slug', node.id);
+  if ((node.aliases || []).length) addRow('别名', node.aliases.join(' · '));
+  if ((node.tags || []).length) addRow('标签', node.tags.join(' · '));
+  if (node.date) addRow('日期', node.date);
+  addRow('路径', node.path);
+
+  // 相关节点：按重要度排序，点击跳转
+  const rel = [...new Set(neighborsOf[node.id])]
+    .map(id => nodeById[id]).filter(Boolean)
+    .sort((a, b) => importance(b) - importance(a)).slice(0, 12);
+  const relHtml = rel.length
+    ? '<div class="rel-title">相关节点（' + degreeOf[node.id] + ' 个，点击跳转）</div><div class="rel">' +
+      rel.map(r => '<span class="rel-chip" data-rid="' + r.id + '">' +
+        '<span class="rdot" style="background:' +
+        (r.type === 'concept' ? (CONF_COLOR[r.confidence] || CONF_COLOR.low) :
+         (r.type === 'source' && r.possibly_outdated ? '#5b616d' : TYPE_META[r.type].color)) +
+        '"></span><span class="rname">' + escapeHtml(r.label) + '</span></span>').join('') +
+      '</div>'
+    : '';
+
+  box.innerHTML =
+    '<h3>' + escapeHtml(node.label) + '</h3>' +
+    '<div class="meta">' + badges + '</div>' +
+    (node.summary ? '<div class="summary">' + escapeHtml(node.summary) + '</div>' : '') +
+    '<table>' + rows.join('') + '</table>' +
+    relHtml +
+    '';
+  box.querySelectorAll('.rel-chip').forEach(chip => {
+    chip.onclick = () => selectNode(nodeById[chip.dataset.rid]);
+  });
+}
+
+function focusNode(node) {
+  if (!node) return;
+  const dist = 70;
+  const angle = Math.PI / 3;
+  Graph.cameraPosition(
+    { x: node.x + dist, y: node.y + dist * Math.sin(angle), z: node.z + dist * Math.cos(angle) },
+    node, 900);
+}
+
+function copyPath(btn, text) {
+  const done = () => { toast('已复制：' + text); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+  } else fallbackCopy(text, done);
+}
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text; document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) { toast('复制失败，请手动复制'); }
+  document.body.removeChild(ta);
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// 初始视角：锁定模式 + 适配全图
+setTimeout(() => Graph.zoomToFit(400, 60), 800);
+window.addEventListener('resize', () => {
+  Graph.width(window.innerWidth - 340).height(window.innerHeight);
+});
+</script>
+</body>
+</html>

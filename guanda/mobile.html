@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>规答 · AI 施工规范笔记本 — 移动端高保真原型 v3</title>
+<!-- 原型说明：规答 = AI 施工规范笔记本（统一产品，移动端）。
+     四大模块与桌面端一致：笔记 / 问答 / 规范库 / 历史。
+     核心闭环：问 → 答案带条文引用 → 一键存为笔记 → 进入 4 笔记本体系。
+     单文件，Tailwind CDN，纯前端模拟数据，无后端。演示数据为教学示例，正式条文以规范原文为准。 -->
+<script src="tailwind.min.js"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          deep: { DEFAULT: '#0E2A52', 900: '#082F4C', 800: '#0A3A5C', 700: '#0D4A75', 600: '#125A8F', 500: '#1B6FAC', 100: '#D9E9F5' },
+          ink: '#12263A', sub: '#5A6B7E', mist: '#F2F5F8', line: '#DCE4EC', paper: '#F0F3F6',
+          org: { DEFAULT: '#FF6B2C', deep: '#D95418' },
+          ok: '#1F9D6B', warn: '#C77D1F'
+        },
+        fontFamily: {
+          sans: ['"Microsoft YaHei"', '"PingFang SC"', 'system-ui', 'sans-serif'],
+          mono: ['"Cascadia Code"', 'Consolas', 'monospace']
+        }
+      }
+    }
+  }
+</script>
+<style>
+  :root { --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Segoe UI", "Microsoft YaHei", sans-serif; }
+  * { -webkit-tap-highlight-color: transparent; }
+  body { font-family: var(--sans); }
+  ::-webkit-scrollbar { width: 0; height: 0; }
+
+  /* 消息气泡弹入 */
+  @keyframes popIn { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: none; } }
+  .pop-in { animation: popIn .28s cubic-bezier(.2,.8,.3,1.1); }
+
+  /* AI 打字三点 */
+  @keyframes blink { 50% { opacity: .25; transform: translateY(-2px); } }
+  .typing-dot { animation: blink 1.1s infinite; }
+  .typing-dot:nth-child(2) { animation-delay: .18s; }
+  .typing-dot:nth-child(3) { animation-delay: .36s; }
+
+  /* 页面平滑过渡 */
+  .pages { transition: transform .32s cubic-bezier(.4,0,.2,1); }
+
+  /* 弹层上滑 */
+  @keyframes sheetUp { from { transform: translateY(100%); } to { transform: none; } }
+  .sheet { animation: sheetUp .3s cubic-bezier(.3,.9,.3,1); }
+  @keyframes fadeBg { from { opacity: 0; } to { opacity: 1; } }
+  .sheet-bg { animation: fadeBg .25s ease; }
+
+  /* 发送按钮微交互 */
+  .press { transition: transform .12s ease, opacity .12s ease; }
+  .press:active { transform: scale(.94); opacity: .85; }
+
+  /* 图纸标题栏式引用卡（家族元素） */
+  .title-block { border: 1.5px solid var(--tc, #16406B); position: relative; }
+  .title-block::before { content: attr(data-label); position: absolute; top: -9px; left: 10px;
+    background: #fff; padding: 0 6px; font-size: 10px; letter-spacing: .15em; color: var(--tc, #16406B); font-weight: 700; }
+  .tb-cell { border: 0.5px solid var(--tc, #16406B); padding: 4px 8px; font-size: 11px; }
+
+  /* 窗口期时间轴（签名元素） */
+  .wind-axis { position: relative; height: 34px; }
+  .wind-seg { position: absolute; top: 6px; height: 14px; border-radius: 3px; }
+  .wind-axis-ticks { position: relative; height: 14px; border-bottom: 1.5px dashed #B9C6D3; margin: 0 2px; }
+
+  /* 编辑器正文排版（Word 感） */
+  #ed-body { outline: none; line-height: 1.9; }
+  #ed-body h1 { font-size: 20px; font-weight: 700; margin: 18px 0 10px; }
+  #ed-body h2 { font-size: 16px; font-weight: 700; margin: 14px 0 8px; }
+  #ed-body ul { list-style: disc; padding-left: 22px; margin: 6px 0; }
+  #ed-body ol { list-style: decimal; padding-left: 22px; margin: 6px 0; }
+  #ed-body blockquote { border-left: 3px solid #FF6B2C; background: #FFF6F0; padding: 8px 12px; margin: 8px 0; border-radius: 0 6px 6px 0; }
+  .cite-inline { display: inline-block; background: #F2F5F8; border: 1px solid #DCE4EC; border-radius: 4px;
+    padding: 1px 6px; font-size: 12px; color: #16406B; font-weight: 600; margin: 0 2px; }
+
+  .note-item.active { background: #E8F0F7; border-color: #16406B; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body class="bg-[#10151C] min-h-screen flex flex-col items-center justify-center py-6 select-none"><a class="pj-back" href="../index.html">← 返回作品集</a><style>.pj-back{position:fixed;top:12px;left:12px;z-index:99999;background:#0E2A52;color:#fff;font:13px/1 "Microsoft YaHei","PingFang SC",sans-serif;padding:9px 15px;border-radius:20px;text-decoration:none;box-shadow:0 4px 14px rgba(14,42,82,.35);border:1px solid rgba(255,255,255,.28);opacity:.95}.pj-back:hover{opacity:1}@media print{.pj-back{display:none}}</style>
+
+  <!-- 桌面说明 -->
+  <p class="text-white/60 text-sm mb-4 tracking-wide">规答 · AI 施工规范笔记本 <span class="text-white/30">｜ 移动端高保真原型 v3（笔记 / 问答 / 规范库 / 历史）</span></p>
+
+  <!-- ================= 手机壳 ================= -->
+  <div class="relative w-[390px] h-[844px] rounded-[44px] bg-[#0A0E13] p-[10px] shadow-2xl shadow-black/60">
+    <!-- 侧键装饰 -->
+    <div class="absolute -left-[2px] top-32 w-[3px] h-10 bg-white/10 rounded-l"></div>
+    <div class="absolute -right-[2px] top-40 w-[3px] h-20 bg-white/10 rounded-r"></div>
+
+    <!-- 屏幕 -->
+    <div class="relative w-full h-full rounded-[35px] overflow-hidden bg-mist flex flex-col">
+
+      <!-- 状态栏 -->
+      <div class="flex items-center justify-between px-7 pt-3.5 pb-1 text-[13px] font-semibold text-ink bg-mist relative z-20">
+        <span id="status-time">09:41</span>
+        <div class="flex items-center gap-1.5">
+          <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="3" width="3" height="8" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 4.5A3.5 3.5 0 0 1 4.5 1h7A3.5 3.5 0 0 1 15 4.5v2A3.5 3.5 0 0 1 11.5 10h-7A3.5 3.5 0 0 1 1 6.5v-2Z"/><rect x="12.5" y="4" width="3" height="4" rx="1.5" fill="currentColor" stroke="none"/></svg>
+          <svg width="25" height="12" viewBox="0 0 25 12" fill="none" stroke="currentColor" stroke-width="1"><rect x="0.5" y="0.5" width="20" height="11" rx="3"/><rect x="2.5" y="2.5" width="13" height="7" rx="1.5" fill="currentColor" stroke="none"/><path d="M23 4v4a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z" fill="currentColor" stroke="none"/></svg>
+        </div>
+      </div>
+      <!-- 灵动岛 -->
+      <div class="absolute top-[9px] left-1/2 -translate-x-1/2 w-[118px] h-[26px] bg-[#0A0E13] rounded-full z-30"></div>
+
+      <!-- 顶部导航（随页面切换） -->
+      <header id="app-header" class="flex items-center gap-3 px-5 pt-3 pb-2 bg-mist relative z-10">
+        <template id="hdr-notes">
+          <div class="flex items-center gap-2.5 flex-1">
+            <div class="w-9 h-9 rounded-xl bg-deep-700 flex items-center justify-center shadow-sm">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M12 3a4 4 0 0 0-4 4v1H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-2V7a4 4 0 0 0-4-4Z"/><path d="M9 11h.01M15 11h.01"/></svg>
+            </div>
+            <div>
+              <div class="text-[16px] font-bold text-ink leading-tight">规答<span class="text-deep-500">·</span>笔记本</div>
+              <div class="text-[11px] text-sub">AI 施工规范笔记本</div>
+            </div>
+          </div>
+          <button id="btn-new-note" class="press h-9 px-3 rounded-xl bg-org text-white text-[12px] font-semibold shadow-sm">＋ 新建</button>
+        </template>
+        <template id="hdr-qa">
+          <div class="flex items-center gap-2.5 flex-1">
+            <div class="w-9 h-9 rounded-xl bg-deep-700 flex items-center justify-center shadow-sm">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M12 3a4 4 0 0 0-4 4v1H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-2V7a4 4 0 0 0-4-4Z"/><path d="M9 11h.01M15 11h.01"/></svg>
+            </div>
+            <div>
+              <div class="text-[16px] font-bold text-ink leading-tight">规答<span class="text-deep-500">·</span>问答</div>
+              <div class="text-[11px] text-sub">答案可一键存为笔记</div>
+            </div>
+          </div>
+          <button id="hdr-lib" class="press w-9 h-9 rounded-xl bg-white border border-line flex items-center justify-center text-deep-700 shadow-sm">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/><path d="M9 7h7M9 11h7"/></svg>
+          </button>
+        </template>
+        <template id="hdr-sub">
+          <button class="hdr-back press w-9 h-9 rounded-xl bg-white border border-line flex items-center justify-center text-ink shadow-sm">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <div class="text-[17px] font-bold text-ink flex-1"></div>
+        </template>
+      </header>
+
+      <!-- ================= 页面容器（4 页） ================= -->
+      <div id="pages" class="pages flex flex-1 overflow-hidden" style="width:400%">
+        <!-- 页面1：笔记 -->
+        <section class="page w-full flex flex-col overflow-hidden" data-page="notes" style="width:calc(100%/4)">
+          <!-- 笔记本切换 chips -->
+          <div id="nb-chips" class="flex gap-2 px-4 pt-1 pb-2 overflow-x-auto shrink-0"></div>
+          <!-- 笔记列表 -->
+          <div id="note-list" class="flex-1 overflow-y-auto px-4 pb-3"></div>
+          <p class="text-center text-[10px] text-sub/80 py-2 shrink-0">示例数据 · 点击笔记进入编辑，写作时可唤出 AI 辅助</p>
+        </section>
+
+        <!-- 页面2：问答 -->
+        <section class="page w-full flex flex-col overflow-hidden" data-page="qa" style="width:calc(100%/4)">
+          <div id="chat-scroll" class="flex-1 overflow-y-auto px-4 pb-3 space-y-3">
+            <!-- 欢迎卡 -->
+            <div id="welcome" class="pt-2">
+              <div class="bg-white rounded-2xl border border-line p-4 shadow-sm">
+                <div class="flex items-center gap-3">
+                  <div class="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-deep-500 to-deep-800 flex items-center justify-center shadow">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M12 3a4 4 0 0 0-4 4v1H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-2V7a4 4 0 0 0-4-4Z"/><path d="M9 11h.01M15 11h.01"/></svg>
+                    <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-ok border-2 border-white"></span>
+                  </div>
+                  <div>
+                    <div class="text-[15px] font-bold text-ink">规答 AI 助手</div>
+                    <div class="text-[12px] text-sub">已接入 18 本海上风电规范 · 答案可存为笔记</div>
+                  </div>
+                </div>
+                <p class="mt-3 text-[13px] leading-relaxed text-sub">施工中拿不准的做法，直接问。<br>每条答案都带<span class="text-deep-600 font-semibold">条文出处</span>，可点开核对原文，也可<span class="text-deep-600 font-semibold">一键存进你的笔记本</span>。</p>
+              </div>
+            </div>
+            <!-- 快捷问题 -->
+            <div class="pt-1">
+              <div class="text-[11px] font-semibold text-sub mb-2 tracking-wider">快捷问题</div>
+              <div class="grid grid-cols-2 gap-2" id="quick-grid">
+                <button class="quick press text-left bg-white border border-line rounded-xl px-3 py-3 text-[13px] font-medium text-ink shadow-sm hover:border-deep-100">
+                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5">🚁 塔筒吊装要求</span>吊装风速限制是多少？
+                </button>
+                <button class="quick press text-left bg-white border border-line rounded-xl px-3 py-3 text-[13px] font-medium text-ink shadow-sm hover:border-deep-100">
+                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5">🍃 叶片安装安全</span>叶片吊装注意什么？
+                </button>
+                <button class="quick press text-left bg-white border border-line rounded-xl px-3 py-3 text-[13px] font-medium text-ink shadow-sm hover:border-deep-100">
+                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5">🏗 升压站验收</span>交接试验有哪些项目？
+                </button>
+                <button class="quick press text-left bg-white border border-line rounded-xl px-3 py-3 text-[13px] font-medium text-ink shadow-sm hover:border-deep-100">
+                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5">🛡 构件防腐施工</span>防腐施工环境要求？
+                </button>
+                <button class="quick press text-left bg-white border border-line rounded-xl px-3 py-3 text-[13px] font-medium text-ink shadow-sm hover:border-deep-100">
+                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5">⚡ 海缆敷设</span>海缆埋深有什么要求？
+                </button>
+                <button class="quick press text-left bg-white border border-line rounded-xl px-3 py-3 text-[13px] font-medium text-ink shadow-sm hover:border-deep-100">
+                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5">🔩 基础沉桩</span>沉桩垂直度允许偏差？
+                </button>
+                <button class="quick press text-left bg-white border border-line rounded-xl px-3 py-3 text-[13px] font-medium text-ink shadow-sm hover:border-deep-100">
+                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5">🌊 防台撤离</span>台风预警后如何撤离？
+                </button>
+                <button class="quick press text-left bg-white border border-line rounded-xl px-3 py-3 text-[13px] font-medium text-ink shadow-sm hover:border-deep-100">
+                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5">📋 报验资料</span>监理报验要哪些资料？
+                </button>
+              </div>
+            </div>
+            <!-- 消息流 -->
+            <div id="messages" class="space-y-3"></div>
+          </div>
+
+          <!-- 输入栏 -->
+          <div class="px-4 pb-2 pt-2 bg-mist border-t border-line">
+            <div class="flex items-end gap-2 bg-white border border-line rounded-2xl px-3 py-2 shadow-sm">
+              <button class="press w-8 h-8 flex items-center justify-center text-sub shrink-0">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg>
+              </button>
+              <input id="msg-input" type="text" placeholder="输入施工规范问题…" class="flex-1 bg-transparent outline-none text-[15px] text-ink placeholder:text-sub/70 py-1.5">
+              <button id="send-btn" class="press w-9 h-9 rounded-xl bg-deep-700 flex items-center justify-center shadow-sm shrink-0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+              </button>
+            </div>
+            <p class="text-center text-[10px] text-sub/80 py-1.5">本回答基于现行有效规范自动生成 · 重大施工决策请核对原文</p>
+          </div>
+        </section>
+
+        <!-- 页面3：规范库 -->
+        <section class="page w-full flex flex-col overflow-y-auto" data-page="library" style="width:calc(100%/4)">
+          <div class="px-4 py-3 space-y-4">
+            <div class="bg-deep-700 rounded-2xl p-4 text-white shadow">
+              <div class="text-[13px] text-white/80">已内置规范</div>
+              <div class="flex items-end gap-2 mt-1">
+                <span class="text-[30px] font-bold leading-none">18</span><span class="text-[12px] text-white/70 pb-0.5">本 · 现行有效 11 · 内部文件 6 · 厂家手册 1</span>
+              </div>
+              <div class="text-[11px] text-white/60 mt-2">国标 / 施工规范 / 吊装方案 / 防腐 · 全部支持条文引用</div>
+            </div>
+            <div id="lib-groups"></div>
+          </div>
+        </section>
+
+        <!-- 页面4：历史会话 -->
+        <section class="page w-full flex flex-col overflow-y-auto" data-page="history" style="width:calc(100%/4)">
+          <div class="px-4 py-3">
+            <div class="text-[11px] font-semibold text-sub tracking-wider mb-2">今天</div>
+            <button class="his-item press w-full text-left bg-white border border-line rounded-xl px-4 py-3 mb-2 shadow-sm" data-his="0">
+              <div class="text-[14px] font-semibold text-ink">塔筒吊装风速限制是多少？</div>
+              <div class="text-[12px] text-sub truncate mt-0.5">吊装作业应在风速不大于 10m/s 时进行…</div>
+              <div class="text-[11px] text-sub/70 mt-1">09:12 · 3 条消息</div>
+            </button>
+            <div class="text-[11px] font-semibold text-sub tracking-wider mb-2 mt-4">昨天</div>
+            <button class="his-item press w-full text-left bg-white border border-line rounded-xl px-4 py-3 mb-2 shadow-sm" data-his="1">
+              <div class="text-[14px] font-semibold text-ink">海上升压站交接试验有哪些项目？</div>
+              <div class="text-[12px] text-sub truncate mt-0.5">绝缘电阻测量、耐压试验、保护装置调试…</div>
+              <div class="text-[11px] text-sub/70 mt-1">16:40 · 4 条消息</div>
+            </button>
+            <div class="text-[11px] font-semibold text-sub tracking-wider mb-2 mt-4">更早</div>
+            <button class="his-item press w-full text-left bg-white border border-line rounded-xl px-4 py-3 mb-2 shadow-sm" data-his="2">
+              <div class="text-[14px] font-semibold text-ink">叶片吊装为什么必须用专用吊带？</div>
+              <div class="text-[12px] text-sub truncate mt-0.5">专用吊带与叶片曲率贴合，避免应力集中…</div>
+              <div class="text-[11px] text-sub/70 mt-1">07-15 · 2 条消息</div>
+            </button>
+            <button class="his-item press w-full text-left bg-white border border-line rounded-xl px-4 py-3 mb-2 shadow-sm" data-his="3">
+              <div class="text-[14px] font-semibold text-ink">台风预警后施工船舶如何撤离？</div>
+              <div class="text-[12px] text-sub truncate mt-0.5">橙色预警：施工船舶撤离至避风锚地…</div>
+              <div class="text-[11px] text-sub/70 mt-1">07-02 · 4 条消息</div>
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <!-- ================= 底部 Tab（4 个） ================= -->
+      <nav class="flex bg-white border-t border-line px-2 pb-1.5 pt-1.5 shrink-0">
+        <button class="tab press flex-1 flex flex-col items-center gap-0.5 py-1 text-deep-700" data-tab="notes">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a4 4 0 0 0-4 4v1H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-2V7a4 4 0 0 0-4-4Z"/><path d="M9 11h.01M15 11h.01"/></svg>
+          <span class="text-[10px] font-medium">笔记</span>
+        </button>
+        <button class="tab press flex-1 flex flex-col items-center gap-0.5 py-1 text-sub" data-tab="qa">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>
+          <span class="text-[10px] font-medium">问答</span>
+        </button>
+        <button class="tab press flex-1 flex flex-col items-center gap-0.5 py-1 text-sub" data-tab="library">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/><path d="M9 7h7M9 11h7"/></svg>
+          <span class="text-[10px] font-medium">规范库</span>
+        </button>
+        <button class="tab press flex-1 flex flex-col items-center gap-0.5 py-1 text-sub" data-tab="history">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+          <span class="text-[10px] font-medium">历史</span>
+        </button>
+      </nav>
+
+      <!-- ================= 笔记编辑器（全屏推入） ================= -->
+      <div id="editor-overlay" class="absolute inset-0 z-40 bg-mist flex flex-col translate-x-full transition-transform duration-300">
+        <div class="flex items-center gap-2 px-3 pt-3 pb-2">
+          <button id="btn-editor-back" class="press w-9 h-9 rounded-xl bg-white border border-line flex items-center justify-center text-ink shadow-sm">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <div class="text-[15px] font-bold text-ink flex-1">编辑笔记</div>
+          <button id="btn-ai-assist" class="press h-9 px-3 rounded-xl bg-deep-700 text-white text-[12px] font-semibold shadow-sm">✦ AI 助手</button>
+        </div>
+        <div id="ed-toolbar" class="flex items-center gap-1 px-3 pb-2 overflow-x-auto shrink-0">
+          <button class="tb-btn press h-8 px-2.5 rounded-md text-[12px] text-sub bg-white border border-line font-mono" data-block="H1">H1</button>
+          <button class="tb-btn press h-8 px-2.5 rounded-md text-[12px] text-sub bg-white border border-line font-mono" data-block="H2">H2</button>
+          <button class="tb-btn press h-8 px-2.5 rounded-md text-[12px] text-sub bg-white border border-line" data-block="P">正文</button>
+          <button class="tb-btn press w-8 h-8 rounded-md text-[13px] font-bold text-sub bg-white border border-line" data-cmd="bold">B</button>
+          <button class="tb-btn press w-8 h-8 rounded-md text-[13px] italic text-sub bg-white border border-line" data-cmd="italic">I</button>
+          <button class="tb-btn press w-8 h-8 rounded-md text-[13px] underline text-sub bg-white border border-line" data-cmd="underline">U</button>
+          <button class="tb-btn press h-8 px-2 rounded-md text-[12px] text-sub bg-white border border-line" data-cmd="insertUnorderedList">• 列表</button>
+          <button class="tb-btn press h-8 px-2 rounded-md text-[12px] text-sub bg-white border border-line" data-block="BLOCKQUOTE">❝ 引用</button>
+          <button id="btn-insert-clause" class="press h-8 px-2.5 rounded-md text-[12px] font-semibold text-org bg-white border border-line shrink-0">📖 插入规范引用</button>
+        </div>
+        <div class="flex-1 overflow-y-auto">
+          <div class="px-5 py-4">
+            <div id="ed-title" contenteditable="true" spellcheck="false" class="select-text text-[20px] font-bold text-ink outline-none border-b-2 border-transparent focus:border-line pb-2 mb-3"></div>
+            <div id="ed-body" contenteditable="true" spellcheck="false" class="select-text text-[14px]"></div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 px-5 h-9 border-t border-line text-[11px] text-sub shrink-0">
+          <span id="ed-count" class="font-mono">0 字</span>
+          <span id="ed-save" class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-ok"></span>已自动保存</span>
+        </div>
+
+        <!-- AI 辅助底部分析抽屉（编辑器内）；遮罩避开顶部栏，返回按钮保持可点 -->
+        <div id="ai-sheet-bg" class="absolute inset-x-0 top-[56px] bottom-0 bg-black/35 hidden"></div>
+        <div id="ai-sheet" class="absolute inset-x-0 bottom-0 bg-white rounded-t-3xl translate-y-full transition-transform duration-300 max-h-[72%] flex flex-col">
+          <div class="flex justify-center pt-2.5 pb-1"><div class="w-10 h-1 rounded-full bg-line"></div></div>
+          <div class="px-4 pb-5 overflow-y-auto">
+            <!-- 签名元素：今日吊装窗口期时间轴 -->
+            <div class="title-block rounded-md bg-white px-3 pb-3 pt-2.5 mb-3" data-label="今日吊装窗口期" style="--tc:#16406B">
+              <div class="wind-axis-ticks"></div>
+              <div class="wind-axis">
+                <div class="wind-seg bg-deep-700/70" style="left:0%;width:37.5%" title="06:00–10:30 可吊装"></div>
+                <div class="wind-seg bg-org/85" style="left:37.5%;width:45.8%" title="10:30–16:00 风速超限"></div>
+                <div class="wind-seg bg-ok/70" style="left:83.3%;width:16.7%" title="16:00–18:00 可吊装"></div>
+              </div>
+              <div class="flex justify-between text-[10px] font-mono text-sub mt-1">
+                <span>06:00</span><span>10:30</span><span>16:00</span><span>18:00</span>
+              </div>
+              <div class="flex justify-between text-[10px] text-sub mt-0.5">
+                <span class="text-deep-700 font-semibold">▣ 可吊装 ≤8m/s</span>
+                <span class="text-org font-semibold">▣ 超限 11m/s</span>
+                <span class="text-ok font-semibold">▣ 恢复窗口</span>
+              </div>
+              <p class="text-[10px] text-sub mt-1.5 leading-relaxed">示例数据：今日 2# 机位实测风速曲线，10:30–16:00 阵风 11m/s 超吊装限值。</p>
+            </div>
+
+            <!-- 提示卡 ① 窗口期回顾 -->
+            <div class="ai-card press bg-mist border border-line rounded-lg p-3 mb-2.5">
+              <div class="flex items-center gap-1.5 text-[12px] font-bold text-ink">⏱ 窗口期回顾</div>
+              <p class="text-[12px] text-sub leading-relaxed mt-1.5">日志中吊装时段 09:10–11:40 与今日可吊装窗口 <b class="text-ink">06:00–10:30</b> 部分重叠：<b class="text-warn">11:30 后作业超出窗口期</b>，建议核实当时现场实测风速并补记。</p>
+              <button class="ai-ins press mt-2 text-[11px] font-semibold text-deep-700 bg-white border border-line rounded-md px-2.5 py-1" data-insert="window">插入到笔记</button>
+            </div>
+
+            <!-- 提示卡 ② 规范关联 -->
+            <div class="ai-card press bg-mist border border-line rounded-lg p-3 mb-2.5">
+              <div class="flex items-center gap-1.5 text-[12px] font-bold text-ink">📖 规范关联</div>
+              <p class="text-[12px] text-sub leading-relaxed mt-1.5">检测到正文提及「<b class="text-ink">力矩紧固</b>」，已关联：</p>
+              <div class="title-block rounded-sm bg-white mt-1.5" data-label="关联条文" style="--tc:#C77D1F">
+                <div class="tb-cell font-mono text-[11px] text-warn font-bold">M-10MW-001 · 明阳 MySE10-242P 现场机械安装手册 · 第九部分 主机整体吊装</div>
+              </div>
+              <button class="ai-ins press mt-2 text-[11px] font-semibold text-deep-700 bg-white border border-line rounded-md px-2.5 py-1" data-insert="clause">插入引用</button>
+            </div>
+
+            <!-- 提示卡 ③ 资料补全 -->
+            <div class="ai-card press bg-mist border border-line rounded-lg p-3 mb-2.5">
+              <div class="flex items-center gap-1.5 text-[12px] font-bold text-ink">📋 资料补全</div>
+              <p class="text-[12px] text-sub leading-relaxed mt-1.5">本篇为施工日志，尚未附监理报验记录。按 <b class="text-ink">GB 50300-2013 5.0.6</b> 生成报验清单：检验批记录 / 隐蔽验收 / 材料复验报告。</p>
+              <button class="ai-ins press mt-2 text-[11px] font-semibold text-deep-700 bg-white border border-line rounded-md px-2.5 py-1" data-insert="report">插入报验清单</button>
+            </div>
+
+            <!-- AI 写作工具 -->
+            <div class="bg-deep-900 rounded-lg p-3 text-white">
+              <div class="text-[12px] font-bold mb-2">✦ AI 写作工具</div>
+              <div class="flex flex-col gap-1.5">
+                <button id="btn-outline" class="press text-left text-[12px] bg-white/10 hover:bg-white/20 rounded-md px-3 py-2">🧭 生成日志大纲</button>
+                <button id="btn-continue" class="press text-left text-[12px] bg-white/10 hover:bg-white/20 rounded-md px-3 py-2">✍ 续写「明日计划」</button>
+                <button id="btn-polish" class="press text-left text-[12px] bg-white/10 hover:bg-white/20 rounded-md px-3 py-2">🪄 润色「问题记录」</button>
+              </div>
+            </div>
+
+            <!-- 内嵌问答 → 存为笔记 -->
+            <div class="mt-3">
+              <div class="text-[12px] font-bold text-ink mb-2">💬 问规答（答案可存为笔记）</div>
+              <div class="flex gap-1.5">
+                <input id="ai-qa-input" class="flex-1 h-9 bg-mist border border-line rounded-lg px-3 text-[12px] outline-none focus:border-deep-600" placeholder="例：主机吊装关键控制点">
+                <button id="ai-qa-send" class="press h-9 px-3 rounded-lg bg-deep-700 text-white text-[12px] font-semibold">发送</button>
+              </div>
+              <div id="ai-qa-answer" class="hidden mt-2.5 bg-mist border border-line rounded-lg p-3">
+                <div id="ai-qa-body" class="text-[12px] text-ink leading-relaxed"></div>
+                <div id="ai-qa-cite" class="title-block rounded-sm bg-white mt-2" data-label="引用" style="--tc:#16406B"></div>
+                <button id="ai-qa-save" class="press mt-2 w-full h-8 rounded-md bg-org text-white text-[12px] font-semibold">💾 存为笔记</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= 条文详情弹层 ================= -->
+      <div id="sheet-bg" class="sheet-bg absolute inset-0 bg-black/45 z-[55] hidden"></div>
+      <div id="sheet" class="sheet absolute inset-x-0 bottom-0 z-[60] bg-white rounded-t-3xl translate-y-full transition-transform duration-300">
+        <div class="flex justify-center pt-2.5 pb-1"><div class="w-10 h-1 rounded-full bg-line"></div></div>
+        <div class="px-5 pb-6 max-h-[60%] overflow-y-auto">
+          <div class="flex items-start gap-3 pt-1">
+            <div class="w-10 h-10 rounded-xl bg-deep-100 text-deep-700 flex items-center justify-center shrink-0">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg>
+            </div>
+            <div class="flex-1">
+              <div class="text-[15px] font-bold text-ink leading-snug" id="sheet-title">—</div>
+              <div class="text-[11px] text-sub mt-0.5" id="sheet-meta">—</div>
+            </div>
+            <button id="sheet-close" class="press w-8 h-8 rounded-full bg-mist flex items-center justify-center text-sub">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div id="sheet-status" class="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-ok bg-ok/10 border border-ok/30 rounded-full px-2.5 py-1">现行有效</div>
+          <div class="mt-3 text-[11px] font-semibold text-sub tracking-wider">目录章节</div>
+          <div id="sheet-toc" class="mt-1.5 space-y-1"></div>
+          <div class="mt-4 rounded-xl bg-mist p-3.5">
+            <div class="text-[11px] font-semibold text-sub mb-1.5">条文示例</div>
+            <p id="sheet-clause" class="text-[13px] leading-relaxed text-ink">—</p>
+          </div>
+          <button id="sheet-copy" class="press mt-4 w-full bg-deep-700 text-white rounded-xl py-3 text-[14px] font-semibold">复制条文</button>
+          <p class="text-center text-[10px] text-sub/80 mt-2.5">原型演示数据 · 正式条文以规范原文为准</p>
+        </div>
+      </div>
+
+      <!-- Toast -->
+      <div id="toast" class="absolute bottom-28 left-1/2 -translate-x-1/2 bg-ink text-white text-[12px] px-4 py-2 rounded-full opacity-0 transition-opacity duration-300 z-[70] pointer-events-none">已复制</div>
+    </div>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- 状态栏时间 ---------- */
+  function tick() {
+    var d = new Date();
+    document.getElementById("status-time").textContent =
+      String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  }
+  tick();
+
+  /* ---------- 页面切换（4 页） ---------- */
+  var PAGE_ORDER = ["notes", "qa", "library", "history"];
+  var pages = document.getElementById("pages");
+  var header = document.getElementById("app-header");
+  var hdrNotesTpl = document.getElementById("hdr-notes").content;
+  var hdrQaTpl = document.getElementById("hdr-qa").content;
+  var hdrSubTpl = document.getElementById("hdr-sub").content;
+  var HEADER_TITLES = { library: "规范库", history: "历史会话" };
+  var current = "notes";
+
+  function goTo(name, opts) {
+    opts = opts || {};
+    current = name;
+    var idx = PAGE_ORDER.indexOf(name);
+    pages.style.transform = "translateX(-" + (idx * 100 / 4) + "%)";
+    /* 顶部栏 */
+    header.innerHTML = "";
+    if (name === "notes") {
+      header.appendChild(hdrNotesTpl.cloneNode(true));
+      document.getElementById("btn-new-note").addEventListener("click", newNote);
+    } else if (name === "qa") {
+      header.appendChild(hdrQaTpl.cloneNode(true));
+      document.getElementById("hdr-lib").addEventListener("click", function () { goTo("library"); });
+    } else {
+      header.appendChild(hdrSubTpl.cloneNode(true));
+      header.querySelector("div.flex-1").textContent = HEADER_TITLES[name];
+      header.querySelector(".hdr-back").addEventListener("click", function () { goTo("notes"); });
+    }
+    /* 底部 tab */
+    document.querySelectorAll(".tab").forEach(function (t) {
+      var on = t.dataset.tab === name;
+      t.classList.toggle("text-deep-700", on);
+      t.classList.toggle("text-sub", !on);
+    });
+    if (name === "qa" && !opts.silent) {
+      var sc = document.getElementById("chat-scroll");
+      if (sc) sc.scrollTop = sc.scrollHeight;
+    }
+  }
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.addEventListener("click", function () { goTo(t.dataset.tab); });
+  });
+
+  /* ---------- 笔记数据（与桌面端一致，教学示例） ---------- */
+  var NOTES = {
+    "施工日志": [
+      { id: "n1", title: "2026-08-25 示例项目施工日志", time: "今天 19:02", tag: "日志",
+        body: '<h1>2026-08-25 施工日志 · 2# 机位</h1>' +
+              '<p><b>【气象】</b>东南风 3–4 级，上午风速 6–8m/s，午后阵风 11m/s；气温 29–33℃。</p>' +
+              '<p><b>【今日内容】</b></p><ol>' +
+              '<li>08:00 班前安全交底，2# 机位塔筒吊装准备；</li>' +
+              '<li>09:10–11:40 完成第 2 段塔筒吊装，连接螺栓力矩紧固至设计值；</li>' +
+              '<li>14:00 因风速超限暂停吊装，转室内整理报验资料。</li></ol>' +
+              '<p><b>【问题记录】</b></p><ul>' +
+              '<li>2# 机位基础法兰面局部锈斑，已除锈处理，待复验。</li></ul>' +
+              '<p><b>【明日计划】</b>完成第 3 段塔筒吊装 + 检验批报验。</p>' },
+      { id: "n2", title: "2026-08-24 施工日志", time: "昨天 18:47", tag: "日志",
+        body: '<h1>2026-08-24 施工日志 · 2# 机位</h1><p><b>【今日内容】</b></p><ol><li>完成塔筒第 1 段吊装与法兰面密封涂胶；</li><li>高压电缆提升至塔筒顶部。</li></ol><p><b>【问题记录】</b>无。</p>' },
+      { id: "n3", title: "2026-08-23 施工日志", time: "08-23 18:30", tag: "日志",
+        body: '<h1>2026-08-23 施工日志 · 2# 机位</h1><p><b>【今日内容】</b></p><ol><li>基础法兰复测，标高与平整度合格；</li><li>吊装设备进场布置。</li></ol>' }
+    ],
+    "施工记录": [
+      { id: "n4", title: "首桩典型施工总结（示例）", time: "08-20", tag: "记录",
+        body: '<h1>首桩典型施工总结（示例）</h1><p>沉桩垂直度偏差 ≤ 1%，桩顶标高与贯入度双控，首桩施工全过程记录完整，形成典型施工样板。</p>' },
+      { id: "n5", title: "主机吊装关键控制点", time: "08-18", tag: "记录",
+        body: '<h1>主机吊装关键控制点</h1><p>吊装前完成齿轮箱补油、发电机止转工装拆卸；主机与塔筒法兰对接后螺栓按规定力矩紧固；风速超限立即停止作业。</p>' }
+    ],
+    "规范摘录": [
+      { id: "n6", title: "吊装作业风速限值速查", time: "08-15", tag: "摘录",
+        body: '<h1>吊装作业风速限值速查</h1><p>GB/T 50571-2010 7.2.3：吊装作业应在风速不大于 10m/s 时进行，六级以上大风、雷雨天气禁止吊装。</p>' },
+      { id: "n7", title: "海缆埋深与路由复测要点", time: "08-12", tag: "摘录",
+        body: '<h1>海缆埋深与路由复测要点</h1><p>敷设前完成路由复测与扫海；埋深一般不小于 1.5m（软质海床）；完工后复测路由并记录。</p>' }
+    ],
+    "会议纪要": [
+      { id: "n8", title: "第 15 期工程例会（示例）", time: "07-23", tag: "纪要",
+        body: '<h1>第 15 期工程例会纪要（示例）</h1><p>会议明确：台风季节吊装窗口期管理升级，船舶撤离演练按预案执行；报验资料与施工进度同步。</p>' }
+    ]
+  };
+  var NB_ICONS = { "施工日志": "📓", "施工记录": "🗂", "规范摘录": "📖", "会议纪要": "🗒" };
+  var currentNb = "施工日志";
+
+  /* ---------- 笔记 Tab：笔记本 chips + 列表 ---------- */
+  var chipsEl = document.getElementById("nb-chips");
+  var noteList = document.getElementById("note-list");
+
+  function renderChips() {
+    chipsEl.innerHTML = "";
+    Object.keys(NOTES).forEach(function (nb) {
+      var b = document.createElement("button");
+      b.className = "nb-chip press flex items-center gap-1.5 px-3 py-2 rounded-xl border text-[12px] font-semibold whitespace-nowrap " +
+        (nb === currentNb ? "bg-deep-700 border-deep-700 text-white" : "bg-white border-line text-ink");
+      b.innerHTML = "<span>" + (NB_ICONS[nb] || "📔") + "</span>" + nb +
+        "<span class='text-[10px] " + (nb === currentNb ? "text-white/60" : "text-sub") + " font-mono'>" + NOTES[nb].length + "</span>";
+      b.addEventListener("click", function () { currentNb = nb; renderChips(); renderList(); });
+      chipsEl.appendChild(b);
+    });
+  }
+
+  function stripHtml(html) {
+    var t = document.createElement("div");
+    t.innerHTML = html;
+    return t.textContent.replace(/\s+/g, " ").trim();
+  }
+
+  function renderList() {
+    noteList.innerHTML = "";
+    NOTES[currentNb].forEach(function (n) {
+      var div = document.createElement("button");
+      div.className = "note-item press w-full text-left bg-white border border-line rounded-xl px-3.5 py-3 mb-2 shadow-sm";
+      div.setAttribute("data-id", n.id);
+      div.innerHTML =
+        "<div class='flex items-center gap-1.5'>" +
+          "<span class='text-[9px] font-bold text-org border border-org/40 rounded px-1 py-px'>" + n.tag + "</span>" +
+          "<span class='ml-auto text-[10px] text-sub font-mono'>" + n.time + "</span>" +
+        "</div>" +
+        "<div class='text-[13px] font-semibold text-ink mt-1 leading-snug'>" + n.title + "</div>" +
+        "<div class='text-[11px] text-sub truncate mt-0.5'>" + stripHtml(n.body).slice(0, 42) + "…</div>";
+      div.addEventListener("click", function () { openEditor(n.id); });
+      noteList.appendChild(div);
+    });
+  }
+
+  /* ---------- 笔记编辑器 ---------- */
+  var overlay = document.getElementById("editor-overlay");
+  var edTitle = document.getElementById("ed-title");
+  var edBody = document.getElementById("ed-body");
+  var editingId = null;
+
+  function updateEdCount() {
+    document.getElementById("ed-count").textContent = stripHtml(edBody.innerHTML).length + " 字";
+  }
+  edBody.addEventListener("input", function () {
+    updateEdCount();
+    document.getElementById("ed-save").innerHTML = "<span class='w-1.5 h-1.5 rounded-full bg-warn'></span>正在保存…";
+    clearTimeout(edBody._st);
+    edBody._st = setTimeout(function () {
+      document.getElementById("ed-save").innerHTML = "<span class='w-1.5 h-1.5 rounded-full bg-ok'></span>已自动保存";
+    }, 700);
+  });
+
+  function openEditor(id) {
+    var note = null;
+    Object.keys(NOTES).forEach(function (nb) {
+      NOTES[nb].forEach(function (n) { if (n.id === id) note = n; });
+    });
+    if (!note) return;
+    editingId = id;
+    edTitle.textContent = note.title;
+    edBody.innerHTML = note.body;
+    updateEdCount();
+    document.getElementById("ed-save").innerHTML = "<span class='w-1.5 h-1.5 rounded-full bg-ok'></span>已自动保存";
+    closeAiSheet();
+    overlay.style.transform = "translateX(0)";
+  }
+  function closeEditor() {
+    overlay.style.transform = "translateX(100%)";
+    closeAiSheet();
+    renderList();
+    renderChips();
+  }
+  document.getElementById("btn-editor-back").addEventListener("click", closeEditor);
+
+  function newNote() {
+    var n = { id: "n" + Date.now(), title: "未命名笔记", time: "刚刚", tag: "草稿",
+      body: "<h1>未命名笔记</h1><p>从这里开始记录…（示例）</p>" };
+    NOTES[currentNb].unshift(n);
+    renderChips(); renderList();
+    openEditor(n.id);
+    edTitle.focus();
+  }
+
+  /* 编辑器工具栏 */
+  document.querySelectorAll("#ed-toolbar .tb-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var cmd = btn.dataset.cmd, block = btn.dataset.block;
+      edBody.focus();
+      if (cmd) { document.execCommand(cmd, false, null); }
+      if (block) {
+        if (block === "H1" || block === "H2") { document.execCommand("formatBlock", false, block.toLowerCase()); }
+        if (block === "P") { document.execCommand("formatBlock", false, "p"); }
+        if (block === "BLOCKQUOTE") { document.execCommand("formatBlock", false, "blockquote"); }
+      }
+    });
+  });
+  document.getElementById("btn-insert-clause").addEventListener("click", function () {
+    edBody.innerHTML += '<p><span class="cite-inline">GB/T 50571-2010 · 7.2.3</span> 吊装作业应在风速不大于 10m/s 时进行（示例条文）。</p>';
+    showToast("已插入规范引用");
+    updateEdCount();
+  });
+
+  /* ---------- AI 辅助抽屉 ---------- */
+  var aiSheet = document.getElementById("ai-sheet");
+  var aiSheetBg = document.getElementById("ai-sheet-bg");
+  function openAiSheet() {
+    aiSheet.style.transform = "translateY(0)";
+    aiSheetBg.classList.remove("hidden");
+  }
+  function closeAiSheet() {
+    aiSheet.style.transform = "translateY(100%)";
+    aiSheetBg.classList.add("hidden");
+  }
+  document.getElementById("btn-ai-assist").addEventListener("click", openAiSheet);
+  aiSheetBg.addEventListener("click", closeAiSheet);
+
+  var INSERTS = {
+    window: '<blockquote>⏱ 窗口期复核（示例）：吊装时段 09:10–11:40 与今日可吊装窗口 06:00–10:30 部分重叠，11:30 后作业超出窗口期，需核实现场实测风速并补记。</blockquote>',
+    clause: '<p>引用条文 <span class="cite-inline">M-10MW-001 · 明阳手册 · 第九部分 主机整体吊装</span>：吊装前完成齿轮箱补油与止转工装拆卸，螺栓按规定力矩紧固（示例）。</p>',
+    report: '<blockquote>📋 报验资料清单（示例，GB 50300-2013 5.0.6）：① 检验批质量验收记录；② 隐蔽工程验收记录（附影像）；③ 材料/构配件进场复验报告。</blockquote>'
+  };
+  document.querySelectorAll(".ai-ins").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var key = btn.dataset.insert;
+      if (key === "report") {
+        edBody.innerHTML += INSERTS.report;
+        btn.textContent = "✓ 已插入";
+        btn.disabled = true;
+        btn.classList.add("opacity-50");
+        showToast("报验清单已插入正文末尾");
+      } else {
+        edBody.innerHTML += INSERTS[key];
+        showToast(key === "window" ? "窗口期提示已插入" : "规范引用已插入");
+      }
+      updateEdCount();
+    });
+  });
+  document.getElementById("btn-outline").addEventListener("click", function () {
+    edBody.innerHTML += '<h2>今日施工日志大纲（AI 生成 · 示例）</h2><ol><li>气象与海况摘要</li><li>作业内容与起止时间</li><li>安全交底与人员情况</li><li>问题记录与整改闭环</li><li>明日计划</li></ol>';
+    showToast("日志大纲已生成"); updateEdCount();
+  });
+  document.getElementById("btn-continue").addEventListener("click", function () {
+    edBody.innerHTML += '<p><b>【明日计划】</b>（示例）07:00 班前交底；08:00 前确认风速 ≤ 8m/s 后开始第 3 段塔筒吊装；16:00 前完成检验批报验资料。</p>';
+    showToast("「明日计划」已续写"); updateEdCount();
+  });
+  document.getElementById("btn-polish").addEventListener("click", function () {
+    edBody.innerHTML += '<p>（示例）「问题记录」润色建议：法兰面锈斑处理宜写明除锈方法（动力除锈 St3）、处理范围与复验结论，便于监理闭合。</p>';
+    showToast("润色建议已写入"); updateEdCount();
+  });
+
+  /* ---------- 消息渲染（问答 Tab） ---------- */
+  var messagesBox = document.getElementById("messages");
+  var welcome = document.getElementById("welcome");
+  var chatScroll = document.getElementById("chat-scroll");
+
+  function scrollChat() {
+    requestAnimationFrame(function () { chatScroll.scrollTop = chatScroll.scrollHeight; });
+  }
+  function userBubble(text) {
+    var d = document.createElement("div");
+    d.className = "pop-in flex justify-end";
+    d.innerHTML = '<div class="max-w-[80%] bg-deep-700 text-white rounded-2xl rounded-br-md px-3.5 py-2.5 text-[14px] leading-relaxed shadow-sm"></div>';
+    d.querySelector("div").textContent = text;
+    messagesBox.appendChild(d);
+    scrollChat();
+  }
+  function citeCard(code, name, clause, status, statusCls) {
+    return '<button class="cite press w-full text-left mt-2.5 bg-mist border border-line rounded-xl px-3 py-2.5" data-doc="' + code + '">' +
+      '<div class="flex items-center gap-2">' +
+        '<span class="text-[12px] font-bold text-deep-700 font-mono">' + code + '</span>' +
+        '<span class="text-[10px] font-semibold ' + statusCls + ' border rounded-full px-1.5 py-px">' + status + '</span>' +
+      '</div>' +
+      '<div class="text-[12px] text-ink font-medium mt-0.5 truncate">' + name + '</div>' +
+      '<div class="flex items-center justify-between mt-0.5">' +
+        '<span class="text-[11px] text-sub">条文 ' + clause + '</span>' +
+        '<span class="text-[11px] font-semibold text-deep-600">查看原文 ›</span>' +
+      '</div>' +
+    '</button>';
+  }
+  function aiBubble(html, q) {
+    var d = document.createElement("div");
+    d.className = "pop-in flex flex-col gap-2";
+    d.innerHTML =
+      '<div class="flex gap-2.5">' +
+        '<div class="w-8 h-8 rounded-xl bg-gradient-to-br from-deep-500 to-deep-800 flex items-center justify-center shrink-0 mt-0.5 shadow-sm">' +
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M12 3a4 4 0 0 0-4 4v1H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-2V7a4 4 0 0 0-4-4Z"/><path d="M9 11h.01M15 11h.01"/></svg>' +
+        '</div>' +
+        '<div class="max-w-[78%] bg-white border border-line rounded-2xl rounded-tl-md px-3.5 py-3 shadow-sm">' +
+          '<div class="ans-body text-[13px] leading-relaxed text-ink"></div>' +
+        '</div>' +
+      '</div>';
+    d.querySelector(".ans-body").innerHTML = html;
+    if (q) {
+      var btn = document.createElement("button");
+      btn.className = "answer-save press self-end flex items-center gap-1 text-[11px] font-semibold text-deep-600 bg-white border border-line rounded-full px-3 py-1.5 mr-10 shadow-sm";
+      btn.textContent = "💾 存为笔记";
+      btn.addEventListener("click", function () {
+        saveAnswerToNote(q, d.querySelector(".ans-body"));
+      });
+      d.appendChild(btn);
+    }
+    messagesBox.appendChild(d);
+    scrollChat();
+  }
+  function typingBubble() {
+    var d = document.createElement("div");
+    d.className = "pop-in flex gap-2.5";
+    d.innerHTML =
+      '<div class="w-8 h-8 rounded-xl bg-gradient-to-br from-deep-500 to-deep-800 flex items-center justify-center shrink-0 mt-0.5 shadow-sm">' +
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M12 3a4 4 0 0 0-4 4v1H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-2V7a4 4 0 0 0-4-4Z"/><path d="M9 11h.01M15 11h.01"/></svg>' +
+      '</div>' +
+      '<div class="bg-white border border-line rounded-2xl rounded-tl-md px-4 py-3.5 shadow-sm flex gap-1.5 items-center">' +
+        '<span class="typing-dot w-1.5 h-1.5 rounded-full bg-deep-500"></span>' +
+        '<span class="typing-dot w-1.5 h-1.5 rounded-full bg-deep-500"></span>' +
+        '<span class="typing-dot w-1.5 h-1.5 rounded-full bg-deep-500"></span>' +
+      '</div>';
+    messagesBox.appendChild(d);
+    scrollChat();
+    return d;
+  }
+
+  /* ---------- 答案存为笔记（核心闭环） ---------- */
+  function saveAnswerToNote(q, bodyEl) {
+    var text = bodyEl.textContent.trim();
+    var citeEl = bodyEl.querySelector(".cite");
+    var citeText = citeEl ? citeEl.textContent.replace(/\s+/g, " ").trim() : "";
+    var body = "<h1>" + q + "</h1><p>" + text + "</p>";
+    if (citeText) body += '<p><span class="cite-inline">' + citeText + "</span></p>";
+    var note = { id: "qm" + Date.now(), title: q, time: "刚刚", tag: "问答", body: body };
+    NOTES["规范摘录"].unshift(note);
+    renderChips(); renderList();
+    showToast("已存入「规范摘录」笔记本");
+  }
+
+  /* ---------- 问答知识库（13 类高频问题，与桌面端一致） ---------- */
+  var ANSWERS = {
+    tower: {
+      html:
+        '<p>塔筒吊装作业应满足：</p>' +
+        '<p>① <b>风速不大于 10m/s</b>，六级以上大风、雷雨天气禁止吊装<br>② 起重设备与索具经检查合格，吊装区域警戒隔离<br>③ 专人指挥，双钩抬吊保持塔筒轴线垂直</p>',
+      cite: citeCard("GB/T 50571-2010", "海上风力发电工程施工规范", "7.2.3", "现行有效", "text-ok border-ok/40")
+    },
+    blade: {
+      html:
+        '<p>叶片吊装属于高风险作业：</p>' +
+        '<p>① 高处作业人员<b>必须系挂双钩安全带</b><br>② 雷雨、大雾天气停止作业<br>③ 叶片<b>专用吊带</b>每日使用前检查，与叶片曲率贴合<br>④ 吊装回转范围内禁止人员停留</p>',
+      cite: citeCard("GB/T 19568-2017", "风力发电机组 装配和安装规范", "8.3", "现行有效", "text-ok border-ok/40")
+    },
+    substation: {
+      html:
+        '<p>海上升压站电气设备投运前应完成交接试验：</p>' +
+        '<p>① 绝缘电阻测量<br>② 耐压试验<br>③ 保护装置调试与整定<br>④ 试验合格后方可带电试运行</p>',
+      cite: citeCard("GB 50150-2016", "电气装置安装工程 电气设备交接试验标准", "3.0.1", "现行有效", "text-ok border-ok/40")
+    },
+    anticorr: {
+      html:
+        '<p>海上钢结构防腐涂层施工环境要求：</p>' +
+        '<p>① 表面处理等级：喷砂 <b>Sa2.5</b><br>② 环境相对湿度 &lt; 85%<br>③ 钢材表面温度高于露点 3℃ 以上<br>④ 干膜厚度达到设计要求</p>',
+      cite: citeCard("NB/T 示例-2026", "海上风电场钢结构防腐施工及验收规范（示例）", "6.1", "现行有效", "text-ok border-ok/40")
+    },
+    cable: {
+      html:
+        '<p>海缆敷设施工要求：</p>' +
+        '<p>① 敷设前完成<b>路由复测与扫海</b>，避开障碍物<br>② 敷设张力、速度按厂家参数控制，防止损伤<br>③ <b>埋深</b>满足设计要求，一般不小于 1.5m（软质海床）<br>④ 余缆量按设计预留，完工后复测路由并记录</p>',
+      cite: citeCard("NB/T 31040-示例", "海底电缆敷设施工规范（示例）", "8.2", "现行有效", "text-ok border-ok/40")
+    },
+    pile: {
+      html:
+        '<p>海上风电基础钢管桩沉桩要求：</p>' +
+        '<p>① 沉桩<b>垂直度偏差 ≤ 1%</b><br>② 桩顶标高、贯入度双控，以设计为准<br>③ 连续锤击出现异常（溜桩、拒锤）立即停锤查明原因<br>④ 沉桩记录逐桩完整填写</p>',
+      cite: citeCard("NB/T 10106-示例", "海上风电场工程桩基施工规范（示例）", "6.3", "现行有效", "text-ok border-ok/40")
+    },
+    concrete: {
+      html:
+        '<p>大体积混凝土（承台/基础）养护要求：</p>' +
+        '<p>① 保温保湿养护<b>不少于 14 天</b><br>② 内外温差控制 ≤ 25℃<br>③ 测温点按方案布置，每日测温并记录<br>④ 表面及时覆盖，防止干缩裂缝</p>',
+      cite: citeCard("GB 50496-2018", "大体积混凝土施工标准", "5.2", "现行有效", "text-ok border-ok/40")
+    },
+    belt: {
+      html:
+        '<p>高处作业安全带使用要求：</p>' +
+        '<p>① <b>受过冲击载荷的安全带立即报废</b>，不得继续使用<br>② 每次使用前逐件目检（缝线、卡扣、带体）<br>③ 高处作业必须<b>高挂低用</b><br>④ 海上作业优先选配双钩缓冲系带</p>',
+      cite: citeCard("GB 6095-2021", "坠落防护 安全带", "4.2", "现行有效", "text-ok border-ok/40")
+    },
+    weld: {
+      html:
+        '<p>钢结构焊接作业环境要求：</p>' +
+        '<p>① 露天焊接<b>风速超过 8m/s</b>禁止作业（有防风措施除外）<br>② 相对湿度 &gt; 90% 禁止焊接<br>③ 焊条按规定烘干、保温领用<br>④ 焊工持证上岗，工艺评定先行</p>',
+      cite: citeCard("GB 50661-2011", "钢结构焊接规范", "7.1", "现行有效", "text-ok border-ok/40")
+    },
+    guard: {
+      html:
+        '<p>吊装作业警戒区设置：</p>' +
+        '<p>① 按<b>吊臂回转半径外扩 ≥ 5m</b>设置警戒区<br>② 专人警戒，无关人员、车辆禁止进入<br>③ 夜间作业设置警示灯与反光标志<br>④ 吊物下方严禁人员停留或通过</p>',
+      cite: citeCard("Q/XX-JZ 示例", "海上风电项目施工安全专项方案编制指南（示例）", "3.4", "内部文件", "text-warn border-warn/40")
+    },
+    typhoon: {
+      html:
+        '<p>台风预警响应与撤离：</p>' +
+        '<p>① <b>蓝色预警</b>：加固设备、检查锚泊<br>② <b>黄色预警</b>：停止吊装等高危作业<br>③ <b>橙色预警</b>：施工船舶撤离至避风锚地<br>④ 人员按预案撤离，船舶动态实时上报</p>',
+      cite: citeCard("F-TY 示例", "海上风电项目防台应急预案（示例）", "4.2", "内部文件", "text-warn border-warn/40")
+    },
+    report: {
+      html:
+        '<p>监理报验需准备的核心资料：</p>' +
+        '<p>① <b>检验批</b>质量验收记录<br>② <b>隐蔽工程</b>验收记录（附影像资料）<br>③ 材料/构配件进场复验报告<br>④ 分项、分部验收按规定程序报审</p>',
+      cite: citeCard("GB 50300-2013", "建筑工程施工质量验收统一标准", "5.0.6", "现行有效", "text-ok border-ok/40")
+    },
+    mingyang: {
+      html:
+        '<p>主机整体吊装（按明阳厂家手册）：</p>' +
+        '<p>① 吊装前完成<b>齿轮箱补油</b>、发电机止转工装拆卸<br>② 主机与塔筒法兰对接，连接螺栓按规定力矩紧固<br>③ 吊装全程专人指挥，风速超限立即停止作业<br>④ 关键控制点按手册第九部分逐项检查确认</p>',
+      cite: citeCard("M-10MW-001", "明阳 MySE10-242P 风力发电机组现场机械安装手册", "第九部分", "厂家手册 · 初版", "text-warn border-warn/40")
+    }
+  };
+
+  /* ---------- 关键词匹配规则（顺序即优先级） ---------- */
+  function matchAnswer(text) {
+    if (/焊接|焊条|焊工/.test(text)) return "weld";
+    if (/主机|机舱|轮毂|对中|箱变/.test(text)) return "mingyang";
+    if (/风速|大风|六级/.test(text)) return "tower";
+    if (/塔筒|吊装/.test(text)) return "tower";
+    if (/叶片/.test(text)) return "blade";
+    if (/升压站|交接试验|电气试验|耐压/.test(text)) return "substation";
+    if (/防腐|涂层|油漆|喷砂|除锈/.test(text)) return "anticorr";
+    if (/海缆|电缆|埋深|敷设/.test(text)) return "cable";
+    if (/桩|沉桩|垂直度/.test(text)) return "pile";
+    if (/混凝土|养护|大体积|测温/.test(text)) return "concrete";
+    if (/安全带|高处|坠落/.test(text)) return "belt";
+    if (/警戒|警戒区/.test(text)) return "guard";
+    if (/台风|防台|撤离|预警/.test(text)) return "typhoon";
+    if (/报验|检验批|隐蔽|资料|验收记录/.test(text)) return "report";
+    return null;
+  }
+
+  /* ---------- 发送与回答 ---------- */
+  var input = document.getElementById("msg-input");
+  var sendBtn = document.getElementById("send-btn");
+
+  function send(text) {
+    if (welcome) welcome.style.display = "none";
+    userBubble(text);
+    var typing = typingBubble();
+    setTimeout(function () {
+      typing.remove();
+      var key = matchAnswer(text);
+      var html, cite;
+      if (key) {
+        html = ANSWERS[key].html;
+        cite = ANSWERS[key].cite;
+      } else {
+        html = "<p>未找到相关规范条文，试试换个问法，或到「规范库」按目录查找。</p>" +
+               "<p class='text-sub text-[12px] mt-1'>可覆盖主题：吊装 / 主机吊装 / 叶片 / 海缆敷设 / 沉桩 / 混凝土养护 / 焊接 / 防台撤离 / 防腐 / 报验资料</p>";
+        cite = "";
+      }
+      aiBubble(html + cite, text);
+    }, reduced ? 0 : 1300);
+  }
+  sendBtn.addEventListener("click", function () {
+    var v = input.value.trim();
+    if (!v) return;
+    send(v);
+    input.value = "";
+  });
+  input.addEventListener("keydown", function (e) { if (e.key === "Enter") sendBtn.click(); });
+  document.querySelectorAll(".quick").forEach(function (q) {
+    q.addEventListener("click", function () {
+      var label = q.querySelector("span").textContent;
+      var text = q.textContent.replace(label, "").trim();
+      send(text);
+    });
+  });
+
+  /* ---------- 历史会话 ---------- */
+  var HISTORY = [
+    {
+      msgs: [
+        { u: "塔筒吊装风速限制是多少？" },
+        { a: ANSWERS.tower.html + ANSWERS.tower.cite }
+      ]
+    },
+    {
+      msgs: [
+        { u: "海上升压站交接试验有哪些项目？" },
+        { a: ANSWERS.substation.html + ANSWERS.substation.cite },
+        { u: "试验报告谁出？" },
+        { a: "<p>交接试验应由具备资质的试验单位实施并出具报告，作为验收资料归档。</p>" }
+      ]
+    },
+    {
+      msgs: [
+        { u: "叶片吊装为什么必须用专用吊带？" },
+        { a: "<p>叶片表面曲率大、局部受力敏感，专用吊带与叶片曲率贴合，<b>避免应力集中损伤结构</b>；普通钢丝绳吊具禁止直接接触叶片表面。</p>" + citeCard("GB/T 19568-2017", "风力发电机组 装配和安装规范", "8.3", "现行有效", "text-ok border-ok/40") }
+      ]
+    },
+    {
+      msgs: [
+        { u: "台风预警后施工船舶如何撤离？" },
+        { a: ANSWERS.typhoon.html + ANSWERS.typhoon.cite },
+        { u: "避风锚地在哪里？" },
+        { a: "<p>按防台预案指定锚地停泊，远离风机基础与海缆路由区域；锚泊期间安排值守并保持通讯畅通。</p>" }
+      ]
+    }
+  ];
+  document.querySelectorAll(".his-item").forEach(function (it) {
+    it.addEventListener("click", function () {
+      var idx = Number(it.dataset.his);
+      welcome.style.display = "none";
+      messagesBox.innerHTML = "";
+      HISTORY[idx].msgs.forEach(function (m) {
+        if (m.u) userBubble(m.u);
+        else aiBubble(m.a, null);
+      });
+      goTo("qa", { silent: true });
+      scrollChat();
+    });
+  });
+
+  /* ---------- 规范库（6 分类 18 本，与桌面端一致） ---------- */
+  var LIB = [
+    {
+      group: "国家标准", items: [
+        { code: "GB/T 50571-2010", name: "海上风力发电工程施工规范", status: "现行有效", st: "text-ok border-ok/40",
+          toc: ["1 总则", "2 术语", "3 基本规定", "7 风力发电机组安装", "9 施工安全"], clause: "7.2.3 吊装作业应在风速不大于 10m/s 时进行，六级以上大风、雷雨天气禁止吊装作业。" },
+        { code: "GB 50150-2016", name: "电气装置安装工程 电气设备交接试验标准", status: "现行有效", st: "text-ok border-ok/40",
+          toc: ["1 总则", "3 基本规定", "5 变压器、电抗器试验", "18 保护装置调试"], clause: "3.0.1 电气设备交接试验应在设备安装完毕、试验合格后进行。" },
+        { code: "GB/T 19568-2017", name: "风力发电机组 装配和安装规范", status: "现行有效", st: "text-ok border-ok/40",
+          toc: ["1 范围", "4 安装准备", "8 叶片安装", "10 安全要求"], clause: "8.3 叶片吊装应使用专用吊带，吊装前检查吊带完好性。" },
+        { code: "GB 50496-2018", name: "大体积混凝土施工标准", status: "现行有效", st: "text-ok border-ok/40",
+          toc: ["1 总则", "5 温控施工", "6 混凝土浇筑", "7 温度监测"], clause: "5.2 大体积混凝土应保温保湿养护不少于 14d，混凝土内外温差不宜大于 25℃。" },
+        { code: "GB 6095-2021", name: "坠落防护 安全带", status: "现行有效", st: "text-ok border-ok/40",
+          toc: ["1 范围", "3 分类与标记", "4 技术要求", "6 检验规则"], clause: "4.2 安全带各部件应完好，受过冲击载荷的安全带应立即报废，不得继续使用。" },
+        { code: "GB 50661-2011", name: "钢结构焊接规范", status: "现行有效", st: "text-ok border-ok/40",
+          toc: ["1 总则", "4 焊接工艺评定", "7 焊接施工", "9 焊接质量检查"], clause: "7.1 露天焊接作业风速超过 8m/s 或相对湿度大于 90% 时，应采取防护措施或停止焊接。" },
+        { code: "GB 50300-2013", name: "建筑工程施工质量验收统一标准", status: "现行有效", st: "text-ok border-ok/40",
+          toc: ["1 总则", "3 基本规定", "5 质量验收划分", "6 质量验收程序"], clause: "5.0.6 检验批、隐蔽工程验收记录等资料应随工程进度同步形成、收集和整理。" }
+      ]
+    },
+    {
+      group: "行业 / 施工规范", items: [
+        { code: "Q/XX-JZ 示例", name: "海上风电项目施工安全专项方案编制指南（示例）", status: "内部文件", st: "text-warn border-warn/40",
+          toc: ["1 编制依据", "2 危险性分析", "3 专项措施", "4 应急响应"], clause: "示例数据：专项方案应在危大工程施工前完成审批；3.4 吊装作业按吊臂回转半径外扩 5m 设置警戒区。" },
+        { code: "NB/T 示例-2026", name: "海上风电场钢结构防腐施工及验收规范（示例）", status: "现行有效", st: "text-ok border-ok/40",
+          toc: ["1 范围", "6 涂层施工", "7 质量验收"], clause: "6.1 涂层施工环境相对湿度应低于 85%，钢材表面温度高于露点 3℃ 以上。" },
+        { code: "NB/T 31040-示例", name: "海底电缆敷设施工规范（示例）", status: "现行有效", st: "text-ok border-ok/40",
+          toc: ["1 范围", "5 路由复测与扫海", "8 敷设施工", "10 完工复测"], clause: "8.2 海缆敷设前完成路由复测与扫海，埋深一般不小于 1.5m（软质海床），余缆按设计预留。" },
+        { code: "NB/T 10106-示例", name: "海上风电场工程桩基施工规范（示例）", status: "现行有效", st: "text-ok border-ok/40",
+          toc: ["1 范围", "4 沉桩准备", "6 沉桩施工", "8 质量检验"], clause: "6.3 钢管桩沉桩垂直度偏差不应大于 1%，沉桩记录逐桩完整填写。" }
+      ]
+    },
+    {
+      group: "吊装方案", items: [
+        { code: "V3", name: "某海上风电项目风机安装专项施工方案（示例）", status: "内部文件 · 示例", st: "text-warn border-warn/40",
+          toc: ["1 工程概况（120 万千瓦）", "2 吊装设备选型", "3 吊装工艺与流程", "4 安全保证措施", "5 应急预案"], clause: "示例数据：吊装作业窗口期按气象预报提前 48h 锁定，现场风速仪实测超限立即停工。" },
+        { code: "SGZ-示例", name: "海上升压站组块吊装专项方案（示例）", status: "内部文件", st: "text-warn border-warn/40",
+          toc: ["1 工程概况", "2 吊装设备选型", "3 吊装工艺", "4 安全措施"], clause: "示例数据：升压站上部组块整体吊装，作业窗口按气象预报提前锁定，吊装索具逐件检查。" }
+      ]
+    },
+    {
+      group: "厂家手册", items: [
+        { code: "M-10MW-001", name: "明阳 MySE10-242P 风力发电机组现场机械安装手册", status: "厂家手册 · 172 页 · 初版", st: "text-warn border-warn/40",
+          toc: ["一 安全要求（培训与警示）", "四 机组安装条件（安装风速）", "六 机组卸货", "八 塔架吊装", "九 主机整体吊装", "十一 轮毂安装", "十三 单叶片安装", "十七 机械安装验收"],
+          clause: "示例预览：第一部分 1.1.1 安全总则——参与风机安装的所有相关人员必须经过培训后方可进行施工；工作人员进入机组工作前必须在设备周围设置警告标志；第四部分 1.1 安装风速——塔筒、主机、叶片吊装风速限值各不相同，详见手册对应章节。" }
+      ]
+    },
+    {
+      group: "安全与应急", items: [
+        { code: "F-TY 示例", name: "海上风电项目防台应急预案（示例）", status: "内部文件", st: "text-warn border-warn/40",
+          toc: ["1 编制依据", "2 预警分级响应", "3 船舶撤离", "4 人员撤离与值守"], clause: "示例数据：蓝色预警加固锚泊，黄色预警停止吊装等高危作业，橙色预警施工船舶撤离至避风锚地。" },
+        { code: "AQ-示例", name: "海上风电高处作业安全操作规程（示例）", status: "内部文件", st: "text-warn border-warn/40",
+          toc: ["1 基本要求", "2 临边与高处作业", "3 个人防护装备", "4 应急措施"], clause: "示例数据：海上高处作业必须系挂安全带并高挂低用，双钩交替系挂。" },
+        { code: "HX-示例", name: "海上施工船舶航行与锚泊安全规程（示例）", status: "内部文件", st: "text-warn border-warn/40",
+          toc: ["1 总则", "2 航行安全", "3 锚泊作业", "4 防台撤离"], clause: "示例数据：防台撤离时船舶按预案驶往避风锚地，远离风机基础与海缆路由，锚泊期间安排值守。" }
+      ]
+    },
+    {
+      group: "防腐", items: [
+        { code: "T/示例 2026", name: "海上风电基础钢结构防腐涂装工艺卡（示例）", status: "现行有效", st: "text-ok border-ok/40",
+          toc: ["1 适用范围", "2 表面处理", "3 涂料配套", "4 施工与检验"], clause: "示例数据：喷砂除锈等级 Sa2.5，干膜总厚度不低于设计值。" }
+      ]
+    }
+  ];
+  var libGroups = document.getElementById("lib-groups");
+  LIB.forEach(function (g) {
+    var sec = document.createElement("div");
+    var html = '<div class="text-[11px] font-semibold text-sub tracking-wider mb-2">' + g.group + "</div>";
+    g.items.forEach(function (it) {
+      html += '<button class="lib-item press w-full text-left bg-white border border-line rounded-xl px-4 py-3 mb-2 shadow-sm" data-code="' + it.code + '">' +
+        '<div class="flex items-center gap-2">' +
+          '<span class="text-[12px] font-bold text-deep-700 font-mono">' + it.code + "</span>" +
+          '<span class="text-[10px] font-semibold ' + it.st + ' border rounded-full px-1.5 py-px">' + it.status + "</span>" +
+        "</div>" +
+        '<div class="text-[13px] font-medium text-ink mt-1">' + it.name + "</div>" +
+      "</button>";
+    });
+    sec.innerHTML = html;
+    libGroups.appendChild(sec);
+  });
+
+  /* ---------- 条文弹层 ---------- */
+  var sheet = document.getElementById("sheet");
+  var sheetBg = document.getElementById("sheet-bg");
+  var ALL_DOCS = {};
+  LIB.forEach(function (g) { g.items.forEach(function (it) { ALL_DOCS[it.code] = it; }); });
+
+  function openSheet(doc) {
+    document.getElementById("sheet-title").textContent = doc.name;
+    document.getElementById("sheet-meta").textContent = doc.code;
+    document.getElementById("sheet-status").textContent = doc.status;
+    document.getElementById("sheet-status").className =
+      "mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold rounded-full px-2.5 py-1 " +
+      (doc.status.indexOf("现行有效") >= 0 ? "text-ok bg-ok/10 border border-ok/30" : "text-warn bg-warn/10 border border-warn/30");
+    var toc = document.getElementById("sheet-toc");
+    toc.innerHTML = "";
+    doc.toc.forEach(function (t) {
+      var row = document.createElement("div");
+      row.className = "flex items-center gap-2 text-[13px] text-ink";
+      row.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-deep-100 shrink-0"></span>' + t;
+      toc.appendChild(row);
+    });
+    document.getElementById("sheet-clause").textContent = doc.clause;
+    sheet.style.transform = "translateY(0)";
+    sheetBg.classList.remove("hidden");
+  }
+  function closeSheet() {
+    sheet.style.transform = "translateY(100%)";
+    sheetBg.classList.add("hidden");
+  }
+  document.addEventListener("click", function (e) {
+    var c = e.target.closest(".cite");
+    var l = e.target.closest(".lib-item");
+    if (c) openSheet(ALL_DOCS[c.dataset.doc]);
+    if (l) openSheet(ALL_DOCS[l.dataset.code]);
+  });
+  document.getElementById("sheet-close").addEventListener("click", closeSheet);
+  sheetBg.addEventListener("click", closeSheet);
+
+  /* ---------- 内嵌问答（编辑器 AI 抽屉内） ---------- */
+  var aiQaInput = document.getElementById("ai-qa-input");
+  var aiQaAnswer = document.getElementById("ai-qa-answer");
+  function aiQaAsk() {
+    var text = aiQaInput.value.trim();
+    if (!text) { showToast("先输入一个问题（演示）"); return; }
+    var hit = matchAnswer(text);
+    if (!hit) {
+      aiQaAnswer.classList.remove("hidden");
+      document.getElementById("ai-qa-body").innerHTML = "未找到相关规范条文（示例库仅覆盖 13 类高频问题）。";
+      document.getElementById("ai-qa-cite").innerHTML = "";
+      document.getElementById("ai-qa-save").classList.add("hidden");
+      return;
+    }
+    document.getElementById("ai-qa-body").innerHTML = ANSWERS[hit].html;
+    document.getElementById("ai-qa-cite").innerHTML = ANSWERS[hit].cite;
+    document.getElementById("ai-qa-save").classList.remove("hidden");
+    aiQaAnswer.classList.remove("hidden");
+  }
+  document.getElementById("ai-qa-send").addEventListener("click", aiQaAsk);
+  aiQaInput.addEventListener("keydown", function (e) { if (e.key === "Enter") aiQaAsk(); });
+  document.getElementById("ai-qa-save").addEventListener("click", function () {
+    saveAnswerToNote(aiQaInput.value.trim(), document.getElementById("ai-qa-body"));
+  });
+
+  /* ---------- 复制与 Toast ---------- */
+  var toast = document.getElementById("toast");
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.style.opacity = "1";
+    setTimeout(function () { toast.style.opacity = "0"; }, 1600);
+  }
+  document.getElementById("sheet-copy").addEventListener("click", function () {
+    var t = document.getElementById("sheet-clause").textContent;
+    if (navigator.clipboard) navigator.clipboard.writeText(t).then(function () { showToast("条文已复制"); });
+  });
+
+  /* ---------- 初始化 ---------- */
+  renderChips();
+  renderList();
+  goTo("notes", { silent: true });
+})();
+</script>
+</body>
+</html>
