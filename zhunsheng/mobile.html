@@ -15,6 +15,8 @@
        · 照片：长边 1600 压缩、单张 ≤300KB、canvas 重绘剥离 EXIF（含位置信息）
        · 导出：canvas 自绘分页不分页脚五要素（产品名/版本/生成时间/自录未核验声明/条文以官方文本为准）
        · 桌面端差异：整改前后照片为左右对照（移动端上下对照）
+     v2.3 检查视图：整改记录本内「列表 / 汇总」切换（只读聚合，待整改置顶·已逾期优先）+ 检查包导出（单 HTML 离线可看）。
+     v2.3 配色：暖纸底 + 橙强调 + 工程图纸网格/线稿水印（v2.3 配色焕新；颜色仍克制——暖色中性打底，色相只给品牌与语义）。
      单文件，Tailwind CDN，纯前端内存演示，断网可演示，无后端。演示数据均虚构。 -->
 <script src="tailwind.min.js"></script>
 <script>
@@ -22,11 +24,11 @@
     theme: {
       extend: {
         colors: {
-          /* 无彩色系统：白底、黑字、发丝线分层，UI 不使用任何色相；
-             颜色只承载语义（整改四态 + 阻断/通过），装饰一律靠字重与留白。 */
-          deep: { DEFAULT: '#111111', 900: '#111111', 800: '#111111', 700: '#111111', 600: '#6A6A6A', 500: '#6A6A6A', 100: '#E8E8E8' },
-          ink: '#111111', sub: '#6A6A6A', mist: '#FFFFFF', line: '#E8E8E8', paper: '#F5F5F5',
-          org: { DEFAULT: '#111111', deep: '#111111' },
+          /* v2.3 配色（暖纸 + 橙强调）：暖米纸底、墨褐文字、工程图纸网格；
+             色相只用于品牌强调（橙）与语义（整改四态 + 阻断/通过），主体仍是暖色中性。 */
+          deep: { DEFAULT: '#241C12', 900: '#241C12', 800: '#241C12', 700: '#241C12', 600: '#7A6B57', 500: '#D2621C', 100: '#E8DBC0' },
+          ink: '#241C12', sub: '#7A6B57', mist: '#F7EFDF', line: '#E8DBC0', paper: '#F0E4CB',
+          org: { DEFAULT: '#D2621C', deep: '#B14E12' },
           ok: '#1F9D6B', warn: '#C26A17', danger: '#C0392B'
         },
         fontFamily: {
@@ -69,7 +71,7 @@
   /* 笔记列表（v2.3 列表整理）：行内仅保留纵向滚动手势、抑制原生长按菜单；
      置顶后短暂高亮（列表重排的位置反馈） */
   #note-list .note-item { touch-action: pan-y; -webkit-touch-callout: none; }
-  .note-flash { border-color: #111 !important; box-shadow: 0 0 0 3px rgba(17,17,17,.10); }
+  .note-flash { border-color: #D2621C !important; box-shadow: 0 0 0 3px rgba(210,98,28,.16); }
 
   /* 编辑器工具栏按钮：不压缩、不换行（字始终在框内），容器整体折行 */
   .tb-btn { flex: 0 0 auto; white-space: nowrap; }
@@ -80,26 +82,31 @@
      不补则子项无法收缩、随内容撑高，底部内容被顶出可视区。 */
   .clip-noscroll { overflow: hidden; overflow: clip; min-width: 0; min-height: 0; }
 
-  /* ---------- 中性控件（第 3 轮）：主操作=白底墨线；次操作=透明发丝线 ---------- */
-  .btn-p { background: #FFFFFF !important; border: 1px solid #111111 !important; color: #111111 !important; }
-  .btn-p:hover { background: #F0F0F0 !important; }
-  .btn-s { background: transparent !important; border: 1px solid #E8E8E8 !important; color: #111111 !important; }
-  .btn-s:hover { background: #F0F0F0 !important; }
+  /* ---------- 控件（v2.3 配色）：主操作=橙底白字；次操作=暖纸白底 + 暖发丝线 ---------- */
+  .btn-p { background: #D2621C !important; border: 1px solid #B14E12 !important; color: #FFFFFF !important; }
+  .btn-p:hover { background: #B14E12 !important; }
+  .btn-s { background: #FFFDF7 !important; border: 1px solid #E3D2B0 !important; color: #241C12 !important; }
+  .btn-s:hover { background: #F6EBD6 !important; }
   .btn-p:disabled, .btn-s:disabled { opacity: .4; }
   .ic { display: inline-block !important; width: 1.1em !important; height: 1.1em !important; flex: none !important; vertical-align: -0.15em !important; }
   .lg-sw { display: inline-block !important; width: 7px !important; height: 7px !important; border-radius: 1px !important; margin-right: 4px !important; vertical-align: 1px !important; }
-  .rc-chip-on { background: #FFFFFF !important; color: #111111 !important; border-color: #111111 !important; }
+
+  /* v2.3 检查视图：列表/汇总分段（激活=橙底白字）；汇总行为可点卡片 */
+  .rc-vbtn { color: #7A6B57; }
+  .rc-vbtn.on { background: #D2621C !important; color: #FFFFFF !important; }
+  .ck-row { cursor: pointer; }
+  .ck-row:active { opacity: .85; }
 
   /* 图纸标题栏式引用卡（家族元素） */
-  .title-block { border: 1.5px solid var(--tc, #6A6A6A); position: relative; }
+  .title-block { border: 1.5px solid var(--tc, #8A7150); position: relative; }
   .title-block::before { content: attr(data-label); position: absolute; top: -9px; left: 10px;
-    background: #fff; padding: 0 6px; font-size: 10px; letter-spacing: .15em; color: var(--tc, #6A6A6A); font-weight: 700; }
-  .tb-cell { border: 0.5px solid var(--tc, #6A6A6A); padding: 4px 8px; font-size: 11px; }
+    background: #FFFDF7; padding: 0 6px; font-size: 10px; letter-spacing: .15em; color: var(--tc, #8A7150); font-weight: 700; }
+  .tb-cell { border: 0.5px solid var(--tc, #8A7150); padding: 4px 8px; font-size: 11px; }
 
   /* 窗口期时间轴（签名元素） */
   .wind-axis { position: relative; height: 34px; }
   .wind-seg { position: absolute; top: 6px; height: 14px; border-radius: 3px; }
-  .wind-axis-ticks { position: relative; height: 14px; border-bottom: 1.5px dashed #E8E8E8; margin: 0 2px; }
+  .wind-axis-ticks { position: relative; height: 14px; border-bottom: 1.5px dashed #E8DBC0; margin: 0 2px; }
 
   /* 编辑器正文排版（Word 感） */
   #ed-body { outline: none; line-height: 1.9; }
@@ -107,30 +114,30 @@
   #ed-body h2 { font-size: 16px; font-weight: 700; margin: 14px 0 8px; }
   #ed-body ul { list-style: disc; padding-left: 22px; margin: 6px 0; }
   #ed-body ol { list-style: decimal; padding-left: 22px; margin: 6px 0; }
-  #ed-body blockquote { border-left: 3px solid #C9CFCE; background: #F5F5F5; padding: 8px 12px; margin: 8px 0; border-radius: 0 6px 6px 0; }
-  .cite-inline { display: inline-block; background: #F5F5F5; border: 1px solid #E8E8E8; border-radius: 4px;
-    padding: 1px 6px; font-size: 12px; color: #6A6A6A; font-weight: 600; margin: 0 2px; }
+  #ed-body blockquote { border-left: 3px solid #D9C6A3; background: #F4E9D3; padding: 8px 12px; margin: 8px 0; border-radius: 0 6px 6px 0; }
+  .cite-inline { display: inline-block; background: #F4E9D3; border: 1px solid #E8DBC0; border-radius: 4px;
+    padding: 1px 6px; font-size: 12px; color: #7A6B57; font-weight: 600; margin: 0 2px; }
 
-  .note-item.active { background: #F5F5F5; border-color: #111111; }
+  .note-item.active { background: #FBE9D2; border-color: #D2621C; }
 
   /* ---------- 整改模块（v2.0 新增） ---------- */
   .rc-status { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 9px; border: 1px solid; white-space: nowrap; }
-  .rc-st-draft { color: #8C8C8C; background: #F5F5F5; border-color: #E0E0E0; }
+  .rc-st-draft { color: #948268; background: #F1E8D5; border-color: #E0D2B8; }
   .rc-st-pending { color: #C26A17; background: #FFF4E8; border-color: #F0C79A; }
   .rc-st-fixed { color: #1F9D6B; background: #EAF7F1; border-color: #A9DCC5; }
   .rc-st-review { color: #125A8F; background: #E8F0F7; border-color: #A9C6E0; }
-  .rc-chip-on { background: #111111 !important; color: #fff !important; border-color: #111111 !important; }
+  .rc-chip-on { background: #FBE7D2 !important; color: #B14E12 !important; border-color: #D2621C !important; }
   .rc-invalid { border-color: #C0392B !important; background: #FBEDEB !important; }
   .rc-tl { position: relative; padding-left: 16px; }
-  .rc-tl::before { content: ""; position: absolute; left: 4px; top: 7px; bottom: 7px; width: 1.5px; background: #E8E8E8; }
-  .rc-tl-item { position: relative; font-size: 11.5px; color: #111111; padding: 3px 0; line-height: 1.5; }
-  .rc-tl-item::before { content: ""; position: absolute; left: -16px; top: 9px; width: 7px; height: 7px; border-radius: 999px; background: #111111; }
-  .skeleton-line { background: linear-gradient(90deg,#F5F5F5 25%,#EFF2F1 37%,#F5F5F5 63%); background-size: 400% 100%; animation: sk 1.2s ease infinite; border-radius: 6px; }
+  .rc-tl::before { content: ""; position: absolute; left: 4px; top: 7px; bottom: 7px; width: 1.5px; background: #E8DBC0; }
+  .rc-tl-item { position: relative; font-size: 11.5px; color: #241C12; padding: 3px 0; line-height: 1.5; }
+  .rc-tl-item::before { content: ""; position: absolute; left: -16px; top: 9px; width: 7px; height: 7px; border-radius: 999px; background: #D2621C; }
+  .skeleton-line { background: linear-gradient(90deg,#F0E4CB 25%,#F6EDDC 37%,#F0E4CB 63%); background-size: 400% 100%; animation: sk 1.2s ease infinite; border-radius: 6px; }
   @keyframes sk { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
   .rc-btn-main { min-height: 56px; }
-  .exp-split { display: flex; align-items: center; gap: 8px; color: #9A9A9A; font-size: 10px; margin-top: 10px; }
-  .exp-split::before, .exp-split::after { content: ""; flex: 1; border-top: 1px dashed #E8E8E8; }
-  @keyframes rcFlash { 0% { background: #F2F2F2; } 100% { background: #fff; } }
+  .exp-split { display: flex; align-items: center; gap: 8px; color: #A6947B; font-size: 10px; margin-top: 10px; }
+  .exp-split::before, .exp-split::after { content: ""; flex: 1; border-top: 1px dashed #E8DBC0; }
+  @keyframes rcFlash { 0% { background: #F6EBD8; } 100% { background: #FFFDF7; } }
   .rc-flash { animation: rcFlash 1.5s ease; }
 
   /* ---------- v2.2 新增：定高条带（整改 + 笔记统一 56px）/ 两级 chips 触控 / 编号识别 ---------- */
@@ -138,27 +145,27 @@
   .strip-layer { position: absolute; inset: 0; display: flex; align-items: center; gap: 8px; padding: 0 12px; }
   .strip-layer.hidden, .strip-pop.hidden { display: none; }
   /* v2.3 空态占位（替代预填正文；随输入消失） */
-  #ed-title:empty::before { content: "未命名笔记"; color: #B9B9B9; }
-  #ed-body:empty::before { content: "开始记录…输入关键词可自动推荐条文"; color: #B9B9B9; }
-  .strip-pop { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 45; background: #fff;
-    border: 1px solid #E8E8E8; border-radius: 12px; box-shadow: 0 10px 28px rgba(0,0,0,.12); padding: 8px; }
+  #ed-title:empty::before { content: "未命名笔记"; color: #B5A488; }
+  #ed-body:empty::before { content: "开始记录…输入关键词可自动推荐条文"; color: #B5A488; }
+  .strip-pop { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 45; background: #FFFDF7;
+    border: 1px solid #E8DBC0; border-radius: 12px; box-shadow: 0 10px 28px rgba(60,40,16,.14); padding: 8px; }
   .chip-touch { min-height: 56px; min-width: 56px; }
   /* 编号识别（阅读视图）：弱色虚线下划线 + 小图标，与引用卡实底样式区分 */
-  .num-ref { color: #6A6A6A; border-bottom: 1px dashed #9A9A9A; cursor: pointer; }
+  .num-ref { color: #7A6B57; border-bottom: 1px dashed #B5A488; cursor: pointer; }
   .num-ref svg { width: 10px !important; height: 10px !important; vertical-align: -0.1em !important; margin-left: 1px !important; opacity: .65; }
   .cite-inline[data-clause-id] { cursor: pointer; }
   /* v2.2 引用规范（顺序编码制）：正文上标 [n] + 文末「引用规范」参考文献表；[S]=标准 [Z]=内部示例 */
-  .cite-ref { display: inline-block; min-width: 15px; text-align: center; background: #F5F5F5; color: #333333;
-    border: 1px solid #E8E8E8; border-radius: 3px; font-size: 10px; line-height: 14px; padding: 0 2px;
+  .cite-ref { display: inline-block; min-width: 15px; text-align: center; background: #F4E9D3; color: #4A3E2E;
+    border: 1px solid #E8DBC0; border-radius: 3px; font-size: 10px; line-height: 14px; padding: 0 2px;
     margin: 0 1px; vertical-align: super; cursor: pointer; user-select: none; font-family: ui-monospace, monospace; }
-  .cite-ref:hover { border-color: #9A9A9A; }
-  .ref-sec { margin-top: 20px; border-top: 1px dashed #D9D9D9; padding-top: 10px; }
-  .ref-sec-title { font-size: 12px; font-weight: 700; color: #111111; letter-spacing: .5px; margin-bottom: 6px; }
-  .ref-item { font-size: 11.5px; color: #333333; line-height: 1.7; padding: 2px 4px; border-radius: 4px; cursor: pointer; }
-  .ref-item:hover { background: #F5F5F5; }
-  .ref-sec-note { font-size: 10px; color: #9A9A9A; margin-top: 6px; }
+  .cite-ref:hover { border-color: #B5A488; }
+  .ref-sec { margin-top: 20px; border-top: 1px dashed #DDCDAC; padding-top: 10px; }
+  .ref-sec-title { font-size: 12px; font-weight: 700; color: #241C12; letter-spacing: .5px; margin-bottom: 6px; }
+  .ref-item { font-size: 11.5px; color: #4A3E2E; line-height: 1.7; padding: 2px 4px; border-radius: 4px; cursor: pointer; }
+  .ref-item:hover { background: #F4E9D3; }
+  .ref-sec-note { font-size: 10px; color: #A6947B; margin-top: 6px; }
   .ref-flash { animation: ref-flash 1.1s ease-out; }
-  @keyframes ref-flash { 0% { background: #EFEFEF; } 100% { background: transparent; } }
+  @keyframes ref-flash { 0% { background: #F1E6D2; } 100% { background: transparent; } }
   .tb-toggle-off { opacity: .5; }
   .note-exp-body h1 { font-size: 15px; font-weight: 700; margin: 6px 0 4px; }
   .note-exp-body h2 { font-size: 13px; font-weight: 700; margin: 5px 0 3px; }
@@ -166,14 +173,53 @@
   .note-exp-body ul, .note-exp-body ol { padding-left: 18px; margin: 3px 0; }
   .note-exp-body ul { list-style: disc; }
   .note-exp-body ol { list-style: decimal; }
-  .note-exp-body blockquote { border-left: 3px solid #C9CFCE; background: #F5F5F5; padding: 6px 10px; margin: 5px 0; }
+  .note-exp-body blockquote { border-left: 3px solid #D9C6A3; background: #F4E9D3; padding: 6px 10px; margin: 5px 0; }
+
+  /* ---------- v2.3 配色焕新：暖纸画布 + 工程图纸网格 + 橙色晨光 + 圆规线稿水印 ---------- */
+  body {
+    background-color: #EADCC0 !important;
+    background-image:
+      radial-gradient(1000px 560px at 16% 4%, rgba(210,98,28,.10), rgba(210,98,28,0) 62%),
+      radial-gradient(820px 560px at 88% 96%, rgba(210,98,28,.08), rgba(210,98,28,0) 62%),
+      repeating-linear-gradient(0deg, rgba(138,113,80,.09) 0 1px, transparent 1px 26px),
+      repeating-linear-gradient(90deg, rgba(138,113,80,.09) 0 1px, transparent 1px 26px);
+  }
+  /* 机屏内：橙色晨光（右上）+ 左下余晖 + 圆规线稿水印（右下角探出，被圆角裁切） */
+  #app-screen {
+    background-image:
+      radial-gradient(340px 210px at 88% -40px, rgba(210,98,28,.16), rgba(210,98,28,0) 70%),
+      radial-gradient(320px 260px at -50px 104%, rgba(210,98,28,.09), rgba(210,98,28,0) 70%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' fill='none' stroke='%238A7150' stroke-width='2' stroke-linecap='round' opacity='.13'%3E%3Ccircle cx='100' cy='100' r='74' stroke-dasharray='3 8'/%3E%3Ccircle cx='100' cy='100' r='46'/%3E%3Cpath d='M100 26v148M26 100h148' stroke-dasharray='2 10'/%3E%3Cpath d='M100 54l13 31-13 61-13-61z'/%3E%3Ccircle cx='100' cy='100' r='6' fill='%23D2621C' stroke='none'/%3E%3Cpath d='M100 12v16M100 172v16M12 100h16M172 100h16'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right top, left bottom, right -48px bottom -44px;
+    background-size: auto, auto, 200px 200px;
+  }
+  /* 页头晨光带 */
+  #app-header { background-image: linear-gradient(180deg, rgba(247,209,158,.75) 0%, rgba(247,209,158,0) 100%) !important; }
+  /* 卡片/弹层：暖纸白（替代纯白） */
+  [class~="bg-white"] { background-color: #FFFDF7 !important; }
+  [class~="bg-white/80"] { background-color: rgba(255,251,242,.82) !important; }
+  /* 字面色悬停：暖化（含 hover 变体补偿） */
+  [class~="bg-[#F0F0F0]"] { background-color: #EADCC0 !important; }
+  [class~="bg-[#F7F7F7]"] { background-color: #F4E9D6 !important; }
+  [class~="hover:bg-[#F0F0F0]"]:hover { background-color: #F3E6CE !important; }
+  [class~="hover:bg-[#F7F7F7]"]:hover { background-color: #F6EDDC !important; }
+  [class~="border-[#E8E8E8]"] { border-color: #E7DAC2 !important; }
+  [class~="text-[#6A6A6A]"] { color: #7A6B57 !important; }
+  [class~="text-[#9A9A9A]"] { color: #A6947B !important; }
+  /* 品牌橙：图标底、用户消息气泡（bg-* 直改；文字色不动） */
+  [class~="bg-deep-500"], [class~="bg-deep-700"] { background-color: #D2621C !important; }
+  [class~="bg-gradient-to-br"][class~="from-deep-500"] { background-image: linear-gradient(135deg, #E8833F, #B14E12) !important; }
+  /* 手机壳与灵动岛：暖黑（与暖纸同族） */
+  [class~="bg-[#0A0E13]"] { background-color: #241A10 !important; }
+  ::selection { background: #F6D8B8; }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
   }
 </style>
 </head>
-<body class="bg-[#F0F0F0] min-h-screen flex flex-col items-center justify-center py-6 select-none"><a class="pj-back" href="../index.html">← 返回作品集</a><style>.pj-back{position:fixed;top:12px;left:12px;z-index:99999;background:#FFFFFF;color:#111111;font:13px/1 "Microsoft YaHei","PingFang SC",sans-serif;padding:9px 15px;border-radius:20px;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.14);border:1px solid #111111;opacity:.94}.pj-back:hover{opacity:1;background:#F0F0F0}@media print{.pj-back{display:none}}</style>
+<body class="bg-[#EADCC0] min-h-screen flex flex-col items-center justify-center py-6 select-none"><a class="pj-back" href="../index.html">← 返回作品集</a><style>.pj-back{position:fixed;top:12px;left:12px;z-index:99999;background:#FFFFFF;color:#111111;font:13px/1 "Microsoft YaHei","PingFang SC",sans-serif;padding:9px 15px;border-radius:20px;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.14);border:1px solid #111111;opacity:.94}.pj-back:hover{opacity:1;background:#F0F0F0}@media print{.pj-back{display:none}}</style>
   <svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true"><symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.1 14.6a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.55V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1.03H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.55-1.1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1.03-1.55V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1.03 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.55 1.03H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.55 1.03z"/></symbol><symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2l1.75 5.05L18.8 10l-5.05 1.75L12 16.8l-1.75-5.05L5.2 10l5.05-1.75z"/><path d="M18.6 16.2l.6 1.7 1.7.6-1.7.6-.6 1.7-.6-1.7-1.7-.6 1.7-.6z"/></symbol><symbol id="i-compass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15.6 8.4-2.1 5.1-5.1 2.1 2.1-5.1z"/></symbol><symbol id="i-pen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5-10.5a2.12 2.12 0 0 0-3-3L5 17z"/><path d="M13.5 6.5l3 3"/></symbol><symbol id="i-wand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l8.5-8.5"/><path d="M15 3.2l.85 2.35L18.2 6.4l-2.35.85L15 9.6l-.85-2.35L11.8 6.4l2.35-.85z"/><path d="M19.4 12.6l.5 1.4 1.4.5-1.4.5-.5 1.4-.5-1.4-1.4-.5 1.4-.5z"/></symbol><symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></symbol><symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20.2 20.2-3.3-3.3"/></symbol><symbol id="i-quote" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 7.5c-2 0-3.5 1.5-3.5 3.5s1.5 3.5 3.5 3.5c0 2-1.3 3.2-2.8 3.5"/><path d="M18 7.5c-2 0-3.5 1.5-3.5 3.5s1.5 3.5 3.5 3.5c0 2-1.3 3.2-2.8 3.5"/></symbol><symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="m21 15.5-4.5-4.5L7 20.5"/></symbol><symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.2v5l3.2 1.9"/></symbol><symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.2A2.4 2.4 0 0 1 6.4 16.8H20"/><path d="M6.4 2.8H20v18.4H6.4A2.4 2.4 0 0 1 4 18.8V5.2a2.4 2.4 0 0 1 2.4-2.4z"/></symbol><symbol id="i-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2.5" width="8" height="3.6" rx="1.1"/><path d="M16 4.3h2a2 2 0 0 1 2 2v13.4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6.3a2 2 0 0 1 2-2h2"/><path d="M8.5 11.5h7M8.5 15.5h4.5"/></symbol><symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 14.8a2 2 0 0 1-2 2H7.5L3.5 20.5V5.2a2 2 0 0 1 2-2h13.5a2 2 0 0 1 2 2z"/></symbol><symbol id="i-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18.5-6.5-6.5L15 5.5"/></symbol><symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5.5 6.5 6.5L9 18.5"/></symbol><symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></symbol><symbol id="i-hook" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16"/><path d="M12 4v6.2"/><path d="M12 10.2a4.4 4.4 0 1 0 4.4 4.4"/></symbol><symbol id="i-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 3.8c0 9.2-6 15.4-14.4 15.4 0-9.2 6-15.4 14.4-15.4z"/><path d="M6.2 18.6C9 13.8 12.6 10.6 16.6 8.6"/></symbol><symbol id="i-factory" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20.5h18"/><path d="M4.5 20.5V10l5.2 3.1V10l5.2 3.1V7.2l5.6 3.4v9.9"/></symbol><symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2l7.8 2.9v5.7c0 4.9-3.3 8.2-7.8 9.2-4.5-1-7.8-4.3-7.8-9.2V6.1z"/></symbol><symbol id="i-wave" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 9.2c2.4 0 2.4 2 4.8 2s2.4-2 4.8-2 2.4 2 4.8 2 2.4-2 4.6-2"/><path d="M2.5 15.2c2.4 0 2.4 2 4.8 2s2.4-2 4.8-2 2.4 2 4.8 2 2.4-2 4.6-2"/></symbol><symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8v13.4"/><path d="M8.2 6.6h7.6"/><path d="M4.5 21.2h15"/><path d="M12 16.2l-2.6 5h5.2z"/></symbol><symbol id="i-wind" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.2h9.4a2.9 2.9 0 1 0-2.9-2.9"/><path d="M3 12.4h13.6a2.9 2.9 0 1 1-2.9 2.9"/><path d="M3 16.6h6.6"/></symbol><symbol id="i-note" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 3h9.3l4.7 4.7V20a1.2 1.2 0 0 1-1.2 1.2H5.5A1.2 1.2 0 0 1 4.3 20V4.2A1.2 1.2 0 0 1 5.5 3z"/><path d="M14.8 3v4.7h4.7"/><path d="M8 13h8M8 17h5"/></symbol><symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.4a2 2 0 0 1 2-2h3.9l2 2H19a2 2 0 0 1 2 2v8.8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol><symbol id="i-memo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="3" width="15" height="18" rx="2"/><path d="M8.5 8.5h7M8.5 12.5h7M8.5 16.5h4.5"/></symbol></svg>
 
   <!-- 桌面说明 -->
@@ -186,7 +232,7 @@
     <div class="absolute -right-[2px] top-40 w-[3px] h-20 bg-white/10 rounded-r"></div>
 
     <!-- 屏幕 -->
-    <div class="relative w-full h-full rounded-[35px] clip-noscroll bg-mist flex flex-col">
+    <div id="app-screen" class="relative w-full h-full rounded-[35px] clip-noscroll bg-mist flex flex-col">
 
       <!-- 状态栏 -->
       <div class="flex items-center justify-between px-7 pt-3.5 pb-1 text-[13px] font-semibold text-ink bg-mist relative z-20">
@@ -244,6 +290,16 @@
           <div id="nb-chips" class="flex gap-2 px-4 pt-1 pb-2 overflow-x-auto shrink-0"></div>
           <!-- 整改记录主入口（v2.0：现场节奏 ≤2 步可达） -->
           <button id="btn-new-rectify" class="press mx-4 mb-2 h-12 shrink-0 rounded-xl btn-p text-[13px] font-bold flex items-center justify-center gap-1.5"><svg class="ic"><use href="#i-gear"></use></svg> ＋ 新建整改记录</button>
+          <!-- v2.3 检查视图（仅整改记录本显示）：列表/汇总切换 + 检查包导出 -->
+          <div id="rc-view-bar" class="hidden shrink-0 px-4 pb-2">
+            <div class="flex items-center gap-2">
+              <div class="flex bg-white border border-line rounded-xl p-0.5 shadow-sm">
+                <button id="rc-vt-list" class="rc-vbtn press h-8 px-3 rounded-[10px] text-[12px] font-bold">列表</button>
+                <button id="rc-vt-sum" class="rc-vbtn press h-8 px-3 rounded-[10px] text-[12px] font-bold">汇总</button>
+              </div>
+              <button id="btn-check-pkg" class="press ml-auto h-8 px-3 rounded-xl border border-warn/40 bg-warn/10 text-[12px] font-bold text-warn">⬇ 检查包</button>
+            </div>
+          </div>
           <!-- 笔记列表 -->
           <div id="note-list" class="flex-1 overflow-y-auto px-4 pb-3"></div>
           <p class="text-center text-[10px] text-sub/80 pt-2 shrink-0">笔记仅存本机浏览器（清除浏览数据即丢失）· 导出长图可存档，不含照片</p>
@@ -457,10 +513,10 @@
           <div class="flex justify-center pt-2.5 pb-1"><div class="w-10 h-1 rounded-full bg-line"></div></div>
           <div class="px-4 pb-5 overflow-y-auto">
             <!-- 签名元素：今日吊装窗口期时间轴 -->
-            <div class="title-block rounded-md bg-white px-3 pb-3 pt-2.5 mb-3" data-label="今日吊装窗口期" style="--tc:#6A6A6A">
+            <div class="title-block rounded-md bg-white px-3 pb-3 pt-2.5 mb-3" data-label="今日吊装窗口期" style="--tc:#8A7150">
               <div class="wind-axis-ticks"></div>
               <div class="wind-axis">
-                <div class="wind-seg bg-[#9A9A9A]" style="left:0%;width:37.5%" title="06:00–10:30 可吊装"></div>
+                <div class="wind-seg bg-[#B5A488]" style="left:0%;width:37.5%" title="06:00–10:30 可吊装"></div>
                 <div class="wind-seg bg-warn/85" style="left:37.5%;width:45.8%" title="10:30–16:00 风速超限"></div>
                 <div class="wind-seg bg-ok/70" style="left:83.3%;width:16.7%" title="16:00–18:00 可吊装"></div>
               </div>
@@ -468,7 +524,7 @@
                 <span>06:00</span><span>10:30</span><span>16:00</span><span>18:00</span>
               </div>
               <div class="flex justify-between text-[10px] text-sub mt-0.5">
-                <span class="text-sub font-semibold"><i class="lg-sw" style="background:#9A9A9A"></i>可吊装 ≤8m/s</span>
+                <span class="text-sub font-semibold"><i class="lg-sw" style="background:#B5A488"></i>可吊装 ≤8m/s</span>
                 <span class="text-warn font-semibold"><i class="lg-sw" style="background:#C26A17"></i>超限 11m/s</span>
                 <span class="text-ok font-semibold"><i class="lg-sw" style="background:#1F9D6B"></i>恢复窗口</span>
               </div>
@@ -503,7 +559,7 @@
               </div>
               <div id="ai-qa-answer" class="hidden mt-2.5 bg-mist border border-line rounded-lg p-3">
                 <div id="ai-qa-body" class="text-[12px] text-ink leading-relaxed"></div>
-                <div id="ai-qa-cite" class="title-block rounded-sm bg-white mt-2" data-label="引用" style="--tc:#6A6A6A"></div>
+                <div id="ai-qa-cite" class="title-block rounded-sm bg-white mt-2" data-label="引用" style="--tc:#8A7150"></div>
                 <button id="ai-qa-save" class="press mt-2 w-full h-8 rounded-md btn-p text-[12px] font-semibold"><svg class="ic"><use href="#i-save"></use></svg> 存为笔记</button>
               </div>
             </div>
@@ -1035,11 +1091,16 @@
   function renderList() {
     var keepTop = noteList.scrollTop;   /* v2.3：重排/勾选后保持滚动位置 */
     noteList.innerHTML = "";
-    byId("nb-hint").classList.toggle("hidden", currentNb === "整改记录");   /* 整理提示仅笔记本有效 */
-    if (currentNb === "整改记录") {
+    var isRect = currentNb === "整改记录";
+    byId("nb-hint").classList.toggle("hidden", isRect);   /* 整理提示仅笔记本有效 */
+    byId("rc-view-bar").classList.toggle("hidden", !isRect);   /* v2.3 检查视图入口仅整改记录本显示 */
+    if (isRect) {
       if (msMode) { msMode = false; msSel = {}; }   /* 防御：整改记录本无多选（与桌面端同构） */
-      syncMsBar(); renderRectifyList(); noteList.scrollTop = keepTop; return;
+      syncMsBar(); syncRcViewBar();
+      if (rcView === "summary") { renderCheckSummary(""); } else { renderRectifyList(); }
+      noteList.scrollTop = keepTop; return;
     }
+    rcView = "list";   /* v2.3：离开整改本，检查视图复位为列表模式 */
     syncMsBar();
     /* 置顶笔记排前（稳定排序，其余保持原有先后） */
     var arr = NOTES[currentNb].slice().sort(function (a, b) { return (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0); });
@@ -2092,7 +2153,7 @@
     return '<span class="rc-status ' + m.cls + '">' + m.glyph + " " + status + "</span>";
   }
 
-  /* ---------- 演示记录（4 条，覆盖四状态 × 四专业；全部虚构代称；demo=true 显示「示例」角标） ---------- */
+  /* ---------- 演示记录（6 条，覆盖四状态；含「待整改」组三态排序演示：2 逾期 + 1 未到期；全部虚构代称；demo=true 显示「示例」角标） ---------- */
   var RECTIFY = [
     { id: "R-2610-001", demo: true, source: "项目自查", source_other: "",
       location: "主体结构 · 3# 楼二层梁板", severity: "一般",
@@ -2159,7 +2220,37 @@
         "2026-09-27 17:40 状态：待整改 → 已整改",
         "2026-09-28 09:10 状态：已整改 → 待整改（复查不通过：整改照片与说明不完整）",
         "2026-09-28 15:30 状态：待整改 → 已整改",
-        "2026-09-30 10:30 复查合格（线下复查人：质检员王工，代记）"] }
+        "2026-09-30 10:30 复查合格（线下复查人：质检员王工，代记）"] },
+    { id: "R-2610-005", demo: true, source: "项目自查", source_other: "",
+      location: "模板支架 · 5# 楼三层顶板", severity: "一般",
+      description: "5# 楼三层顶板模板支撑架搭设完成后未验收即进入钢筋绑扎，立杆底部垫板局部缺失。",
+      deadline: "2026-10-12", owner: "孙班长",
+      clauses: [{ clause_id: "JGJ 300-2013 · 6.1.4",
+        snapshot: "支撑结构立杆底部应设置木垫板或底座，并应保证其与地基接触面平整密实。",
+        adopted_at: "2026-10-05 10:20", adopted_via: "ai" }],
+      photos_before: [
+        { data: demoPhoto("整改前 · 支撑架体", "#5E7183", "#2C3E50"), caption: "架体搭设完成未验收", order: 0 },
+        { data: demoPhoto("整改前 · 垫板缺失", "#546E7A", "#263238"), caption: "立杆底部垫板局部缺失", order: 1 }],
+      action_note: "", photos_after: [], status: "待整改",
+      review_person: "", review_date: "", review_note: "",
+      created_at: "2026-10-04 09:20", updated_at: "2026-10-05 10:20",
+      timeline: ["2026-10-04 09:20 创建记录（草稿）", "2026-10-04 09:25 状态：草稿 → 待整改",
+        "2026-10-05 10:20 引用条文 JGJ 300-2013 · 6.1.4（AI 推荐采纳）"] },
+    { id: "R-2609-006", demo: true, source: "上级检查", source_other: "",
+      location: "临时用电 · 2# 配电箱区", severity: "较重",
+      description: "二级配电箱门未上锁、回路标识缺失，箱内多股导线接头未做绝缘防护。",
+      deadline: "2026-09-30", owner: "钱班长",
+      clauses: [{ clause_id: "GB 50303-2015 · 6.1.9",
+        snapshot: "配电箱内配线应整齐，导线连接应紧密、不伤芯线，回路标识齐全清晰。",
+        adopted_at: "2026-09-28 16:10", adopted_via: "ai" }],
+      photos_before: [
+        { data: demoPhoto("整改前 · 配电箱", "#6B5E4E", "#3E352A"), caption: "箱门未上锁、无回路标识", order: 0 },
+        { data: demoPhoto("整改前 · 接线混乱", "#5E5A4E", "#2E2B24"), caption: "接头绝缘防护缺失", order: 1 }],
+      action_note: "", photos_after: [], status: "待整改",
+      review_person: "", review_date: "", review_note: "",
+      created_at: "2026-09-26 08:40", updated_at: "2026-09-28 16:10",
+      timeline: ["2026-09-26 08:40 创建记录（草稿）", "2026-09-26 08:45 状态：草稿 → 待整改",
+        "2026-09-28 16:10 引用条文 GB 50303-2015 · 6.1.9（AI 推荐采纳）"] }
   ];
 
   /* ---------- 埋点（原型模拟，呼应 PRD 第 8 章；window.__events 供调试） ---------- */
@@ -2947,10 +3038,204 @@
     rcFlashId = null;
   }
 
+  /* ================= v2.3 检查视图（汇总视图 + 检查包导出） =================
+     只读聚合：按状态分组计数（待整改置顶、组内已逾期优先），点单条进入记录查看前后照片对照；
+     检查包 = 单 HTML（汇总 + 明细 + 内联照片，无外链无脚本，离线双击即看）。
+     边界：不提供批量操作与多人整改流转（PRD 11 章 v2.3 行）。 */
+  var rcView = "list";   /* list | summary */
+  function syncRcViewBar() {
+    byId("rc-vt-list").classList.toggle("on", rcView === "list");
+    byId("rc-vt-sum").classList.toggle("on", rcView === "summary");
+  }
+  function rcIsOverdue(r) { return r.status === "待整改" && !!r.deadline && r.deadline < rToday(); }
+  function rcCountBy(rows, keyFn) {
+    var m = {};
+    rows.forEach(function (r) { var k = keyFn(r) || "未填写"; m[k] = (m[k] || 0) + 1; });
+    return m;
+  }
+  function checkSummaryData(filter) {
+    filter = filter || "";
+    function match(r) { return !filter || r.location.indexOf(filter) >= 0 || r.description.indexOf(filter) >= 0; }
+    var all = RECTIFY.filter(match);
+    var drafts = all.filter(function (r) { return r.status === "草稿"; });
+    var groups = ["待整改", "已整改", "复查合格"].map(function (st) {
+      var rows = all.filter(function (r) { return r.status === st; });
+      if (st === "待整改") {
+        rows = rows.slice().sort(function (a, b) {   /* 已逾期优先，组内期限升序（未设期限排最后） */
+          var ao = rcIsOverdue(a), bo = rcIsOverdue(b);
+          if (ao !== bo) return ao ? -1 : 1;
+          var ad = a.deadline || "9999-99-99", bd = b.deadline || "9999-99-99";
+          return ad < bd ? -1 : (ad > bd ? 1 : 0);
+        });
+      } else {
+        rows = rows.slice().sort(function (a, b) { return (b.updated_at || "").localeCompare(a.updated_at || ""); });
+      }
+      return {
+        status: st, count: rows.length,
+        byLocation: rcCountBy(rows, function (r) { return (r.location || "").split(" · ")[0]; }),
+        byMonth: rcCountBy(rows, function (r) { return (r.created_at || "").slice(0, 7); }),
+        rows: rows.map(function (r) {
+          return { id: r.id, status: r.status, location: r.location, deadline: r.deadline || "",
+            overdue: rcIsOverdue(r), photos_before: r.photos_before.length, photos_after: r.photos_after.length,
+            clauses: r.clauses.length, updated_at: r.updated_at };
+        })
+      };
+    });
+    return { groups: groups, draftCount: drafts.length, total: all.length - drafts.length };
+  }
+  function rcChipsText(m) {
+    return Object.keys(m).map(function (k) { return k + " " + m[k]; }).join(" · ");
+  }
+  function renderCheckSummary(filter) {
+    noteList.innerHTML = "";
+    var data = checkSummaryData(filter);
+    var wrap = document.createElement("div");
+    wrap.className = "ck-wrap pb-1";
+    var h = '<div class="ck-head bg-white border border-line rounded-xl px-3.5 py-3 mb-2.5 shadow-sm">' +
+      '<div class="flex items-center gap-1.5 flex-wrap">' +
+        '<span class="text-[13px] font-bold text-ink">整改检查汇总</span>' +
+        '<span class="text-[9px] font-bold text-sub border border-line rounded px-1 py-px">只读聚合</span>' +
+        '<span class="ml-auto text-[10px] text-sub font-mono">' + rNow().slice(0, 10) + "</span>" +
+      "</div>" +
+      '<div class="text-[10px] text-sub mt-2 leading-relaxed">草稿 ' + data.draftCount + " 条未纳入汇总（未提交）· 共 " + data.total + " 条在检查范围内</div>" +
+    "</div>";
+    data.groups.forEach(function (g) {
+      h += '<div class="ck-group mb-3" data-status="' + g.status + '">' +
+        '<div class="flex items-center gap-1.5 flex-wrap px-0.5 mb-1.5">' +
+          statusTag(g.status) +
+          '<span class="text-[11px] font-bold text-ink"><span class="ck-g-n">' + g.count + "</span> 条</span>" +
+          (g.count ? '<span class="ml-auto text-[10px] text-sub">' + rcChipsText(g.byLocation) + "</span>" : "") +
+        "</div>" +
+        (g.count ? '<div class="text-[10px] text-sub px-0.5 mb-1.5">月份：' + rcChipsText(g.byMonth) + "</div>" : "") +
+        g.rows.map(function (r) {
+          var od = r.overdue
+            ? '<span class="text-[9px] font-bold text-danger border border-danger/40 bg-danger/10 rounded px-1 py-px">已逾期 ' + overdueDays(r.deadline) + " 天</span>" : "";
+          return '<div class="ck-row bg-white border border-line rounded-xl px-3.5 py-2.5 mb-1.5 shadow-sm" data-rid="' + r.id + '" role="button" tabindex="0">' +
+            '<div class="flex items-center gap-1.5 flex-wrap">' +
+              '<span class="text-[10px] font-mono text-sub">' + r.id + "</span>" + od +
+              '<span class="ml-auto text-[10px] text-sub font-mono">' + (r.deadline ? "期限 " + r.deadline.slice(5) : "未设期限") + "</span>" +
+            "</div>" +
+            '<div class="text-[12.5px] font-semibold text-ink mt-1 leading-snug">' + r.location + "</div>" +
+            '<div class="text-[10px] text-sub mt-1">照片 ' + r.photos_before + "+" + r.photos_after + " · " + (r.clauses ? "条文 " + r.clauses + " 条" : "未关联条文") + "</div>" +
+          "</div>";
+        }).join("") +
+        (g.count ? "" : '<div class="text-[11px] text-sub px-0.5">无记录</div>') +
+      "</div>";
+    });
+    wrap.innerHTML = h;
+    Array.prototype.forEach.call(wrap.querySelectorAll(".ck-row"), function (el) {
+      function open() { openRectify(el.getAttribute("data-rid")); }
+      el.addEventListener("click", open);
+      el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+    });
+    noteList.appendChild(wrap);
+  }
+  function escHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function buildCheckPkgHtml() {
+    var data = checkSummaryData("");
+    var now = rNow();
+    var allRecs = [];
+    data.groups.forEach(function (g) { g.rows.forEach(function (r) { allRecs.push(r); }); });
+    var withClause = allRecs.some(function (r) { return r.clauses > 0; });
+    var withPhoto = allRecs.some(function (r) { return (r.photos_before + r.photos_after) > 0; });
+    var h = [];
+    h.push("<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"utf-8\">");
+    h.push("<title>准绳 · 整改检查包 " + now.slice(0, 10) + "</title>");
+    h.push("<style>" +
+      "body{font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:#F3EAD8;color:#241C12;margin:0;padding:22px;}" +
+      ".pk{max-width:880px;margin:0 auto;background:#FFFDF7;border:1px solid #E7DAC2;border-radius:10px;padding:24px 28px;}" +
+      "h1{font-size:19px;margin:0 0 2px;padding-left:10px;border-left:4px solid #D2621C;} h2{font-size:14px;margin:22px 0 8px;padding-top:14px;border-top:1px solid #E7DAC2;}" +
+      ".sub{font-size:11px;color:#7A6B57;margin-bottom:6px;}" +
+      "table{width:100%;border-collapse:collapse;font-size:12px;} th,td{border:1px solid #E7DAC2;padding:5px 8px;text-align:left;}" +
+      "th{background:#F4E9D3;font-size:11px;}" +
+      ".rec{border:1px solid #E7DAC2;border-radius:8px;padding:12px 14px;margin:10px 0;}" +
+      ".rec .rid{font-family:Consolas,monospace;font-size:11px;color:#7A6B57;}" +
+      ".kv{font-size:11.5px;line-height:1.8;} .kv b{display:inline-block;width:64px;color:#7A6B57;font-weight:600;}" +
+      ".cl{border:1px solid #E7DAC2;border-radius:6px;padding:8px 10px;margin:6px 0;font-size:11.5px;}" +
+      ".ph{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0;} .ph figure{margin:0;width:calc(50% - 4px);}" +
+      ".ph img{width:100%;border:1px solid #E7DAC2;border-radius:6px;display:block;}" +
+      ".ph figcaption{font-size:10px;color:#7A6B57;margin-top:3px;}" +
+      ".tl{font-size:11px;color:#241C12;line-height:1.9;} .foot{margin-top:22px;padding-top:12px;border-top:1px solid #E7DAC2;font-size:10.5px;color:#7A6B57;line-height:1.7;}" +
+      ".tag{display:inline-block;font-size:10px;font-weight:700;border:1px solid #E7DAC2;border-radius:999px;padding:1px 8px;margin-right:6px;}" +
+      "</style></head><body><div class=\"pk\">");
+    h.push("<h1>整改检查包</h1>");
+    h.push("<div class=\"sub\">准绳 · 规范驱动的整改留痕助手 · 生成于 " + escHtml(now) + " · 演示数据（全部虚构）· 只读聚合，单文件离线可看</div>");
+    h.push("<h2>一、汇总（按状态 × 部位 × 时间）</h2>");
+    h.push("<table><tr><th>状态</th><th>条数</th><th>部位分布</th><th>月份分布</th></tr>");
+    data.groups.forEach(function (g) {
+      h.push("<tr><td>" + escHtml(g.status) + "</td><td>" + g.count + "</td><td>" + escHtml(rcChipsText(g.byLocation) || "—") + "</td><td>" + escHtml(rcChipsText(g.byMonth) || "—") + "</td></tr>");
+    });
+    h.push("<tr><td>草稿（未纳入）</td><td>" + data.draftCount + "</td><td>—</td><td>—</td></tr>");
+    h.push("</table>");
+    h.push("<div class=\"sub\" style=\"margin-top:6px;\">共 " + data.total + " 条在检查范围内；「待整改」按已逾期优先排列。</div>");
+    h.push("<h2>二、明细与整改前后照片对照</h2>");
+    data.groups.forEach(function (g) {
+      if (!g.count) return;
+      h.push("<div style=\"font-size:12px;font-weight:700;margin:10px 0 2px;\">" + escHtml(g.status) + " · " + g.count + " 条</div>");
+      g.rows.forEach(function (row) {
+        var r = null;
+        for (var i = 0; i < RECTIFY.length; i++) { if (RECTIFY[i].id === row.id) { r = RECTIFY[i]; break; } }
+        if (!r) return;
+        h.push("<div class=\"rec\"><div><span class=\"tag\">" + escHtml(r.status) + "</span><span class=\"rid\">" + escHtml(r.id) + "</span></div>");
+        h.push("<div class=\"kv\" style=\"margin-top:6px;\">" +
+          "<div><b>问题来源</b>" + escHtml(r.source + (r.source === "其他" && r.source_other ? "（" + r.source_other + "）" : "")) + "</div>" +
+          "<div><b>问题部位</b>" + escHtml(r.location) + "</div>" +
+          "<div><b>严重度</b>" + escHtml(r.severity) + "</div>" +
+          "<div><b>整改期限</b>" + escHtml(r.deadline || "未设置") + "</div>" +
+          "<div><b>责任人</b>" + escHtml(r.owner || "未填写") + "</div>" +
+          "<div><b>问题描述</b>" + escHtml(r.description) + "</div>" +
+          (r.action_note ? "<div><b>处置说明</b>" + escHtml(r.action_note) + "</div>" : "") +
+          (r.review_person || r.review_date || r.review_note
+            ? "<div><b>复查信息</b>" + escHtml((r.review_person || "—") + " / " + (r.review_date || "—") + " / " + (r.review_note || "—")) + "</div>" : "") +
+        "</div>");
+        if (r.clauses.length) {
+          r.clauses.forEach(function (cl) {
+            h.push("<div class=\"cl\"><b>" + escHtml(cl.clause_id) + "</b><br>" + escHtml(cl.snapshot) + "</div>");
+          });
+        } else {
+          h.push("<div class=\"cl\" style=\"color:#7A6B57;\">未关联条文</div>");
+        }
+        function ph(list, label) {
+          if (!list.length) return "";
+          return "<div style=\"font-size:10px;color:#7A6B57;margin-top:6px;\">" + label + "</div><div class=\"ph\">" +
+            list.map(function (p) {
+              return "<figure><img src=\"" + p.data + "\" alt=\"" + escHtml(p.caption || label) + "\"><figcaption>" + escHtml(p.caption || label) + "</figcaption></figure>";
+            }).join("") + "</div>";
+        }
+        h.push(ph(r.photos_before, "整改前") + ph(r.photos_after, "整改后"));
+        if (r.timeline && r.timeline.length) {
+          h.push("<div style=\"font-size:10px;color:#7A6B57;margin-top:8px;\">时间线</div><div class=\"tl\">" +
+            r.timeline.map(function (t) { return escHtml(t); }).join("<br>") + "</div>");
+        }
+        h.push("</div>");
+      });
+    });
+    h.push("<div class=\"foot\">" + escHtml(EXP_FOOTER.l1()) + "<br>" + escHtml(EXP_FOOTER.l2(withClause, withPhoto)) +
+      "<br>本检查包为只读聚合输出，不含编辑入口；内容供工作留痕参考，不构成验收或责任认定依据。</div>");
+    h.push("</div></body></html>");
+    return h.join("");
+  }
+  function exportCheckPkg() {
+    var blob = new Blob([buildCheckPkgHtml()], { type: "text/html;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "准绳-检查包-" + rNow().slice(0, 10) + ".html";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 30000);
+    showToast("检查包已导出（单文件，离线可看）");
+    track("check_pkg_exported", { records: checkSummaryData("").total });
+  }
+
   /* ---------- 导出预览（页脚五要素逐页固定；分页 ≤1600px） ---------- */
   /* 页脚五要素唯一来源：①产品名 ②版本 ③生成时间 ④自录未核验声明 ⑤条文以官方发布文本为准 */
   var EXP_FOOTER = {
-    l1: function () { return "准绳 v2.2 · 生成于 " + rNow() + " · 演示数据（全部虚构）"; },
+    l1: function () { return "准绳 v2.3 · 生成于 " + rNow() + " · 演示数据（全部虚构）"; },
     /* 常置⑤：自录未核验声明 + 官方文本为准；含条文时追加第⑥要素「条文版权」（整改 clauses 非空 / 笔记 cites 非空或正文含库内编号）；含照片时追加压缩声明 */
     l2: function (withClause, withPhoto) {
       return "内容由用户自行录入、未经第三方核验，不构成验收或责任认定依据；条文以官方发布文本为准。" +
@@ -3778,6 +4063,9 @@
     events: function () { return _events.slice(); },
     saveState: function () { var el = byId("ed-save"); return el.dataset.state || ""; },
     recIds: function () { return RECTIFY.map(function (r) { return r.id; }); },
+    checkSummary: function (f) { return checkSummaryData(f || ""); },
+    buildCheckPkg: function () { return buildCheckPkgHtml(); },
+    checkView: function () { return rcView; },
     pinnedIds: function () {
       var r = [];
       Object.keys(NOTES).forEach(function (nb) { NOTES[nb].forEach(function (n) { if (n.pinned) r.push(n.id); }); });
@@ -3792,6 +4080,12 @@
 
   /* ---------- 初始化 ---------- */
   byId("btn-new-rectify").addEventListener("click", function () { openRectify(null); });
+  /* v2.3 检查视图：列表/汇总切换 + 检查包导出（入口仅整改记录本显示） */
+  byId("rc-vt-list").addEventListener("click", function () { if (rcView !== "list") { rcView = "list"; renderList(); } });
+  byId("rc-vt-sum").addEventListener("click", function () {
+    if (rcView !== "summary") { rcView = "summary"; track("check_view_opened", { total: RECTIFY.length }); renderList(); }
+  });
+  byId("btn-check-pkg").addEventListener("click", exportCheckPkg);
   renderChips();
   renderList();
   goTo("notes", { silent: true });
