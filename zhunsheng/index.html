@@ -325,12 +325,13 @@
             </div>
             <!-- v2.3 检查视图（仅整改记录本显示）：列表/汇总切换 + 检查包导出 -->
             <div id="rc-view-bar" class="hidden px-2.5 pb-2 shrink-0">
-              <div class="flex items-center gap-1.5">
+              <div class="flex items-center gap-1.5 flex-wrap">
                 <div class="flex bg-paper rounded-lg p-0.5">
                   <button id="rc-vt-list" class="rc-vbtn press h-6 px-2.5 rounded-md text-[11px] font-bold">列表</button>
                   <button id="rc-vt-sum" class="rc-vbtn press h-6 px-2.5 rounded-md text-[11px] font-bold">汇总</button>
                 </div>
                 <button id="btn-check-pkg" class="press ml-auto h-6 px-2 rounded-md border border-warn/40 bg-warn/10 text-[11px] font-bold text-warn">⬇ 检查包</button>
+                <button id="btn-photo-table" class="press h-6 px-2 rounded-md border border-line bg-paper text-[11px] font-bold text-ink" title="导出整改照片对照表（一行一条记录，左整改前 / 右整改后；单文件可打印）">⬇ 对照表</button>
               </div>
             </div>
             <div id="note-list" class="flex-1 overflow-y-auto px-2.5 py-2"></div>
@@ -3395,6 +3396,94 @@
     track("check_pkg_exported", { records: checkSummaryData("").total });
   }
 
+  /* ---------- v2.3 补充：整改照片对照表（项目经理现场用，页脚同 EXP_FOOTER） ----------
+     一行一条整改记录：左「整改前照片」右「整改后照片」；与检查包同口径（草稿不入表）；
+     打印友好（行内不跨页、表头逐页重复）；行数随记录增加——新增记录后重新导出即扩充行数。 */
+  function buildPhotoTableHtml() {
+    var data = checkSummaryData("");
+    var now = rNow();
+    var flat = [];
+    data.groups.forEach(function (g) { g.rows.forEach(function (row) { flat.push(row); }); });
+    var withPhoto = flat.some(function (r) { return (r.photos_before + r.photos_after) > 0; });
+    function phCell(list, emptyText) {
+      if (!list.length) return "<td class=\"ph\"><div class=\"none\">—（" + emptyText + "）</div></td>";
+      return "<td class=\"ph\">" + list.map(function (p) {
+        return "<figure><img src=\"" + p.data + "\" alt=\"" + escHtml(p.caption || "") + "\">" +
+          (p.caption ? "<figcaption>" + escHtml(p.caption) + "</figcaption>" : "") + "</figure>";
+      }).join("") + "</td>";
+    }
+    var h = [];
+    h.push("<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"utf-8\">");
+    h.push("<title>准绳 · 整改照片对照表 " + now.slice(0, 10) + "</title>");
+    h.push("<style>" +
+      "body{font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:#F3EAD8;color:#241C12;margin:0;padding:22px;}" +
+      ".pk{max-width:880px;margin:0 auto;background:#FFFDF7;border:1px solid #E7DAC2;border-radius:10px;padding:24px 28px;}" +
+      "h1{font-size:19px;margin:0 0 2px;padding-left:10px;border-left:4px solid #D2621C;}" +
+      ".sub{font-size:11px;color:#7A6B57;margin-bottom:4px;line-height:1.7;}" +
+      "table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;margin-top:12px;}" +
+      "th,td{border:1px solid #E7DAC2;padding:6px 8px;text-align:left;vertical-align:top;}" +
+      "th{background:#F4E9D3;font-size:11px;}" +
+      "tr{page-break-inside:avoid;} thead{display:table-header-group;}" +
+      ".n{font-family:Consolas,monospace;font-size:11px;color:#7A6B57;}" +
+      ".loc{font-weight:700;font-size:12.5px;line-height:1.5;}" +
+      ".desc{font-size:11px;color:#5A4C3A;margin-top:3px;line-height:1.6;}" +
+      ".meta{font-size:10px;color:#7A6B57;margin-top:2px;line-height:1.8;}" +
+      ".tag{display:inline-block;font-size:10px;font-weight:700;border-radius:999px;padding:1px 8px;border:1px solid #E7DAC2;}" +
+      ".tag-pend{color:#B03A2E;border-color:#D8A79F;background:#FBEFEC;}" +
+      ".tag-done{color:#9C6B1E;border-color:#DCC79B;background:#FAF3E3;}" +
+      ".tag-pass{color:#2F6B47;border-color:#A9C9B4;background:#EEF6F0;}" +
+      ".od{color:#B03A2E;font-weight:700;font-size:10px;}" +
+      ".ph figure{margin:0 0 6px;} .ph figure:last-child{margin-bottom:0;}" +
+      ".ph img{width:100%;border:1px solid #E7DAC2;border-radius:6px;display:block;}" +
+      ".ph figcaption{font-size:10px;color:#7A6B57;margin-top:2px;}" +
+      ".none{font-size:10.5px;color:#B0A28C;}" +
+      ".foot{margin-top:18px;padding-top:12px;border-top:1px solid #E7DAC2;font-size:10.5px;color:#7A6B57;line-height:1.7;}" +
+      "@media print{body{background:#fff;padding:0;} .pk{border:none;padding:0;}}" +
+      "</style></head><body><div class=\"pk\">");
+    h.push("<h1>整改照片对照表</h1>");
+    h.push("<div class=\"sub\">准绳 · 规范驱动的整改留痕助手 · 生成于 " + escHtml(now) + " · 演示数据（全部虚构）· 每行一条整改记录：左栏整改前照片、右栏整改后照片；新增记录后重新导出即可扩充行数</div>");
+    h.push("<div class=\"sub\">草稿 " + data.draftCount + " 条未纳入（未提交）· 共 " + data.total + " 条在表内（待整改 " + data.groups[0].count + " · 已整改 " + data.groups[1].count + " · 复查合格 " + data.groups[2].count + "）</div>");
+    h.push("<table><colgroup><col style=\"width:34px\"><col style=\"width:26%\"><col><col></colgroup>");
+    h.push("<thead><tr><th>#</th><th>整改信息</th><th>整改前照片</th><th>整改后照片</th></tr></thead><tbody>");
+    var n = 0;
+    data.groups.forEach(function (g) {
+      g.rows.forEach(function (row) {
+        var r = null;
+        for (var i = 0; i < RECTIFY.length; i++) { if (RECTIFY[i].id === row.id) { r = RECTIFY[i]; break; } }
+        if (!r) return;
+        n += 1;
+        var tagCls = r.status === "待整改" ? "tag-pend" : (r.status === "已整改" ? "tag-done" : "tag-pass");
+        h.push("<tr data-rid=\"" + escHtml(row.id) + "\">" +
+          "<td class=\"n\">" + n + "</td>" +
+          "<td><div class=\"loc\">" + escHtml(r.location) + "</div>" +
+          "<div class=\"desc\">" + escHtml(r.description) + "</div>" +
+          "<div style=\"margin-top:5px;\"><span class=\"tag " + tagCls + "\">" + escHtml(r.status) + "</span>" +
+          (row.overdue ? " <span class=\"od\">已逾期 " + overdueDays(r.deadline) + " 天</span>" : "") + "</div>" +
+          "<div class=\"meta\">" + escHtml(r.id) + " · " + escHtml(r.deadline ? "期限 " + r.deadline : "未设期限") +
+          (r.owner ? " · 责任人 " + escHtml(r.owner) : "") + "</div></td>" +
+          phCell(r.photos_before, "整改前未拍照") + phCell(r.photos_after, "整改后未拍照") +
+        "</tr>");
+      });
+    });
+    h.push("</tbody></table>");
+    h.push("<div class=\"foot\">" + escHtml(EXP_FOOTER.l1()) + "<br>" + escHtml(EXP_FOOTER.l2(false, withPhoto)) +
+      "<br>本对照表为只读导出物，不含编辑入口；照片由用户自行拍摄录入、未经第三方核验，不构成验收或责任认定依据。</div>");
+    h.push("</div></body></html>");
+    return h.join("");
+  }
+  function exportPhotoTable() {
+    var blob = new Blob([buildPhotoTableHtml()], { type: "text/html;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "准绳-整改照片对照表-" + rNow().slice(0, 10) + ".html";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 30000);
+    showToast("整改照片对照表已导出（单文件，离线可看）");
+    track("photo_table_exported", { records: checkSummaryData("").total });
+  }
+
   /* ---------- 导出预览（页脚五要素逐页固定；分页 ≤1600px） ---------- */
   /* 页脚五要素唯一来源：①产品名 ②版本 ③生成时间 ④自录未核验声明 ⑤条文以官方发布文本为准 */
   var EXP_FOOTER = {
@@ -4271,6 +4360,7 @@
     recIds: function () { return RECTIFY.map(function (r) { return r.id; }); },
     checkSummary: function (f) { return checkSummaryData(f || ""); },
     buildCheckPkg: function () { return buildCheckPkgHtml(); },
+    buildPhotoTable: function () { return buildPhotoTableHtml(); },
     checkView: function () { return rcView; },
     pinnedIds: function () {
       var r = [];
@@ -4291,6 +4381,7 @@
     if (rcView !== "summary") { rcView = "summary"; track("check_view_opened", { total: RECTIFY.length }); renderList(byId("note-search").value.trim()); }
   });
   byId("btn-check-pkg").addEventListener("click", exportCheckPkg);
+  byId("btn-photo-table").addEventListener("click", exportPhotoTable);
 
   /* ---------- 整改模块入口 ---------- */
   byId("btn-new-rectify").addEventListener("click", function () {
