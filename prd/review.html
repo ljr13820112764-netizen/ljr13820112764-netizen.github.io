@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>评审摘要 · 准绳 2.0 PRD 六角色评审与复评</title>
+<style>/* ===========================================================
+   视觉语言：中性灰阶 · 色彩只承载语义（与双端原型同一套 token）
+   底/面    #F0F0F0 底 · #FFFFFF 卡 · #F5F5F5 凹块
+   墨阶     #111111 主 · #6A6A6A 次 · #8C8C8C 弱 · #E8E8E8 发丝线
+   语义色   仅四态 + 阻断红 #C0392B + 通过绿 #1F9D6B，不作装饰
+   形态     圆角 16/12/全圆 · 无边框 · 极柔单层阴影
+   =========================================================== */
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif;color:#111111;
+ background:#F0F0F0;line-height:1.95;letter-spacing:.01em;-webkit-text-size-adjust:100%}
+a{color:#111111;text-decoration:none}
+a:hover{color:#000}
+/* ---- 顶栏：毛玻璃 ---- */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.74);
+ -webkit-backdrop-filter:saturate(1.6) blur(14px);backdrop-filter:saturate(1.6) blur(14px);
+ border-bottom:1px solid rgba(0,0,0,.06)}
+.topbar .in{max-width:1180px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:18px;
+ height:52px;flex-wrap:nowrap;overflow:hidden}
+.topbar .brand{font-size:14px;font-weight:600;letter-spacing:.02em;color:#111111;white-space:nowrap}
+.topbar .brand span{color:#8C8C8C;font-weight:400}
+.topbar nav{display:flex;gap:4px;margin-left:auto;align-items:center}
+.topbar nav a{color:#6A6A6A;text-decoration:none;font-size:13px;padding:6px 13px;border-radius:999px;white-space:nowrap;
+ transition:background .18s ease,color .18s ease}
+.topbar nav a:hover{background:rgba(0,0,0,.06);color:#111111}
+.topbar nav a.on{background:#111111;color:#fff}
+.topbar nav a.back{color:#8C8C8C;font-size:12.5px}
+.topbar nav a.back:hover{color:#111111}
+/* ---- 阅读进度发丝线（全页唯一动效） ---- */
+.prog{position:fixed;top:0;left:0;right:0;height:2px;z-index:60;pointer-events:none}
+.prog i{display:block;height:100%;transform:scaleX(0);transform-origin:0 50%;
+ background:linear-gradient(90deg,#BDBDBD,#111111)}
+/* ---- 页首：安静的开场 ---- */
+.dochd{padding:54px 0 30px}
+.dochd .in{max-width:1180px;margin:0 auto;padding:0 20px}
+.dochd h1{font-size:31px;font-weight:600;letter-spacing:-.01em;line-height:1.45;color:#111111}
+.dochd .meta{margin-top:14px;font-size:13.5px;color:#6A6A6A;line-height:2.0;max-width:760px}
+.dochd .meta b{color:#111111;font-weight:600}
+.dochd .tagrow{margin-top:18px;display:flex;gap:8px;flex-wrap:wrap}
+.tg{font-size:11.5px;padding:4px 12px;border-radius:999px;background:#fff;border:1px solid #E8E8E8;color:#6A6A6A}
+.tg.ok{background:#EAF7F1;border-color:#A9DCC5;color:#1F9D6B}   /* 语义：复评通过 */
+.tg.bad{background:#FBEDEB;border-color:#F0C4BE;color:#C0392B}   /* 语义：首轮阻断 */
+/* ---- 主体网格 ---- */
+.docwrap{max-width:1180px;margin:0 auto;padding:8px 20px 90px;display:grid;
+ grid-template-columns:250px 1fr;gap:36px;align-items:start}
+.docwrap > *{min-width:0}   /* 否则宽表 / 宽 SVG 会撑破网格，手机端整页横向溢出 */
+/* ---- 侧栏目录 ---- */
+.toc{position:sticky;top:76px;max-height:calc(100vh - 104px);overflow-y:auto;
+ background:#fff;border-radius:16px;padding:20px 8px 20px 20px;font-size:12.5px;
+ box-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 30px rgba(0,0,0,.05)}
+.toc::-webkit-scrollbar{width:5px}.toc::-webkit-scrollbar-thumb{background:#E8E8E8;border-radius:3px}
+.toc .h{font-size:11px;color:#8C8C8C;letter-spacing:.18em;margin:0 0 12px -2px;font-weight:600}
+.toc ul{list-style:none;margin:0;padding:0}
+.toc ul ul{margin-left:10px;border-left:1px solid #EFEFEF;padding-left:10px}
+.toc li{margin:0}
+.toc a{display:block;padding:5px 8px 5px 10px;color:#6A6A6A;text-decoration:none;border-radius:8px;
+ line-height:1.55;font-size:12.5px;position:relative;transition:background .18s ease,color .18s ease}
+.toc a:hover{color:#111111;background:#F5F5F5}
+.toc ul ul a{font-size:12px;color:#8C8C8C}
+.toc a.cur{color:#111111;background:#F5F5F5;font-weight:600}   /* 当前位置 */
+.toc a.cur::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);
+ width:3px;height:14px;border-radius:2px;background:#111111}
+.toc-mob{display:none;margin-bottom:20px;background:#fff;border-radius:14px;padding:14px 18px;
+ box-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 30px rgba(0,0,0,.05)}
+.toc-mob summary{cursor:pointer;font-size:13.5px;font-weight:600;color:#111111;outline:none;list-style:none}
+.toc-mob summary::-webkit-details-marker{display:none}
+.toc-mob summary::after{content:" ↓";color:#8C8C8C;font-weight:400}
+/* ---- 正文卡片 ---- */
+.docbody{background:#fff;border-radius:16px;padding:46px 54px 60px;min-width:0;
+ box-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 30px rgba(0,0,0,.05)}
+@media (max-width:1000px){.docwrap{grid-template-columns:1fr;gap:0}.toc{display:none}.toc-mob{display:block}}
+@media (max-width:640px){.docbody{padding:26px 20px 34px;border-radius:14px}.docwrap{padding:4px 12px 60px}
+ .dochd{padding:36px 0 22px}.dochd h1{font-size:23px}.topbar .brand span{display:none}}
+/* ---- markdown 正文 ---- */
+.docbody > h1{display:none}   /* 标题已在页首 hero 呈现，正文里不再重复 */
+.pnote{background:#F5F5F5;border-radius:14px;padding:20px 24px 21px;margin:0 0 34px;
+ font-size:14px;color:#3A3A3A;line-height:2.0}
+.pnote p{margin:9px 0;font-size:14px;color:#3A3A3A}
+.pnote p:first-child{margin-top:0}.pnote p:last-child{margin-bottom:0}
+.pnote b{color:#111111}
+.pnote a{color:#111111;border-bottom:1px solid #C4C4C4}
+.pnote a:hover{border-bottom-color:#111111}
+.docbody h2{font-size:23px;font-weight:600;color:#111111;margin:60px 0 20px;line-height:1.5;
+ letter-spacing:-.005em;scroll-margin-top:78px}
+.docbody h3{font-size:18px;font-weight:600;color:#111111;margin:40px 0 14px;scroll-margin-top:78px}
+.docbody h4{font-size:15.5px;font-weight:600;color:#6A6A6A;margin:28px 0 10px;scroll-margin-top:78px}
+.num{color:#8C8C8C;font-weight:600;margin-right:.34em;font-variant-numeric:tabular-nums}  /* 章节号：浅墨 */
+.docbody p{margin:14px 0;font-size:15.5px;color:#1A1A1A}
+.docbody ul,.docbody ol{margin:14px 0 14px 24px;font-size:15.5px;color:#1A1A1A}
+.docbody li{margin:7px 0}
+.docbody strong{color:#0A0A0A;font-weight:600}
+.docbody hr{border:0;border-top:1px solid #EFEFEF;margin:44px 0}
+.docbody code{background:#F5F5F5;border-radius:6px;padding:2px 7px;
+ font-family:Consolas,"Courier New",monospace;font-size:13px;color:#3A3A3A;word-break:break-word}
+.docbody pre{background:#111111;color:#E8E8E8;padding:18px 20px;border-radius:12px;overflow-x:auto;margin:18px 0}
+.docbody pre code{background:none;border:0;color:inherit;padding:0;font-size:12.8px}
+/* ---- 表格：去边框，靠留白与发丝线 ---- */
+.tw{overflow-x:auto;margin:20px 0;border-radius:12px;background:#fff}
+.tw::-webkit-scrollbar{height:8px}.tw::-webkit-scrollbar-thumb{background:#E8E8E8;border-radius:4px}
+.docbody table{border-collapse:collapse;width:100%;font-size:13.6px;min-width:520px}
+.docbody thead th{background:#F5F5F5;color:#111111;font-weight:600;text-align:left;
+ padding:12px 14px;white-space:nowrap;border-bottom:1px solid #E8E8E8}
+.docbody thead th:first-child{border-radius:10px 0 0 0}
+.docbody thead th:last-child{border-radius:0 10px 0 0}
+.docbody tbody td{padding:11px 14px;border-bottom:1px solid #EFEFEF;color:#2A2A2A;vertical-align:top;
+ line-height:1.8}
+.docbody tbody tr:last-child td{border-bottom:0}
+.docbody tbody tr:nth-child(even){background:rgba(0,0,0,.016)}
+.docbody blockquote{margin:20px 0;padding:16px 20px;background:#F5F5F5;border-radius:12px;
+ font-size:14.5px;color:#3A3A3A}
+.docbody blockquote p{margin:7px 0;font-size:14.5px;color:#3A3A3A}
+.docbody blockquote.bq-note{background:#FAF8F5;border:1px solid #EFE9E1;color:#6B5B4A}  /* 语义：土木批注 */
+.docbody blockquote.bq-note p{color:#6B5B4A}
+/* ---- 图 ---- */
+.diag{margin:26px 0 34px;padding:24px 26px 18px;background:#FAFAFA;border-radius:14px}
+.diag figcaption{font-size:12.5px;font-weight:600;color:#6A6A6A;margin-bottom:18px;letter-spacing:.04em}
+.diag-note{font-size:12.6px;color:#8C8C8C;margin-top:16px!important;line-height:1.9;border-top:1px solid #EFEFEF;padding-top:14px}
+.fl{display:flex;gap:10px;align-items:stretch}
+.fl-stage{flex:1 1 0;min-width:0;background:#fff;border-radius:12px;padding:15px 16px 16px;
+ box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.fl-stage.s2{flex:0 0 21%;background:#F2F2F2}   /* 差异化核心：用底纹强调，不用色 */
+.fl-tag{display:inline-block;font-size:10.5px;letter-spacing:.14em;color:#8C8C8C;font-weight:600;
+ margin-bottom:10px}
+.fl-stage.s2 .fl-tag{color:#6A6A6A}
+.fl ol{margin:0;padding-left:20px;font-size:13px;color:#2A2A2A;line-height:1.85}
+.fl li{margin:0 0 8px}
+.fl li:last-child{margin-bottom:0}
+.fl-arrow{align-self:center;color:#C4C4C4;font-size:17px;flex:0 0 auto}
+@media (max-width:820px){.fl{flex-direction:column}.fl-arrow{transform:rotate(90deg);text-align:center}
+ .fl-stage.s2{flex:1 1 auto}}
+.svgwrap{overflow-x:auto}
+.diag svg{display:block;width:100%;height:auto;min-width:600px;max-width:860px;margin:0 auto}
+/* ---- 评审页 ---- */
+.rv{background:#fff;border-radius:16px;padding:32px 38px 36px;margin-bottom:22px;
+ box-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 30px rgba(0,0,0,.05)}
+.rv > h2{font-size:19px;font-weight:600;color:#111111;margin:0 0 8px;line-height:1.5}
+.rv > h2 .n{color:#8C8C8C;font-size:13px;font-weight:400;margin-left:8px}
+.rv .lead{font-size:14px;color:#6A6A6A;margin:0 0 20px}
+.verd{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;
+ border-radius:999px;padding:6px 16px;margin:2px 0 16px}
+.verd.bad{background:#FBEDEB;color:#C0392B}   /* 语义 */
+.verd.ok{background:#EAF7F1;color:#1F9D6B}    /* 语义 */
+.chain{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin:8px 0 6px}
+.cnode{flex:1 1 150px;min-width:150px;background:#F5F5F5;border-radius:12px;padding:13px 15px}
+.cnode .k{font-size:10.5px;letter-spacing:.14em;color:#8C8C8C;font-weight:600}
+.cnode .t{font-size:13.5px;color:#111111;font-weight:600;margin:6px 0 4px;line-height:1.5}
+.cnode .d{font-size:12.2px;color:#8C8C8C;line-height:1.75}
+.cnode.bad{background:#FBEDEB}.cnode.ok{background:#EAF7F1}.cnode.mid{background:#FBF3E9}  /* 语义：判定 */
+.cnode.bad .t{color:#C0392B}.cnode.ok .t{color:#1F9D6B}.cnode.mid .t{color:#9A5A12}
+.cnode.bad .d,.cnode.ok .d,.cnode.mid .d{color:#6A6A6A}
+.rt{width:100%;border-collapse:collapse;font-size:13.4px;margin:18px 0;table-layout:fixed}
+.rt th{background:#F5F5F5;color:#111111;text-align:left;padding:11px 14px;border-bottom:1px solid #E8E8E8;font-size:12.6px;font-weight:600}
+.rt td{padding:11px 14px;border-bottom:1px solid #EFEFEF;color:#2A2A2A;vertical-align:top;line-height:1.8}
+.rt tr:last-child td{border-bottom:0}
+.rt tbody tr:nth-child(even){background:rgba(0,0,0,.016)}
+.rt .id{font-weight:600;color:#6A6A6A;font-family:Consolas,monospace;white-space:nowrap}
+.rt .verdict{white-space:nowrap;font-size:12.2px;font-weight:600}
+.v-no{color:#C0392B}.v-mid{color:#9A5A12}.v-ok{color:#1F9D6B}   /* 语义：判定 */
+details.fold{margin:16px 0;border-radius:12px;background:#F5F5F5;overflow:hidden}
+details.fold > summary{cursor:pointer;padding:14px 18px;font-size:14px;font-weight:600;color:#111111;
+ background:#F5F5F5;list-style:none;outline:none}
+details.fold > summary::-webkit-details-marker{display:none}
+details.fold > summary::before{content:"\25b8 ";color:#8C8C8C;font-weight:600}
+details.fold[open] > summary::before{content:"\25be "}
+details.fold > summary:hover{background:#F2F2F2}
+details.fold .body{padding:8px 18px 18px}
+.rtwrap{overflow-x:auto}
+.muted{font-size:12.6px;color:#8C8C8C;line-height:1.9}
+.kv{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0 6px}
+.kv .b{background:#F5F5F5;border-radius:12px;padding:14px 18px;flex:1 1 150px;min-width:140px}
+.kv .b .n{font-size:24px;font-weight:600;color:#111111;line-height:1.3;font-variant-numeric:tabular-nums}
+.kv .b .l{font-size:11.8px;color:#8C8C8C;margin-top:3px}
+.kv .b.hot .n{color:#C0392B}    /* 语义 */
+.kv .b.good .n{color:#1F9D6B}   /* 语义 */
+.jump{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 24px;padding:14px 18px;
+ background:rgba(255,255,255,.74);-webkit-backdrop-filter:saturate(1.6) blur(14px);backdrop-filter:saturate(1.6) blur(14px);
+ border-radius:14px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.jump a{font-size:12.5px;color:#6A6A6A;text-decoration:none;background:#fff;border:1px solid #E8E8E8;
+ border-radius:999px;padding:5px 14px;white-space:nowrap;transition:color .18s ease,border-color .18s ease}
+.jump a:hover{color:#111111;border-color:#C4C4C4}
+.jump a.go{margin-left:auto;background:#111111;border-color:#111111;color:#fff}
+.jump a.go:hover{background:#000;border-color:#000}
+@media (max-width:640px){.rv{padding:22px 20px 26px}.docbody table{min-width:440px}.jump a.go{margin-left:0}
+ .diag svg{min-width:560px}.diag{padding:18px 14px 14px}.tw{margin:14px 0}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="prog"><i id="pgbar"></i></div>
+<div class="topbar"><div class="in">
+<span class="brand">「准绳」产品文档 <span>· 刘久瑞</span></span>
+<nav><a href="index.html">PRD 全文</a><a href="review.html" class="on">评审摘要</a><a href="../index.html" class="back">← 返回作品集</a></nav>
+</div></div>
+<header class="dochd"><div class="in">
+<h1>「准绳」产品文档链 · 评审摘要</h1>
+<p class="meta">首轮：六角色模拟评审 → v2.1.0 修订 → 三组独立复评 → v2.1.1 收口 → <b>复评通过</b>；随后双端原型交付，216 项自动化断言全绿；v2.1.2 口径校正、v2.1.3 同步原型口径；v2.2.0 全工程化 + 笔记条文关联设计定稿；<b>第二轮：六角色评审（7 阻断）→ v2.2.1 修订 + 三组复评收口（16 处）</b></p>
+<div class="tagrow"><span class="tg bad">首轮 ❌ 不通过 · 9 项阻断</span><span class="tg">11 重要 / 7 建议</span>
+<span class="tg ok">复评 ✅ 通过 · 21 处收口</span>
+<span class="tg ok">第二轮（v2.2.1）❌→✅ · 7 项阻断全采纳</span></div>
+</div></header><div class="docwrap" style="grid-template-columns:1fr">
+<div>
+<div class="jump"><a href="#s1">这条链</a><a href="#s2">首轮评审</a><a href="#s3">9 项阻断</a><a href="#s4">重要 / 建议项</a><a href="#s5">复评收口</a><a href="#s6">方法与局限</a><a href="#s7">下一步</a><a href="index.html" class="go">读 PRD 全文 →</a></div><div class="rv">
+<h2 id="s1">一、这条链是怎么跑的<span class="n">为什么值得看</span></h2>
+<p class="lead">一份 PRD 的质量，不取决于它写得多完整，而取决于它<b>被挑出过多少问题、又怎么闭环</b>。下面这条链是真实跑完的：评审不是走过场，首轮判定就是「不通过」。</p>
+<div class="chain"><div class="cnode"><p class="k">STEP 1</p><p class="t">PRD v2.0.0</p><p class="d">定位重构：从「笔记软件」收敛为整改留痕单点闭环</p></div><div class="cnode bad"><p class="k">STEP 2</p><p class="t">六角色评审 ❌</p><p class="d">9 阻断 / 11 重要 / 7 建议；方向获确认，卡在工程规格</p></div><div class="cnode mid"><p class="k">STEP 3</p><p class="t">v2.1.0 修订</p><p class="d">逐项修订 9 项阻断，并入全部重要项与建议项</p></div><div class="cnode mid"><p class="k">STEP 4</p><p class="t">三组独立复评</p><p class="d">按角色拆三组、各 spawn 独立核验，组间互不可见</p></div><div class="cnode"><p class="k">STEP 5</p><p class="t">v2.1.1 收口</p><p class="d">残余 21 处逐项修毕（核验发现 19 + 自查 2）</p></div><div class="cnode ok"><p class="k">STEP 6</p><p class="t">✅ 复评通过</p><p class="d">进入原型开发；双端 216 项断言全绿</p></div><div class="cnode mid"><p class="k">STEP 7</p><p class="t">v2.2.0 全工程化</p><p class="d">演示数据多专业覆盖；笔记条文关联设计定稿</p></div><div class="cnode ok"><p class="k">STEP 8</p><p class="t">第二轮评审 → v2.2.1</p><p class="d">7 阻断 / 13 重要 / 8 建议修订闭环；16 处复评收口 ✅</p></div></div>
+</div>
+
+<div class="rv">
+<h2 id="s2">二、首轮：六角色模拟评审<span class="n">2026-10-05 · 判定 ❌ 不通过</span></h2>
+<p class="lead">六个角色各以独立视角审查同一份材料、互不影响，再由主评审做冲突归并、重复提权与分级校准（B1 即「产品 / 研发 / 测试」三重复提权的结果）。</p>
+<div class="verd bad">❌ 不通过 —— 方向与结构被确认，但整改模块的工程规格尚不足以支撑原型开发</div>
+<p class="muted">评审明确记录：<b>没有任何角色质疑定位重构与「主动砍掉什么」的论证</b>——问题在规格与口径，不在方向。这正是评审该有的结论形态。</p>
+<div class="rtwrap"><table class="rt"><colgroup><col style="width:120px"><col style="width:130px"><col style="width:60px"><col></colgroup><thead><tr><th>角色</th><th>判定</th><th>阻断项</th><th>核心发现</th></tr></thead><tbody><tr><td>产品经理</td><td class='verdict v-no'>❌ 不通过</td><td style='text-align:center'>1</td><td>「复查合格」终态无操作者（协作方不装 App、多人流转已砍）</td></tr><tr><td>研发工程师</td><td class='verdict v-mid'>⚠️ 有条件通过</td><td style='text-align:center'>3</td><td>数据模型三个洞：照片规格 / 条文快照 / 状态不变量</td></tr><tr><td>测试工程师</td><td class='verdict v-no'>❌ 不通过</td><td style='text-align:center'>4</td><td>验收标准只有范围与断言数，无「验证点→预期结果」对映</td></tr><tr><td>UI/UX 设计师</td><td class='verdict v-no'>❌ 不通过</td><td style='text-align:center'>3</td><td>界面描述仅 5 行表格；现场场景零设计响应</td></tr><tr><td>运营</td><td class='verdict v-no'>❌ 不通过</td><td style='text-align:center'>2</td><td>埋点缺 user_id 致「≥3 人」不可算；H2 门槛两处矛盾</td></tr><tr><td>法务/合规</td><td class='verdict v-no'>❌ 不通过</td><td style='text-align:center'>1</td><td>导出物法定限定不足（仅「非正式监理文书」一句）</td></tr></tbody></table></div>
+<div class="kv">
+<div class="b hot"><p class="n">9</p><p class="l">阻断项（Blockers）</p></div>
+<div class="b"><p class="n">11</p><p class="l">重要项（Majors）</p></div>
+<div class="b"><p class="n">7</p><p class="l">建议项（Minors）</p></div>
+<div class="b"><p class="n">14<span style="font-size:13px">~20</span></p><p class="l">研发周期评估（人天）</p></div>
+<div class="b"><p class="n">7<span style="font-size:13px">~9</span></p><p class="l">设计周期评估（人天）</p></div>
+</div>
+</div>
+
+<div class="rv">
+<h2 id="s3">三、9 项阻断项明细<span class="n">不解决就不能开工</span></h2>
+<p class="lead">判定口径是「核心流程能否跑通 / 数据与合规是否有洞 / 验收标准是否可执行」。三条<b>不可进入开发条件</b>：状态转移表未补全（B1）、数据字典规格未闭合（B2/B3/B8）、指标口径未统一（B6/B7）。</p>
+<div class="rtwrap"><table class="rt"><colgroup><col style="width:44px"><col style="width:38%"><col style="width:120px"><col><col style="width:82px"></colgroup><thead><tr><th>#</th><th>问题</th><th>提出角色</th><th>修改建议</th><th>采纳</th></tr></thead><tbody><tr><td class='id'>B1</td><td>状态机与闭环不完整：打回无界面入口、原因未定；「复查合格」无操作者；行业数据项要求的复查三字段未进数据字典与导出模板；「已整改」状态可被二次编辑抹掉后照片</td><td>测试、研发、产品（三重复→提权）</td><td>补完整状态转移表（守卫 + 回退路径 + 回退必填 reason）；「复查合格」定为依线下复查<b>代记</b>并写入时间线；导出模板补复查三字段；「已整改 ⇒ 后照片 ≥1 且说明非空」设为保存级校验</td><td class='verdict v-ok'>✅ 已采纳</td></tr><tr><td class='id'>B2</td><td>照片能力零规格：格式白名单、张数、体积、压缩参数、存储方案全缺；单 HTML 形态下 localStorage（≈5MB）存不下多组照片；前后对照视图与图注输入无交互定义</td><td>研发、测试、设计</td><td>每组 ≤6 张、单张 ≤300KB、长边 1600px 压缩、JPG/PNG/WebP 白名单；存储改 <b>IndexedDB</b>；补前后对照组件规格（移动端上下 / 桌面端左右）</td><td class='verdict v-ok'>✅ 已采纳</td></tr><tr><td class='id'>B3</td><td>表单校验与边界值全缺：字段无长度上限；必填校验的触发时机、提示形式与文案未定义；异常章缺「创建缺必填」行——空表单提交用例写不出</td><td>测试、研发</td><td>数据字典补约束列；新增「表单校验规则」小节；异常章补必填校验行；验证计划改「验证点 → 预期（元素+文案）→ 对应规则」三列</td><td class='verdict v-ok'>✅ 已采纳</td></tr><tr><td class='id'>B4</td><td>界面状态矩阵缺失：空列表、推荐加载中、照片上传中、导出中、成功/失败反馈全部缺失——设计师无法出稿，开发无验收基准</td><td>设计</td><td>补「屏幕 × 状态矩阵」（默认/空/加载/错误/成功/禁用），双端各一份</td><td class='verdict v-ok'>✅ 已采纳</td></tr><tr><td class='id'>B5</td><td>现场场景零设计响应：强光、戴手套、单手操作无对应设计；13 字段键盘输入使「3 分钟记完」不成立；移动端入口 4 步可达</td><td>设计</td><td>补现场模式：触控 ≥56px、高对比；来源/严重度改 chip 单选、期限快捷选项、拍照入口置首屏；移动端快捷入口 ≤2 步</td><td class='verdict v-ok'>✅ 已采纳</td></tr><tr><td class='id'>B6</td><td>指标与假设口径混乱：「挂载率」一名三义（覆盖率 80% / 采纳率 50% / 命中率 80%）；同假设两门槛（50% vs 80%）打架；假设无编号；「导出被采信」假设未进证据表</td><td>运营、产品</td><td>拆义为<b>采纳率</b>（验证线 ≥50%）/ <b>记录覆盖率</b>（产品线 ≥80%）/ <b>评估集命中率</b>；假设统一编号 A1-A4 ↔ H1-H4 双向引用</td><td class='verdict v-ok'>✅ 已采纳</td></tr><tr><td class='id'>B7</td><td>埋点无法支撑验证：6 个整改事件均缺 user_id / device_id（H1「≥3 人」与「周创建数 / 人 / 周」不可算——owner 是整改责任人、非操作者）；推荐→采纳无 recommend_id；导出率无去重口径</td><td>运营</td><td>统一加 user_id / device_id（试点用匿名编号）；recommended / linked 加 recommend_id + 时间戳；明确「首次保存即上报」；导出按唯一记录去重</td><td class='verdict v-ok'>✅ 已采纳</td></tr><tr><td class='id'>B8</td><td>条文引用无快照：clauses 存字符串与埋点 clause_id 矛盾；条文库更新后，历史整改记录的「处置依据」失效</td><td>研发</td><td>改存 <code>{clause_id, 快照原文, adopted_at, adopted_via}</code>；详情与导出一律取快照（留痕产品的可信性根基）</td><td class='verdict v-ok'>✅ 已采纳</td></tr><tr><td class='id'>B9</td><td>导出物法定限定不足：仅「非正式监理文书」一句，缺生成方 / 版本 / 生成时间 /「内容系用户自录、未经第三方核验」/ 条文以官方发布文本为准</td><td>法务</td><td>导出物固定页脚：产品名 + 版本 + 生成时间 + <b>内容由用户自行录入、未经第三方核验，不构成验收或责任认定依据；条文以官方发布文本为准</b>。用事实限定，勿写「不得作为诉讼证据」</td><td class='verdict v-ok'>✅ 已采纳</td></tr></tbody></table></div>
+<p class="muted">末列即采纳状态：<b>9 项阻断的修改建议已逐项写入 PRD 正文</b>（v2.1.0 首轮修订）。其中 B3 / B4 / B6 复评判定为「部分达标」，残余 21 处在 v2.1.1 修毕；v2.1.2 再以 22 项关键词核对复核一遍，确认全部落地。</p>
+</div>
+
+<div class="rv">
+<h2 id="s4">四、11 项重要项与 7 项建议项<span class="n">提测前须修 / 修复后更好</span></h2>
+<p class="lead">重要项全部并入 v2.1.0 修订；建议项中的状态标签三重编码（S1）等已成为原型里的实际设计。</p>
+<details class="fold"><summary>11 项重要项（点击展开）</summary><div class="body"><div class="rtwrap"><table class="rt"><colgroup><col style="width:44px"><col><col style="width:120px"></colgroup><thead><tr><th>#</th><th>问题与处置</th><th>提出角色</th></tr></thead><tbody><tr><td class='id'>M1</td><td>富文本与「结构化表单+时间线」共存方式未定义；两个「新建」入口主次不清；推荐区无占位（防抖弹出造成 layout shift）</td><td>设计</td></tr><tr><td class='id'>M2</td><td>无草稿态：前照片必填+强校验使现场「先记后补」不可行，异常表却提「草稿本地保留」</td><td>研发、运营</td></tr><tr><td class='id'>M3</td><td>并发与双端存储：同一记录双开静默覆盖；双端 HTML 存储各自独立未声明</td><td>研发</td></tr><tr><td class='id'>M4</td><td>规则匹配「与问答同策略」含糊：复用哪条链路、映射表来源、编辑后是否重推、防抖的取消/序号机制未定</td><td>研发</td></tr><tr><td class='id'>M5</td><td>表单切入既有富文本编辑器主路径（95 断言回归风险）；导出长图需内联 html2canvas 或 canvas 限高截断</td><td>研发</td></tr><tr><td class='id'>M6</td><td>隐私章未覆盖：owner 姓名、照片中工人肖像、数据归属、留存与删除、传输加密、照片 EXIF 位置</td><td>法务</td></tr><tr><td class='id'>M7</td><td>规范原文版权无声明；条文推荐出错的责任声明未单列</td><td>法务</td></tr><tr><td class='id'>M8</td><td>试点无准入/退出条件；回滚仅覆盖问答 AI，条文推荐错误无 kill switch；承诺测试未挂门槛</td><td>运营</td></tr><tr><td class='id'>M9</td><td>H3 证据「对方直接接受」无采集动作；导出率只是前置指标</td><td>运营</td></tr><tr><td class='id'>M10</td><td>验证时机矛盾：假设称承诺测试为「前置动作」，路线图却把验证放在 v3.0；数天可做的 5 人访谈未排入任何阶段</td><td>产品</td></tr><tr><td class='id'>M11</td><td>「未关联条文」UI 位置与文案不一；无记录时空列表状态未定义；回退时间线事件格式/排序未定</td><td>测试</td></tr></tbody></table></div></div></details>
+<details class="fold"><summary>7 项建议项（点击展开）</summary><div class="body"><div class="rtwrap"><table class="rt"><colgroup><col style="width:44px"><col><col style="width:120px"></colgroup><thead><tr><th>#</th><th>问题与处置</th><th>提出角色</th></tr></thead><tbody><tr><td class='id'>S1</td><td>状态标签仅 emoji 色块：跨平台渲染不一、色弱不友好 → 改为色块 + 文字 + 形状三重编码</td><td>设计</td></tr><tr><td class='id'>S2</td><td>移动端整改入口 4 步可达 → 增快捷入口，目标 ≤2 步</td><td>设计</td></tr><tr><td class='id'>S3</td><td>「虚构示例」标注无 UI 载体；保存失败未入异常章；导出「可重试」与「降级长图」二义 → 标注做可见徽标</td><td>测试</td></tr><tr><td class='id'>S4</td><td>severity 无用途与默认值；source「其他」无补录文本；id 生成规则易撞号；deadline 无逾期展示</td><td>研发</td></tr><tr><td class='id'>S5</td><td>用户协议/隐私政策无落点 → 通过标准加「上线前完成用户协议与隐私政策」</td><td>法务</td></tr><tr><td class='id'>S6</td><td>异常章多类异常无埋点；推荐为空时是否上报未定 → 空推荐也上报 recommend_count=0</td><td>运营</td></tr><tr><td class='id'>S7</td><td>目标无时间维度；问题陈述中两条行业事实无出处 → 补相对周期；调研补来源或降级为假设</td><td>产品</td></tr></tbody></table></div></div></details>
+</div>
+
+<div class="rv">
+<h2 id="s5">五、复评：三组独立核验<span class="n">按角色拆分，组间互不可见</span></h2>
+<p class="lead">复评不重读全文——只按首轮留下的「复评清单」逐项核验 9 项阻断修订是否到位。三组各自独立核验，主评审归并残余并收口。</p>
+<div class="verd ok">✅ 复评通过 —— 9 项阻断修订全部关闭（6 项直接达标 / 3 项部分达标）</div>
+<div class="rtwrap"><table class="rt"><colgroup><col style="width:172px"><col style="width:150px"><col style="width:180px"><col></colgroup><thead><tr><th>核验组</th><th>覆盖修订项</th><th>判定</th><th>残余与处置</th></tr></thead><tbody><tr><td>组 1 · 产品</td><td>B1 / B6</td><td>B1 ✅ ／ B6 ⚠️</td><td>B1 无残余；B6 阶段列误标 / H2 引用悬空 / 缺命中率行 → 已修</td></tr><tr><td>组 2 · 研发 + 运营</td><td>B2 / B7 / B8</td><td>三项均 ✅</td><td>B2 元素结构、尺寸措辞；B7 H1 计数口径；B8 枚举与快照上限 → 已修</td></tr><tr><td>组 3 · 测试 + 设计 + 法务</td><td>B3 / B4 / B5 / B9</td><td>B5 ✅ ／ B9 ✅ ／ B3 ⚠️ ／ B4 ⚠️</td><td>B3 文案唯一性七项；B4 状态矩阵三项；B5 键盘边界；B9 五要素枚举 → 已修</td></tr></tbody></table></div>
+<p class="lead" style="margin-top:16px">三组核验发现的残余共 <b>19 处</b>（另主评审自查 2 处），全部是<b>文案唯一性与表述一致性</b>缺口——没有新增设计缺口、没有结构问题。这本身说明了一件事：<b>单轮高密度修订必然产生复述走样，复评环节是必需的。</b></p>
+<details class="fold" open><summary>21 处收口逐项登记（第 1-19 条为核验发现，第 20-21 条为主评审自查）</summary><div class="body"><div class="rtwrap"><table class="rt"><colgroup><col style="width:38px"><col style="width:29%"><col style="width:96px"><col></colgroup><thead><tr><th>#</th><th>核验发现的残余</th><th>对应</th><th>修复落点（v2.1.1）</th></tr></thead><tbody><tr><td class='id'>1</td><td>§2.2 采纳率行阶段列误标「产品化阶段（规划）」</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>B6</td><td>改为「试点验证（规划）」，与 §9 及指标名自洽</td></tr><tr><td class='id'>2</td><td>§4.4 H2 引用悬空（80% 属覆盖率口径）</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>B6</td><td>改为「产品化目标待试点基线复盘后另定（注：2.2 / 9 章的 ≥80% 属覆盖率口径，勿与采纳率混用）」</td></tr><tr><td class='id'>3</td><td>§9 注称「三个率」但表内缺命中率行</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>B6</td><td>补「评估集命中率（整改推荐专项 50 例，A3）≥80%」行</td></tr><tr><td class='id'>4</td><td>数据字典 photos 未内联元素结构</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>B2</td><td>photos_before 约束补 <code>{data, caption≤50字, order}</code>；photos_after 注明同构</td></tr><tr><td class='id'>5</td><td>「尺寸超限」与「体积」两套措辞</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>B2</td><td>异常表统一为「单张超过 300KB 将自动压缩（长边 1600px）」</td></tr><tr><td class='id'>6</td><td>H1 计数口径（草稿 vs 提交）未写明</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>B7</td><td>§8 加注：以首次 from=草稿→to=待整改、按 record_id 去重、按 user_id 归因；§9 周创建数行加口径引用</td></tr><tr><td class='id'>7</td><td>adopted_via 取值未定义（仅示例 ai）</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>B8</td><td>字典 clauses 行定义枚举 <code>adopted_via ∈ {ai, manual}</code></td></tr><tr><td class='id'>8</td><td>快照原文无长度上限</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>B8</td><td>字典补「快照原文 ≤1000 字（超长截断存储，保留条文号定位）」</td></tr><tr><td class='id'>9</td><td>前照片文案两版冲突（校验表 vs 验证计划）</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>B3</td><td>6.2 对齐 5.2.1a：「请至少添加 1 张整改前照片」</td></tr><tr><td class='id'>10</td><td>6.2 称「仅填标题即可保存」但字典无 title 字段</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>B3</td><td>改为「首存豁免校验（必填未齐、无照片也可保存）」</td></tr><tr><td class='id'>11</td><td>回退原因三处表述不一 + 时间线格式不一</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>B3</td><td>统一为「原因空 → 确认按钮禁用（内联提示『请填写原因（将记入时间线）』，≤100 字）」；时间线按 5.2 格式追加</td></tr><tr><td class='id'>12</td><td>长度超限文案只覆盖 500 字档</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>B3</td><td>校验表按字段分档（20 / 60 / 200 / 500 字）给出各自「最多 n 字」文案</td></tr><tr><td class='id'>13</td><td>source_other 条件必填未进校验表</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>B3</td><td>校验表补行：「来源=其他时非空、≤20 字」+ 提示「请补充来源说明（20 字内）」</td></tr><tr><td class='id'>14</td><td>「未关联条文」自述唯一、实存标注/提示两版</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>B3</td><td>5.2 界面精确化：<b>短标注</b>（表单依据区 + 导出物）与<b>引导提示</b>（空推荐时）为两种语境，各固定唯一文案</td></tr><tr><td class='id'>15</td><td>整改列表缺成功态</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>B4</td><td>矩阵补「保存 / 提交成功后新卡片置顶 + 高亮 1.5s」</td></tr><tr><td class='id'>16</td><td>表单 / 导出预览空态「—」未释义</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>B4</td><td>补注「—（表单始终含默认值，无空态）」「—（导出入口仅在记录存在时可用，无空态）」</td></tr><tr><td class='id'>17</td><td>旧屏「沿用 v1.2」未注明范围</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>B4</td><td>矩阵注：v1.2 PRD 6 章（已随 95 项断言验证）；旧屏不在本轮复评范围</td></tr><tr><td class='id'>18</td><td>「其余字段零键盘」与部位、责任人需输入矛盾</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>B5</td><td>5.2.2 修正：部位提供常用部位 chip 快选（可切手动）；键盘仅限 4 项，其余零键盘</td></tr><tr><td class='id'>19</td><td>「五要素」只列 4 类、第五要素未枚举</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>B9</td><td>5.5 / 6.2 / A4 三处统一枚举：①产品名 ②版本 ③生成时间 ④自录未核验声明 ⑤条文以官方发布文本为准</td></tr><tr><td class='id'>20</td><td>5.5 批注残留「非正式文书」措辞</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>主评审自查</td><td>批注同步改为「事实限定（自录未核验 / 条文以官方文本为准）」</td></tr><tr><td class='id'>21</td><td>12.1 缺「评估集命中率」术语条目</td><td style='white-space:nowrap;color:#8C8C8C;font-size:12px'>主评审自查</td><td>名词解释补条目（与采纳率、覆盖率并列区分）</td></tr></tbody></table></div></div></details>
+</div>
+
+<div class="rv">
+<h2 id="s6">六、方法与局限<span class="n">这份摘要还差什么</span></h2>
+<ul style="margin:6px 0 0 20px;font-size:14.5px;color:#3A3A3A;line-height:1.95">
+<li><b>角色是模拟的，不是真人。</b>六角色与三组复评均由 LLM 分角色独立审查，<b>不等于</b>真实公司里产品/研发/测试/设计/运营/法务的评审——它验证的是「文档能不能被挑出问题并闭环」，不是「真人会怎么看」。</li>
+<li><b>评审口径已按作品集语境下调。</b>这是个人项目，未采用成熟公司的上线严苛口径（未要求法务审查流程、未要求数据迁移方案）。</li>
+<li><b>修订后的收口未再二次独立核验。</b>21 处收口是单点文本修正，由主评审自查完成——这是一个已知的强度折损。</li>
+<li><b>首轮 9 项阻断属正常水平，不值得自夸。</b>真正的产出是这条链跑通了：<b>评审 → 修订 → 复评 → 收口</b>，以及 4.3 砍项论证与 4.4 假设纪律未被任何角色质疑。</li>
+</ul>
+</div>
+
+<div class="rv">
+<h2 id="s7">七、下一步</h2>
+<p class="lead">9 项阻断全部关闭，满足首轮评审的「通过条件 1」；重要项已在 v2.1.0 并入 —— <b>PRD 达到进入原型开发状态</b>。此后按路线图推进：双端原型交付，整改模块新增 121 项断言，双端合计 <b>216 项断言全绿</b>；v2.2 迭代再经第二轮六角色评审（7 阻断 / 13 重要 / 8 建议），v2.2.1 修订 + 复评收口闭环（2026-10-06）。</p>
+<p class="lead" style="margin-bottom:0">原型可直接在本站试用：<a href="../zhunsheng/index.html">桌面端 Demo ↗</a>　<a href="../zhunsheng/mobile.html">移动端 Demo ↗</a>　·　<a href="index.html">返回 PRD 全文 →</a></p>
+</div>
+
+</div>
+</div>
+<script>
+(function(){
+  var d=document.documentElement,bar=document.getElementById('pgbar');
+  function upd(){var h=d.scrollHeight-d.clientHeight;bar.style.transform='scaleX('+(h>0?Math.min(1,d.scrollTop/h):0)+')';}
+  addEventListener('scroll',upd,{passive:true});addEventListener('resize',upd);upd();
+  var links=[].slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+  if(!links.length||!window.IntersectionObserver)return;
+  var byId={};
+  links.forEach(function(a){var id=a.getAttribute('href').slice(1),el=document.getElementById(id);if(el)byId[id]=a;});
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){if(e.isIntersecting){
+      for(var k in byId)byId[k].classList.remove('cur');
+      if(byId[e.target.id])byId[e.target.id].classList.add('cur');
+    }});
+  },{rootMargin:'-80px 0px -70% 0px'});
+  for(var k in byId)io.observe(document.getElementById(k));
+})();
+</script>
+</body>
+</html>

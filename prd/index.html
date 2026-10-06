@@ -1,0 +1,2870 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD 全文 · 准绳 2.0 —— 规范驱动的整改留痕助手</title>
+<style>/* ===========================================================
+   视觉语言：中性灰阶 · 色彩只承载语义（与双端原型同一套 token）
+   底/面    #F0F0F0 底 · #FFFFFF 卡 · #F5F5F5 凹块
+   墨阶     #111111 主 · #6A6A6A 次 · #8C8C8C 弱 · #E8E8E8 发丝线
+   语义色   仅四态 + 阻断红 #C0392B + 通过绿 #1F9D6B，不作装饰
+   形态     圆角 16/12/全圆 · 无边框 · 极柔单层阴影
+   =========================================================== */
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif;color:#111111;
+ background:#F0F0F0;line-height:1.95;letter-spacing:.01em;-webkit-text-size-adjust:100%}
+a{color:#111111;text-decoration:none}
+a:hover{color:#000}
+/* ---- 顶栏：毛玻璃 ---- */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.74);
+ -webkit-backdrop-filter:saturate(1.6) blur(14px);backdrop-filter:saturate(1.6) blur(14px);
+ border-bottom:1px solid rgba(0,0,0,.06)}
+.topbar .in{max-width:1180px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:18px;
+ height:52px;flex-wrap:nowrap;overflow:hidden}
+.topbar .brand{font-size:14px;font-weight:600;letter-spacing:.02em;color:#111111;white-space:nowrap}
+.topbar .brand span{color:#8C8C8C;font-weight:400}
+.topbar nav{display:flex;gap:4px;margin-left:auto;align-items:center}
+.topbar nav a{color:#6A6A6A;text-decoration:none;font-size:13px;padding:6px 13px;border-radius:999px;white-space:nowrap;
+ transition:background .18s ease,color .18s ease}
+.topbar nav a:hover{background:rgba(0,0,0,.06);color:#111111}
+.topbar nav a.on{background:#111111;color:#fff}
+.topbar nav a.back{color:#8C8C8C;font-size:12.5px}
+.topbar nav a.back:hover{color:#111111}
+/* ---- 阅读进度发丝线（全页唯一动效） ---- */
+.prog{position:fixed;top:0;left:0;right:0;height:2px;z-index:60;pointer-events:none}
+.prog i{display:block;height:100%;transform:scaleX(0);transform-origin:0 50%;
+ background:linear-gradient(90deg,#BDBDBD,#111111)}
+/* ---- 页首：安静的开场 ---- */
+.dochd{padding:54px 0 30px}
+.dochd .in{max-width:1180px;margin:0 auto;padding:0 20px}
+.dochd h1{font-size:31px;font-weight:600;letter-spacing:-.01em;line-height:1.45;color:#111111}
+.dochd .meta{margin-top:14px;font-size:13.5px;color:#6A6A6A;line-height:2.0;max-width:760px}
+.dochd .meta b{color:#111111;font-weight:600}
+.dochd .tagrow{margin-top:18px;display:flex;gap:8px;flex-wrap:wrap}
+.tg{font-size:11.5px;padding:4px 12px;border-radius:999px;background:#fff;border:1px solid #E8E8E8;color:#6A6A6A}
+.tg.ok{background:#EAF7F1;border-color:#A9DCC5;color:#1F9D6B}   /* 语义：复评通过 */
+.tg.bad{background:#FBEDEB;border-color:#F0C4BE;color:#C0392B}   /* 语义：首轮阻断 */
+/* ---- 主体网格 ---- */
+.docwrap{max-width:1180px;margin:0 auto;padding:8px 20px 90px;display:grid;
+ grid-template-columns:250px 1fr;gap:36px;align-items:start}
+.docwrap > *{min-width:0}   /* 否则宽表 / 宽 SVG 会撑破网格，手机端整页横向溢出 */
+/* ---- 侧栏目录 ---- */
+.toc{position:sticky;top:76px;max-height:calc(100vh - 104px);overflow-y:auto;
+ background:#fff;border-radius:16px;padding:20px 8px 20px 20px;font-size:12.5px;
+ box-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 30px rgba(0,0,0,.05)}
+.toc::-webkit-scrollbar{width:5px}.toc::-webkit-scrollbar-thumb{background:#E8E8E8;border-radius:3px}
+.toc .h{font-size:11px;color:#8C8C8C;letter-spacing:.18em;margin:0 0 12px -2px;font-weight:600}
+.toc ul{list-style:none;margin:0;padding:0}
+.toc ul ul{margin-left:10px;border-left:1px solid #EFEFEF;padding-left:10px}
+.toc li{margin:0}
+.toc a{display:block;padding:5px 8px 5px 10px;color:#6A6A6A;text-decoration:none;border-radius:8px;
+ line-height:1.55;font-size:12.5px;position:relative;transition:background .18s ease,color .18s ease}
+.toc a:hover{color:#111111;background:#F5F5F5}
+.toc ul ul a{font-size:12px;color:#8C8C8C}
+.toc a.cur{color:#111111;background:#F5F5F5;font-weight:600}   /* 当前位置 */
+.toc a.cur::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);
+ width:3px;height:14px;border-radius:2px;background:#111111}
+.toc-mob{display:none;margin-bottom:20px;background:#fff;border-radius:14px;padding:14px 18px;
+ box-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 30px rgba(0,0,0,.05)}
+.toc-mob summary{cursor:pointer;font-size:13.5px;font-weight:600;color:#111111;outline:none;list-style:none}
+.toc-mob summary::-webkit-details-marker{display:none}
+.toc-mob summary::after{content:" ↓";color:#8C8C8C;font-weight:400}
+/* ---- 正文卡片 ---- */
+.docbody{background:#fff;border-radius:16px;padding:46px 54px 60px;min-width:0;
+ box-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 30px rgba(0,0,0,.05)}
+@media (max-width:1000px){.docwrap{grid-template-columns:1fr;gap:0}.toc{display:none}.toc-mob{display:block}}
+@media (max-width:640px){.docbody{padding:26px 20px 34px;border-radius:14px}.docwrap{padding:4px 12px 60px}
+ .dochd{padding:36px 0 22px}.dochd h1{font-size:23px}.topbar .brand span{display:none}}
+/* ---- markdown 正文 ---- */
+.docbody > h1{display:none}   /* 标题已在页首 hero 呈现，正文里不再重复 */
+.pnote{background:#F5F5F5;border-radius:14px;padding:20px 24px 21px;margin:0 0 34px;
+ font-size:14px;color:#3A3A3A;line-height:2.0}
+.pnote p{margin:9px 0;font-size:14px;color:#3A3A3A}
+.pnote p:first-child{margin-top:0}.pnote p:last-child{margin-bottom:0}
+.pnote b{color:#111111}
+.pnote a{color:#111111;border-bottom:1px solid #C4C4C4}
+.pnote a:hover{border-bottom-color:#111111}
+.docbody h2{font-size:23px;font-weight:600;color:#111111;margin:60px 0 20px;line-height:1.5;
+ letter-spacing:-.005em;scroll-margin-top:78px}
+.docbody h3{font-size:18px;font-weight:600;color:#111111;margin:40px 0 14px;scroll-margin-top:78px}
+.docbody h4{font-size:15.5px;font-weight:600;color:#6A6A6A;margin:28px 0 10px;scroll-margin-top:78px}
+.num{color:#8C8C8C;font-weight:600;margin-right:.34em;font-variant-numeric:tabular-nums}  /* 章节号：浅墨 */
+.docbody p{margin:14px 0;font-size:15.5px;color:#1A1A1A}
+.docbody ul,.docbody ol{margin:14px 0 14px 24px;font-size:15.5px;color:#1A1A1A}
+.docbody li{margin:7px 0}
+.docbody strong{color:#0A0A0A;font-weight:600}
+.docbody hr{border:0;border-top:1px solid #EFEFEF;margin:44px 0}
+.docbody code{background:#F5F5F5;border-radius:6px;padding:2px 7px;
+ font-family:Consolas,"Courier New",monospace;font-size:13px;color:#3A3A3A;word-break:break-word}
+.docbody pre{background:#111111;color:#E8E8E8;padding:18px 20px;border-radius:12px;overflow-x:auto;margin:18px 0}
+.docbody pre code{background:none;border:0;color:inherit;padding:0;font-size:12.8px}
+/* ---- 表格：去边框，靠留白与发丝线 ---- */
+.tw{overflow-x:auto;margin:20px 0;border-radius:12px;background:#fff}
+.tw::-webkit-scrollbar{height:8px}.tw::-webkit-scrollbar-thumb{background:#E8E8E8;border-radius:4px}
+.docbody table{border-collapse:collapse;width:100%;font-size:13.6px;min-width:520px}
+.docbody thead th{background:#F5F5F5;color:#111111;font-weight:600;text-align:left;
+ padding:12px 14px;white-space:nowrap;border-bottom:1px solid #E8E8E8}
+.docbody thead th:first-child{border-radius:10px 0 0 0}
+.docbody thead th:last-child{border-radius:0 10px 0 0}
+.docbody tbody td{padding:11px 14px;border-bottom:1px solid #EFEFEF;color:#2A2A2A;vertical-align:top;
+ line-height:1.8}
+.docbody tbody tr:last-child td{border-bottom:0}
+.docbody tbody tr:nth-child(even){background:rgba(0,0,0,.016)}
+.docbody blockquote{margin:20px 0;padding:16px 20px;background:#F5F5F5;border-radius:12px;
+ font-size:14.5px;color:#3A3A3A}
+.docbody blockquote p{margin:7px 0;font-size:14.5px;color:#3A3A3A}
+.docbody blockquote.bq-note{background:#FAF8F5;border:1px solid #EFE9E1;color:#6B5B4A}  /* 语义：土木批注 */
+.docbody blockquote.bq-note p{color:#6B5B4A}
+/* ---- 图 ---- */
+.diag{margin:26px 0 34px;padding:24px 26px 18px;background:#FAFAFA;border-radius:14px}
+.diag figcaption{font-size:12.5px;font-weight:600;color:#6A6A6A;margin-bottom:18px;letter-spacing:.04em}
+.diag-note{font-size:12.6px;color:#8C8C8C;margin-top:16px!important;line-height:1.9;border-top:1px solid #EFEFEF;padding-top:14px}
+.fl{display:flex;gap:10px;align-items:stretch}
+.fl-stage{flex:1 1 0;min-width:0;background:#fff;border-radius:12px;padding:15px 16px 16px;
+ box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.fl-stage.s2{flex:0 0 21%;background:#F2F2F2}   /* 差异化核心：用底纹强调，不用色 */
+.fl-tag{display:inline-block;font-size:10.5px;letter-spacing:.14em;color:#8C8C8C;font-weight:600;
+ margin-bottom:10px}
+.fl-stage.s2 .fl-tag{color:#6A6A6A}
+.fl ol{margin:0;padding-left:20px;font-size:13px;color:#2A2A2A;line-height:1.85}
+.fl li{margin:0 0 8px}
+.fl li:last-child{margin-bottom:0}
+.fl-arrow{align-self:center;color:#C4C4C4;font-size:17px;flex:0 0 auto}
+@media (max-width:820px){.fl{flex-direction:column}.fl-arrow{transform:rotate(90deg);text-align:center}
+ .fl-stage.s2{flex:1 1 auto}}
+.svgwrap{overflow-x:auto}
+.diag svg{display:block;width:100%;height:auto;min-width:600px;max-width:860px;margin:0 auto}
+/* ---- 评审页 ---- */
+.rv{background:#fff;border-radius:16px;padding:32px 38px 36px;margin-bottom:22px;
+ box-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 30px rgba(0,0,0,.05)}
+.rv > h2{font-size:19px;font-weight:600;color:#111111;margin:0 0 8px;line-height:1.5}
+.rv > h2 .n{color:#8C8C8C;font-size:13px;font-weight:400;margin-left:8px}
+.rv .lead{font-size:14px;color:#6A6A6A;margin:0 0 20px}
+.verd{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;
+ border-radius:999px;padding:6px 16px;margin:2px 0 16px}
+.verd.bad{background:#FBEDEB;color:#C0392B}   /* 语义 */
+.verd.ok{background:#EAF7F1;color:#1F9D6B}    /* 语义 */
+.chain{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin:8px 0 6px}
+.cnode{flex:1 1 150px;min-width:150px;background:#F5F5F5;border-radius:12px;padding:13px 15px}
+.cnode .k{font-size:10.5px;letter-spacing:.14em;color:#8C8C8C;font-weight:600}
+.cnode .t{font-size:13.5px;color:#111111;font-weight:600;margin:6px 0 4px;line-height:1.5}
+.cnode .d{font-size:12.2px;color:#8C8C8C;line-height:1.75}
+.cnode.bad{background:#FBEDEB}.cnode.ok{background:#EAF7F1}.cnode.mid{background:#FBF3E9}  /* 语义：判定 */
+.cnode.bad .t{color:#C0392B}.cnode.ok .t{color:#1F9D6B}.cnode.mid .t{color:#9A5A12}
+.cnode.bad .d,.cnode.ok .d,.cnode.mid .d{color:#6A6A6A}
+.rt{width:100%;border-collapse:collapse;font-size:13.4px;margin:18px 0;table-layout:fixed}
+.rt th{background:#F5F5F5;color:#111111;text-align:left;padding:11px 14px;border-bottom:1px solid #E8E8E8;font-size:12.6px;font-weight:600}
+.rt td{padding:11px 14px;border-bottom:1px solid #EFEFEF;color:#2A2A2A;vertical-align:top;line-height:1.8}
+.rt tr:last-child td{border-bottom:0}
+.rt tbody tr:nth-child(even){background:rgba(0,0,0,.016)}
+.rt .id{font-weight:600;color:#6A6A6A;font-family:Consolas,monospace;white-space:nowrap}
+.rt .verdict{white-space:nowrap;font-size:12.2px;font-weight:600}
+.v-no{color:#C0392B}.v-mid{color:#9A5A12}.v-ok{color:#1F9D6B}   /* 语义：判定 */
+details.fold{margin:16px 0;border-radius:12px;background:#F5F5F5;overflow:hidden}
+details.fold > summary{cursor:pointer;padding:14px 18px;font-size:14px;font-weight:600;color:#111111;
+ background:#F5F5F5;list-style:none;outline:none}
+details.fold > summary::-webkit-details-marker{display:none}
+details.fold > summary::before{content:"\25b8 ";color:#8C8C8C;font-weight:600}
+details.fold[open] > summary::before{content:"\25be "}
+details.fold > summary:hover{background:#F2F2F2}
+details.fold .body{padding:8px 18px 18px}
+.rtwrap{overflow-x:auto}
+.muted{font-size:12.6px;color:#8C8C8C;line-height:1.9}
+.kv{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0 6px}
+.kv .b{background:#F5F5F5;border-radius:12px;padding:14px 18px;flex:1 1 150px;min-width:140px}
+.kv .b .n{font-size:24px;font-weight:600;color:#111111;line-height:1.3;font-variant-numeric:tabular-nums}
+.kv .b .l{font-size:11.8px;color:#8C8C8C;margin-top:3px}
+.kv .b.hot .n{color:#C0392B}    /* 语义 */
+.kv .b.good .n{color:#1F9D6B}   /* 语义 */
+.jump{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 24px;padding:14px 18px;
+ background:rgba(255,255,255,.74);-webkit-backdrop-filter:saturate(1.6) blur(14px);backdrop-filter:saturate(1.6) blur(14px);
+ border-radius:14px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.jump a{font-size:12.5px;color:#6A6A6A;text-decoration:none;background:#fff;border:1px solid #E8E8E8;
+ border-radius:999px;padding:5px 14px;white-space:nowrap;transition:color .18s ease,border-color .18s ease}
+.jump a:hover{color:#111111;border-color:#C4C4C4}
+.jump a.go{margin-left:auto;background:#111111;border-color:#111111;color:#fff}
+.jump a.go:hover{background:#000;border-color:#000}
+@media (max-width:640px){.rv{padding:22px 20px 26px}.docbody table{min-width:440px}.jump a.go{margin-left:0}
+ .diag svg{min-width:560px}.diag{padding:18px 14px 14px}.tw{margin:14px 0}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="prog"><i id="pgbar"></i></div>
+<div class="topbar"><div class="in">
+<span class="brand">「准绳」产品文档 <span>· 刘久瑞</span></span>
+<nav><a href="index.html" class="on">PRD 全文</a><a href="review.html">评审摘要</a><a href="../index.html" class="back">← 返回作品集</a></nav>
+</div></div>
+<header class="dochd"><div class="in">
+<h1>PRD：准绳 2.0 —— 规范驱动的整改留痕助手</h1>
+<p class="meta">版本 <b>v2.2.1</b>　·　文档状态：定位重构版（两轮六角色评审、16 项阻断建议逐项采纳；复评通过；v2.2 设计定稿待原型迭代）　·　最近更新 2026-10-06　·　产品负责人 刘久瑞（个人作品项目）</p>
+<div class="tagrow"><span class="tg">六角色模拟评审</span><span class="tg bad">首轮 ❌ 9 项阻断</span>
+<span class="tg">两轮六角色评审修订闭环</span><span class="tg ok">复评 ✅ 通过</span><span class="tg">双端原型 216 项断言</span><span class="tg">v2.2.1 修订 + 复评收口</span></div>
+</div></header><div class="docwrap"><aside class="toc"><p class="h">目 录</p><ul>
+<li><a href="#1-文档信息">1. 文档信息</a><ul>
+<li><a href="#11-修订记录">1.1 修订记录</a></li>
+</ul>
+</li>
+<li><a href="#2-需求背景与目标决策层">2. 需求背景与目标（决策层）</a><ul>
+<li><a href="#21-问题陈述三段式">2.1 问题陈述（三段式）</a></li>
+<li><a href="#22-业务目标分两阶段">2.2 业务目标（分两阶段）</a></li>
+<li><a href="#23-核心价值一句话">2.3 核心价值（一句话）</a></li>
+<li><a href="#24-定位变更说明v12-v20-的决策过程">2.4 定位变更说明（v1.2 → v2.0 的决策过程）</a></li>
+</ul>
+</li>
+<li><a href="#3-目标用户与场景决策层">3. 目标用户与场景（决策层）</a><ul>
+<li><a href="#31-用户画像v20-收窄">3.1 用户画像（v2.0 收窄）</a></li>
+<li><a href="#32-用户故事">3.2 用户故事</a></li>
+<li><a href="#33-核心使用场景">3.3 核心使用场景</a></li>
+</ul>
+</li>
+<li><a href="#4-功能概要-范围边界决策层">4. 功能概要 + 范围边界（决策层）</a><ul>
+<li><a href="#41-功能清单与优先级">4.1 功能清单与优先级</a></li>
+<li><a href="#42-范围边界明确不做什么">4.2 范围边界（明确不做什么）</a></li>
+<li><a href="#43-主动砍掉什么为什么v20-新增">4.3 主动砍掉什么、为什么（v2.0 新增）</a></li>
+<li><a href="#44-核心假设与验证计划v20-新增v22-加-h5">4.4 核心假设与验证计划（v2.0 新增；v2.2 加 H5）</a></li>
+</ul>
+</li>
+<li><a href="#5-功能详细描述方案层实现层">5. 功能详细描述（方案层+实现层）</a><ul>
+<li><a href="#51-产品信息架构v20-更新">5.1 产品信息架构（v2.0 更新）</a></li>
+<li><a href="#52-功能一整改记录p0v20-核心已实现">5.2 功能一：整改记录（P0，v2.0 核心，已实现）</a><ul>
+<li><a href="#功能描述">功能描述</a></li>
+<li><a href="#用户故事">用户故事</a></li>
+<li><a href="#前置条件-后置条件">前置条件 / 后置条件</a></li>
+<li><a href="#操作流程">操作流程</a></li>
+<li><a href="#状态转换">状态转换</a></li>
+<li><a href="#状态转移表v21-新增评审-b1">状态转移表（v2.1 新增，评审 B1）</a></li>
+<li><a href="#界面与交互说明v21-扩充">界面与交互说明（v2.1 扩充）</a></li>
+<li><a href="#业务规则v21-修订">业务规则（v2.1 修订）</a></li>
+<li><a href="#521-数据字典整改记录v21-补约束列-复查三字段评审-b1b3">5.2.1 数据字典（整改记录，v2.1 补约束列 + 复查三字段，评审 B1/B3）</a></li>
+<li><a href="#521a-表单校验规则v21-新增评审-b3">5.2.1a 表单校验规则（v2.1 新增，评审 B3）</a></li>
+<li><a href="#异常分支流程v21-扩充">异常/分支流程（v2.1 扩充）</a></li>
+<li><a href="#522-现场模式v21-新增评审-b5v221-补-chips-规格">5.2.2 现场模式（v2.1 新增，评审 B5；v2.2.1 补 chips 规格）</a></li>
+<li><a href="#523-界面状态矩阵v21-新增评审-b4双端共用移动端为全屏页-桌面端为三栏右区">5.2.3 界面状态矩阵（v2.1 新增，评审 B4；双端共用，移动端为全屏页 / 桌面端为三栏右区）</a></li>
+</ul>
+</li>
+<li><a href="#53-功能二条文自动挂载p0差异化核心已实现">5.3 功能二：条文自动挂载（P0，差异化核心，已实现）</a><ul>
+<li><a href="#功能描述_1">功能描述</a></li>
+<li><a href="#操作流程_1">操作流程</a></li>
+<li><a href="#业务规则v21-修订_1">业务规则（v2.1 修订）</a></li>
+</ul>
+</li>
+<li><a href="#54-功能三照片留痕p0已实现">5.4 功能三：照片留痕（P0，已实现）</a><ul>
+<li><a href="#功能描述_2">功能描述</a></li>
+<li><a href="#照片规格v21-新增评审-b2">照片规格（v2.1 新增，评审 B2）</a></li>
+<li><a href="#界面与交互v21-新增">界面与交互（v2.1 新增）</a></li>
+<li><a href="#业务规则">业务规则</a></li>
+</ul>
+</li>
+<li><a href="#55-功能四导出留档p0已实现">5.5 功能四：导出留档（P0，已实现）</a><ul>
+<li><a href="#功能描述_3">功能描述</a></li>
+<li><a href="#业务规则v21-修订_2">业务规则（v2.1 修订）</a></li>
+</ul>
+</li>
+<li><a href="#56-已实现资产摘要v12-四模块详细定义见-v12-prd">5.6 已实现资产摘要（v1.2 四模块，详细定义见 v1.2 PRD）</a></li>
+<li><a href="#57-功能五笔记条文关联v22-新增-规划v221-评审修订">5.7 功能五：笔记条文关联（v2.2 新增，🔵 规划；v2.2.1 评审修订）</a><ul>
+<li><a href="#功能描述_4">功能描述</a></li>
+<li><a href="#用户故事_1">用户故事</a></li>
+<li><a href="#业务规则_1">业务规则</a></li>
+<li><a href="#notecites-数据字典v221-新增评审-b2">note.cites 数据字典（v2.2.1 新增，评审 B2）</a></li>
+<li><a href="#推荐排序与范围v221-新增评审-m7">推荐排序与范围（v2.2.1 新增，评审 M7）</a></li>
+<li><a href="#编号识别规格v221-新增评审-m5m6m7">编号识别规格（v2.2.1 新增，评审 M5/M6/M7）</a></li>
+<li><a href="#界面与交互v221-重写评审-m8">界面与交互（v2.2.1 重写，评审 M8）</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#6-原型验证v20-更新">6. 原型验证（v2.0 更新）</a><ul>
+<li><a href="#61-已有资产v12-存量-v20-增量均已完成">6.1 已有资产（v1.2 存量 + v2.0 增量，均已完成）</a></li>
+<li><a href="#62-v20-新增验证计划整改模块已完成v21-改三列表-统一断言口径评审-b3">6.2 v2.0 新增验证计划（整改模块，已完成；v2.1 改三列表 + 统一断言口径，评审 B3）</a></li>
+<li><a href="#63-v22-新增验证点规划v221-扩项评审-b5m6m7m9实现后按-62-口径回填实测数">6.3 v2.2 新增验证点（规划；v2.2.1 扩项，评审 B5/M6/M7/M9；实现后按 6.2 口径回填实测数）</a></li>
+</ul>
+</li>
+<li><a href="#7-非功能需求">7. 非功能需求</a></li>
+<li><a href="#8-数据需求与埋点产品化规划">8. 数据需求与埋点（产品化规划）</a></li>
+<li><a href="#9-成功指标">9. 成功指标</a></li>
+<li><a href="#10-异常处理">10. 异常处理</a></li>
+<li><a href="#11-迭代路线图">11. 迭代路线图</a></li>
+<li><a href="#12-附录">12. 附录</a><ul>
+<li><a href="#121-名词解释">12.1 名词解释</a></li>
+<li><a href="#122-参考资料">12.2 参考资料</a></li>
+</ul>
+</li>
+<li><a href="#a-ai-产品增量章节v20-更新">A. AI 产品增量章节（v2.0 更新）</a><ul>
+<li><a href="#a1-检索方案选型与演进更新">A1. 检索方案选型与演进（更新）</a></li>
+<li><a href="#a2-prompt-策略更新">A2. Prompt 策略（更新）</a></li>
+<li><a href="#a3-评估集与准确率要求更新">A3. 评估集与准确率要求（更新）</a></li>
+<li><a href="#a4-a7-幻觉控制-安全护栏-成本-bad-case-闭环">A4-A7. 幻觉控制 / 安全护栏 / 成本 / Bad case 闭环</a></li>
+</ul>
+</li>
+</ul></aside><div><div class="docbody"><details class="toc-mob"><summary>目录（点击展开）</summary><div style="margin-top:10px"><ul>
+<li><a href="#1-文档信息">1. 文档信息</a><ul>
+<li><a href="#11-修订记录">1.1 修订记录</a></li>
+</ul>
+</li>
+<li><a href="#2-需求背景与目标决策层">2. 需求背景与目标（决策层）</a><ul>
+<li><a href="#21-问题陈述三段式">2.1 问题陈述（三段式）</a></li>
+<li><a href="#22-业务目标分两阶段">2.2 业务目标（分两阶段）</a></li>
+<li><a href="#23-核心价值一句话">2.3 核心价值（一句话）</a></li>
+<li><a href="#24-定位变更说明v12-v20-的决策过程">2.4 定位变更说明（v1.2 → v2.0 的决策过程）</a></li>
+</ul>
+</li>
+<li><a href="#3-目标用户与场景决策层">3. 目标用户与场景（决策层）</a><ul>
+<li><a href="#31-用户画像v20-收窄">3.1 用户画像（v2.0 收窄）</a></li>
+<li><a href="#32-用户故事">3.2 用户故事</a></li>
+<li><a href="#33-核心使用场景">3.3 核心使用场景</a></li>
+</ul>
+</li>
+<li><a href="#4-功能概要-范围边界决策层">4. 功能概要 + 范围边界（决策层）</a><ul>
+<li><a href="#41-功能清单与优先级">4.1 功能清单与优先级</a></li>
+<li><a href="#42-范围边界明确不做什么">4.2 范围边界（明确不做什么）</a></li>
+<li><a href="#43-主动砍掉什么为什么v20-新增">4.3 主动砍掉什么、为什么（v2.0 新增）</a></li>
+<li><a href="#44-核心假设与验证计划v20-新增v22-加-h5">4.4 核心假设与验证计划（v2.0 新增；v2.2 加 H5）</a></li>
+</ul>
+</li>
+<li><a href="#5-功能详细描述方案层实现层">5. 功能详细描述（方案层+实现层）</a><ul>
+<li><a href="#51-产品信息架构v20-更新">5.1 产品信息架构（v2.0 更新）</a></li>
+<li><a href="#52-功能一整改记录p0v20-核心已实现">5.2 功能一：整改记录（P0，v2.0 核心，已实现）</a><ul>
+<li><a href="#功能描述">功能描述</a></li>
+<li><a href="#用户故事">用户故事</a></li>
+<li><a href="#前置条件-后置条件">前置条件 / 后置条件</a></li>
+<li><a href="#操作流程">操作流程</a></li>
+<li><a href="#状态转换">状态转换</a></li>
+<li><a href="#状态转移表v21-新增评审-b1">状态转移表（v2.1 新增，评审 B1）</a></li>
+<li><a href="#界面与交互说明v21-扩充">界面与交互说明（v2.1 扩充）</a></li>
+<li><a href="#业务规则v21-修订">业务规则（v2.1 修订）</a></li>
+<li><a href="#521-数据字典整改记录v21-补约束列-复查三字段评审-b1b3">5.2.1 数据字典（整改记录，v2.1 补约束列 + 复查三字段，评审 B1/B3）</a></li>
+<li><a href="#521a-表单校验规则v21-新增评审-b3">5.2.1a 表单校验规则（v2.1 新增，评审 B3）</a></li>
+<li><a href="#异常分支流程v21-扩充">异常/分支流程（v2.1 扩充）</a></li>
+<li><a href="#522-现场模式v21-新增评审-b5v221-补-chips-规格">5.2.2 现场模式（v2.1 新增，评审 B5；v2.2.1 补 chips 规格）</a></li>
+<li><a href="#523-界面状态矩阵v21-新增评审-b4双端共用移动端为全屏页-桌面端为三栏右区">5.2.3 界面状态矩阵（v2.1 新增，评审 B4；双端共用，移动端为全屏页 / 桌面端为三栏右区）</a></li>
+</ul>
+</li>
+<li><a href="#53-功能二条文自动挂载p0差异化核心已实现">5.3 功能二：条文自动挂载（P0，差异化核心，已实现）</a><ul>
+<li><a href="#功能描述_1">功能描述</a></li>
+<li><a href="#操作流程_1">操作流程</a></li>
+<li><a href="#业务规则v21-修订_1">业务规则（v2.1 修订）</a></li>
+</ul>
+</li>
+<li><a href="#54-功能三照片留痕p0已实现">5.4 功能三：照片留痕（P0，已实现）</a><ul>
+<li><a href="#功能描述_2">功能描述</a></li>
+<li><a href="#照片规格v21-新增评审-b2">照片规格（v2.1 新增，评审 B2）</a></li>
+<li><a href="#界面与交互v21-新增">界面与交互（v2.1 新增）</a></li>
+<li><a href="#业务规则">业务规则</a></li>
+</ul>
+</li>
+<li><a href="#55-功能四导出留档p0已实现">5.5 功能四：导出留档（P0，已实现）</a><ul>
+<li><a href="#功能描述_3">功能描述</a></li>
+<li><a href="#业务规则v21-修订_2">业务规则（v2.1 修订）</a></li>
+</ul>
+</li>
+<li><a href="#56-已实现资产摘要v12-四模块详细定义见-v12-prd">5.6 已实现资产摘要（v1.2 四模块，详细定义见 v1.2 PRD）</a></li>
+<li><a href="#57-功能五笔记条文关联v22-新增-规划v221-评审修订">5.7 功能五：笔记条文关联（v2.2 新增，🔵 规划；v2.2.1 评审修订）</a><ul>
+<li><a href="#功能描述_4">功能描述</a></li>
+<li><a href="#用户故事_1">用户故事</a></li>
+<li><a href="#业务规则_1">业务规则</a></li>
+<li><a href="#notecites-数据字典v221-新增评审-b2">note.cites 数据字典（v2.2.1 新增，评审 B2）</a></li>
+<li><a href="#推荐排序与范围v221-新增评审-m7">推荐排序与范围（v2.2.1 新增，评审 M7）</a></li>
+<li><a href="#编号识别规格v221-新增评审-m5m6m7">编号识别规格（v2.2.1 新增，评审 M5/M6/M7）</a></li>
+<li><a href="#界面与交互v221-重写评审-m8">界面与交互（v2.2.1 重写，评审 M8）</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#6-原型验证v20-更新">6. 原型验证（v2.0 更新）</a><ul>
+<li><a href="#61-已有资产v12-存量-v20-增量均已完成">6.1 已有资产（v1.2 存量 + v2.0 增量，均已完成）</a></li>
+<li><a href="#62-v20-新增验证计划整改模块已完成v21-改三列表-统一断言口径评审-b3">6.2 v2.0 新增验证计划（整改模块，已完成；v2.1 改三列表 + 统一断言口径，评审 B3）</a></li>
+<li><a href="#63-v22-新增验证点规划v221-扩项评审-b5m6m7m9实现后按-62-口径回填实测数">6.3 v2.2 新增验证点（规划；v2.2.1 扩项，评审 B5/M6/M7/M9；实现后按 6.2 口径回填实测数）</a></li>
+</ul>
+</li>
+<li><a href="#7-非功能需求">7. 非功能需求</a></li>
+<li><a href="#8-数据需求与埋点产品化规划">8. 数据需求与埋点（产品化规划）</a></li>
+<li><a href="#9-成功指标">9. 成功指标</a></li>
+<li><a href="#10-异常处理">10. 异常处理</a></li>
+<li><a href="#11-迭代路线图">11. 迭代路线图</a></li>
+<li><a href="#12-附录">12. 附录</a><ul>
+<li><a href="#121-名词解释">12.1 名词解释</a></li>
+<li><a href="#122-参考资料">12.2 参考资料</a></li>
+</ul>
+</li>
+<li><a href="#a-ai-产品增量章节v20-更新">A. AI 产品增量章节（v2.0 更新）</a><ul>
+<li><a href="#a1-检索方案选型与演进更新">A1. 检索方案选型与演进（更新）</a></li>
+<li><a href="#a2-prompt-策略更新">A2. Prompt 策略（更新）</a></li>
+<li><a href="#a3-评估集与准确率要求更新">A3. 评估集与准确率要求（更新）</a></li>
+<li><a href="#a4-a7-幻觉控制-安全护栏-成本-bad-case-闭环">A4-A7. 幻觉控制 / 安全护栏 / 成本 / Bad case 闭环</a></li>
+</ul>
+</li>
+</ul></div></details><div class="pnote">
+<p><b>关于本页</b>　这是「准绳」的产品需求文档 <b>v2.2.1 全文</b>（公开投递版，项目相关标识已脱敏）。v2.0 起产品定位发生重构——从 v1.2 的「AI 施工规范笔记本」收敛为「规范驱动的整改留痕助手」。定位变更的完整论证见 <a href="#2-需求背景与目标决策层">2.4 节</a>，砍项论证见 <a href="#43-主动砍掉什么为什么v20-新增">4.3 节</a>，假设纪律见 <a href="#44-核心假设与验证计划v20-新增v22-加-h5">4.4 节</a>——这三节是这份文档与模板填空的主要区别。</p>
+<p><b>关于「🛠 土木批注」</b>　正文 14 处批注是写作时的自注，解释<b>为什么这么写</b>（判断依据、取舍理由、易踩的坑），不是模板内容。它记录的是决策过程。</p>
+<p><b>文档链</b>　v2.0.0 → 六角色模拟评审（<b>❌ 9 项阻断</b> / 11 重要 / 7 建议）→ v2.1.0 修订 → 三组独立复评 → v2.1.1 收口 21 处 → <b>✅ 复评通过</b> → 双端原型 216 项断言全绿 → v2.1.2 口径校正（断言数、标准号、导出与存储取舍与实现对齐） → v2.1.3 原型改造后口径同步（断言 216 项、规范库 8 组 42 本、知识库发布口径） → v2.2.0 全工程化 + 笔记条文关联设计定稿 → v2.2.1 第二轮六角色评审修订（7 阻断 / 13 重要 / 8 建议）+ 三组复评收口。评审与复评结论见 <a href="review.html">评审摘要</a>。</p>
+</div><h1 id="prd准绳-20-规范驱动的整改留痕助手">PRD：准绳 2.0 —— 规范驱动的整改留痕助手</h1>
+<p><strong>存储口径修正（v2.2.1，评审 B1）</strong>：v2.0 原型实测为<strong>内存级演示（零持久化，刷新即重置）</strong>——本地持久化（IndexedDB）与笔记导出为 v2.2 迭代任务，见 11 章。v2.2 新增内容（5.7 笔记条文关联 / 全工程演示数据要求 / 本地持久化 / 笔记导出）为<strong>设计定稿</strong>（v2.2.1 评审修订版）——原型实现见 11 章路线图；本文对「已实现 / 规划」严格分列，不把设计当交付。</p>
+<hr />
+<h2 id="1-文档信息"><span class="num">1.</span>文档信息</h2>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文档标题</td>
+<td>PRD：准绳 2.0 —— 规范驱动的整改留痕助手</td>
+</tr>
+<tr>
+<td>版本号</td>
+<td>v2.2.1</td>
+</tr>
+<tr>
+<td>文档状态</td>
+<td>定位重构版（首轮 9 项阻断 B1-B9 的修改建议<strong>逐项复核、全部采纳</strong>；复评通过，见 《复评报告》；已按 04a 清单完成口径校正；v2.1.3 同步原型两轮改造后的实测口径；v2.2.0 全工程化 + 笔记条文关联设计定稿；<strong>v2.2.1 按第二轮六角色评审（07 号报告）完成修订</strong>，复评通过（见 08 号报告）；原型实现待 v2.2 迭代）</td>
+</tr>
+<tr>
+<td>创建日期</td>
+<td>2026-08-10</td>
+</tr>
+<tr>
+<td>最近更新</td>
+<td>2026-10-06</td>
+</tr>
+<tr>
+<td>产品负责人</td>
+<td>刘久瑞（个人作品项目）</td>
+</tr>
+<tr>
+<td>研发负责人</td>
+<td>刘久瑞（原型为单人完成）</td>
+</tr>
+<tr>
+<td>评审人</td>
+<td>求职面试官 / 目标公司产品团队</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="11-修订记录"><span class="num">1.1</span>修订记录</h3>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>版本</th>
+<th>日期</th>
+<th>修改人</th>
+<th>变更说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v0.9.0</td>
+<td>2026-08-10</td>
+<td>张三</td>
+<td>初稿，内部评审</td>
+</tr>
+<tr>
+<td>v1.0.0</td>
+<td>2026-08-14</td>
+<td>张三</td>
+<td>补充"无网络场景"异常处理；明确规范库范围边界</td>
+</tr>
+<tr>
+<td>v1.1.0</td>
+<td>2026-08-26</td>
+<td>刘久瑞</td>
+<td>与已交付原型对齐：新增笔记助手形态；规范库 6 分类 18 本；检索实现修正</td>
+</tr>
+<tr>
+<td>v1.2.0</td>
+<td>2026-08-27</td>
+<td>刘久瑞</td>
+<td>统一产品重构：「AI 施工规范笔记本」两端四模块同构；95 项断言</td>
+</tr>
+<tr>
+<td>v2.0.0</td>
+<td>2026-10-05</td>
+<td>刘久瑞</td>
+<td><strong>定位重构</strong>：经三视角产品评审（用户价值核算 / 证据分级 / 风险取舍），产品收敛为「规范驱动的整改留痕助手」——核心新增「整改记录」单向闭环（记录→挂条文→留照片→导出）；水印照片降为普通附件、日历提醒砍除；新增「主动砍掉什么」（4.3）与「假设与验证计划」（4.4）两节</td>
+</tr>
+<tr>
+<td>v2.1.0</td>
+<td>2026-10-05</td>
+<td>刘久瑞</td>
+<td><strong>首轮评审修订</strong>：按六角色模拟评审结论（9 阻断 / 11 重要 / 7 建议）逐项修订——新增完整状态转移表与"复查代记"机制、照片规格与 IndexedDB 存储方案、表单校验规则、界面状态矩阵、现场模式、草稿态；统一指标口径（采纳率 / 覆盖率 / 评估集命中率三义分列）、假设编号 A1-A4 ↔ H1-H4、埋点参数补全（user_id / device_id）、条文改存快照、导出物加五要素页脚。修订对照见 《六角色评审报告》 复评清单</td>
+</tr>
+<tr>
+<td>v2.1.1</td>
+<td>2026-10-05</td>
+<td>刘久瑞</td>
+<td><strong>复评收口</strong>：按三组独立复评核验（见 《复评报告》）的残余项修正——指标口径（采纳率阶段列、H2 引用、§9 补评估集命中率行）、H1 计数口径（首次「草稿→待整改」按 record_id 去重）、clauses 枚举（adopted_via ai/manual + 快照 ≤1000 字）、photos 元素结构内联、校验表（source_other 行 + 分字段超限文案）、文案唯一性对齐（前照片/回退原因/未关联条文/五要素枚举）、状态矩阵补注（列表成功态、空态「—」释义）、现场模式键盘边界修正</td>
+</tr>
+<tr>
+<td>v2.1.2</td>
+<td>2026-10-05</td>
+<td>刘久瑞</td>
+<td><strong>口径校正 + 阻断项采纳复核</strong>（按 《待确认项清单》 逐条落实）——① 文档口径校正 D1-D4：6.1 验证脚本更新为 <code>11-…移动端-v4.py</code>(77) / <code>12-…桌面端-v3.py</code>(134)，合计由 95 项更正为 <strong>211 项</strong>；4.2「原型尚未开发」改为「已按本文实现并验证」；6.2 断言口径改「规划 ≥125 / 实测 211」并列保留（不用实测覆盖规划，保住"按计划交付"的证据）；11 章 v2.0 通过标准拆标达成情况；② 待确认项收口 C1 / C5 / C6 / C7 / C8 / C9：存储选型延至 v3.0 试点前、页脚版本号口径与文档修订号解耦、云端留存期随用户协议确定、PDF 延后理由补齐、2.1 补标准号出处（GB/T 50319—2013 第 5.2.15 条 + 表 B.0.9）、周创建数改「待试点基线校准」；③ <strong>B1-B9 复核</strong>：9 项阻断的修改建议逐条核对，全部已在 v2.1.0/v2.1.1 落地，无遗漏</td>
+</tr>
+<tr>
+<td>v2.1.3</td>
+<td>2026-10-05</td>
+<td>刘久瑞</td>
+<td><strong>口径同步（原型改造后回填）</strong>——v2.1.2 交付后，原型又经两轮改造：① <strong>视觉统一</strong>（品牌深蓝/莫兰迪 → 无彩色中性灰阶，按钮与图标线性化）——改值不改名，不动任何断言所依赖的类名与选择器；② <strong>规范库扩容</strong>（演示库 6 分类 18 本 → <strong>8 组 42 本</strong>，移除厂家手册条目）——规范库相关断言随之改写（双端各新增 8 条、替换 5~6 条）。双端脚本实测由 77 / 134 更新为 <strong>79 / 137</strong>，合计 <strong>216 项全绿</strong>（v2.0 新增口径 116 → <strong>121</strong> 项）；规划口径 ≥125 不变。同步校正正文：6.1 / 6.2 / 9 / 11 章断言数，2.1 / 4.1 / 5.6 章规范库口径，7 章商密条目表述；2.1 补知识库发布口径（62 来源 / 85 概念 / 9 实体）。<code>04a</code> 为 2026-10-05 编制时的快照，未回填——保留当时口径以存证</td>
+</tr>
+<tr>
+<td>v2.2.0</td>
+<td>2026-10-05</td>
+<td>刘久瑞</td>
+<td><strong>全工程化 + 笔记条文关联（设计定稿，原型待实现）</strong>——评审背景：产品面向所有工程人，原演示与示例过度集中于海上风电；且「规范用法」在笔记中未真正体现（v1.2 的「插入规范引用」为硬编码演示）。① <strong>定位广度说明</strong>：不绑定工程类型，「规范驱动」对房建/市政/机电/钢结构/风电各专业同等成立（2.4 / 3.1）；② 现场模式部位选项改「专业 → 部位」两级 chips（5.2.2）；③ 数据字典与时间线示例由风电改为房建、5.3 流程示例覆盖房建/机电/钢结构（5.2.1 / 5.2 / 5.3）；④ <strong>演示数据覆盖要求</strong>：笔记/整改/快捷问题/部位选项/内部示例条目覆盖 ≥4 个专业（4.2）；⑤ <strong>新增 5.7「笔记条文关联」功能设计</strong>：笔记编辑中关键词自动推荐 / 手动插入 / 编号识别三条路径，快照落库、复用整改同款引擎；⑥ 新增假设 <strong>A5/H5</strong>（笔记条文关联被真实使用）与埋点 2 事件（8 章）；⑦ 路线图新增 v2.2 行。<strong>实现状态：设计定稿；原型（演示数据 + 5.7 能力）为 v2.2 迭代待实现</strong></td>
+</tr>
+<tr>
+<td>v2.2.1</td>
+<td>2026-10-06</td>
+<td>刘久瑞</td>
+<td><strong>第二轮评审修订（2026-10-06）</strong>：按六角色评审（<code>07-评审报告-准绳2.2</code>，原始 63 条归并 7 阻断 / 13 重要 / 8 建议）逐项修订——① <strong>B1 存储口径修正</strong>：主评审实测 v2.0 原型零持久化，「存 IndexedDB」失实表述（4.2 / 5.4 / 7 章）全部修正，本地持久化（笔记回写 + note.cites 落库 + 记录/照片持久化 + chips 记忆）列入 v2.2 任务；② <strong>B2 条带空间模型定案</strong>：定高 56px 常驻 + 关闭三要素 + 双端对照（5.1 / 5.7 / 6.3 三处统一）；③ <strong>B3 两级 chips 规格</strong>：location 映射表 + 五条状态规则 + 记忆介质（5.2.2）；④ <strong>B4 笔记线埋点与 H5 口径</strong>：公共参数覆盖全事件线、非引导定义、活跃笔记分母来源、30% 收口、本地事件日志载体；⑤ <strong>B5 存量断言影响分析</strong>：07/08/11/12 插入路径与风电话料断言清单 + 全量回归通过标准（6.3 / 11 章）；⑥ <strong>B6 笔记导出纳入 v2.2</strong> + 页脚第六要素（含条文时）+「含条文」判定；⑦ <strong>B7 商密边界扩至五类演示载体</strong>；⑧ 5.7 保留 P0 + 访谈第 5 题前置门（M1）；⑨ M5/M6/M7 数据规格三件套（note.cites 字典 / 编号识别规格 / 推荐排序与扩充目标）；⑩ 其余 M2-M13、S1-S8 随修。四项范围决策经用户拍板定案（详「落实情况」）</td>
+</tr>
+<tr>
+<td>v2.2.1（复评收口）</td>
+<td>2026-10-06</td>
+<td>刘久瑞</td>
+<td><strong>三组独立复评收口</strong>（<code>08-复评报告-准绳2.2-修订复评.md</code>，11 项复评项全部关闭）——残余 16 处修正：① B5 <strong>行号实测修正</strong>（12 号脚本「行 63」经实测无风电字样、剔除；断言/输入行分列）+ 6.3「07/08 其余条目」矛盾句 + 6.1 合计口径注（覆盖重叠、不重复计入 216）；② 「落库」措辞 2 处随零持久化口径修正；③ 整改侧条带占位字面文案 + 与空推荐提示的语境区分；④「库内编号白名单」匹配机制 + 误报边界收紧；⑤ 5.3 规则 6 补「已采纳文本不参与匹配」（5.7 指向落地、两处对称）；⑥ 6.3 补排序链/排除引用卡/新建预选·重置断言；⑦ 11 章三处（前置门语序、降级判据为第 5 题、退出线 H1 表述）+ 回滚线口径澄清（灾难线 vs 达标线区间、勿与 A3 命中率混淆）。修订与收口同日完成，<strong>不另升号</strong></td>
+</tr>
+<tr>
+<td>—（产品更名）</td>
+<td>2026-10-06</td>
+<td>刘久瑞</td>
+<td><strong>产品更名：规答 → 准绳</strong>——结合工程行业命名：「以规范为准绳」是工程验收文件的既有表述，准绳本义为古代测量平直工具（准测平面、绳量直度），与「规范驱动」定位同源。仅更新正文产品名与文件名，<strong>不涉及内容修订、不升版本号</strong>；历史文档（03 / 04a / 05 / 06 及 v1.2 原型脚本序号 01-08）保留原样留痕、不回填</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote class="bq-note">
+<p>🛠 土木批注：v2.0 的修订记录写法示范了「决策留痕」——变更不只是"加了什么"，而是写清"经什么判断、砍了什么、为什么"。面试官看修订记录，看的是你的决策过程。这份修订记录本身就是一个作品。</p>
+</blockquote>
+<hr />
+<h2 id="2-需求背景与目标决策层"><span class="num">2.</span>需求背景与目标（决策层）</h2>
+<h3 id="21-问题陈述三段式"><span class="num">2.1</span>问题陈述（三段式）</h3>
+<p><strong>现状与证据</strong>（真实项目背景 + 外部调研）：</p>
+<blockquote>
+<p>作者任职于某海上风电总承包项目（总装机百万千瓦级、多机位），任施工技术员。现场「问题整改」是施工员每天的高频动作之一，但完整过程散落在三类互不通气的载体里：<strong>问题描述</strong>在纸质监理通知单 / 即时通讯群，<strong>处置依据</strong>（依据哪条规范这样处置）在人脑和厚重的规范文本里，<strong>整改前后影像</strong>在手机相册和即时通讯聊天记录里。</p>
+<p>当需要复盘、报审或追责时，这些散落的材料需要重新拼装：翻两个月的群聊找照片、凭记忆说出处置依据、把过程重新口述一遍。作者本人的日常行为可佐证这一场景的高频性（每天写施工日志、查规范结论随手记进笔记——见 v1.2 第 2.1 节）。</p>
+<p>外部调研（2026-10）补充两个行业事实：① 施工质量整改在招投标与检查语境中有明确的数据项要求（整改人/整改时间/整改结果 + 复查时间/复查人/复查结论），说明"整改留痕"是行业认可的刚需结构（出处：<strong>GB/T 50319—2013《建设工程监理规范》</strong>第 5.2.15 条——「监理通知单（表 A.0.3）→ 整改 → 监理通知回复单（表 B.0.9）→ 复查」的闭环；该回复单的栏目设置即含整改情况说明、<strong>整改过程与结果照片附件</strong>、复查意见、双方签署与日期，与本文的字段设计同源）；② 现有工具两头不靠——公司级系统（品茗、广联达等）只覆盖部署了系统的企业项目，一线个人没有工具；免费的施工日志类 App 做了照片与导出，但没有"<strong>处置依据与被结构化记录</strong>"的能力。</p>
+</blockquote>
+<p><strong>影响与代价</strong>（不解决会损失什么）：</p>
+<blockquote>
+<p>事后追责说不清：整改当时是怎么处理的、依据什么规范，没有结构化记录，只有一堆照片；报审资料重新拼装，重复劳动；「凭记忆引用规范」可能记错限值版本（与 v1.2 问题同源）；处置依据从未沉淀，同类问题反复出现时无法快速复用上次的规范结论。</p>
+</blockquote>
+<p><strong>时机与约束</strong>（为什么现在做）：</p>
+<blockquote>
+<p>作者正在从施工岗转型「会使用 AI 工具的产品经理」，本产品是求职作品集第 1 号项目。已有资产可直接复用：42 本规范已结构化入库（8 组）、本地 RAG 知识库链路已用 qmd 验证（62 来源 / 85 概念 + 9 实体，2026-10 发布口径）、双端原型四模块（笔记/问答/规范库/历史，95 项断言）已交付。v2.0 的整改模块是在此底座上的<strong>增量</strong>——技术路径清晰，无需推翻既有原型。</p>
+</blockquote>
+<p><strong>证据状态（诚实声明）</strong>：</p>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>编号</th>
+<th>证据项</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>—</td>
+<td>写施工日志、查规范随手记（作者本人行为）</td>
+<td>✅ 有行为证据（v1.2 已记录）</td>
+</tr>
+<tr>
+<td>—</td>
+<td>整改是施工员岗位高频行为（行业普遍性）</td>
+<td>✅ 有行业事实支撑</td>
+</tr>
+<tr>
+<td><strong>A1</strong></td>
+<td>「一线施工员需要个人化的整改留痕工具」并愿意当场记录（↔H1）</td>
+<td>⚠️ <strong>[假设·待验证]</strong>——缺「具体事件 + 已付代价 + 当事人原话」级证据</td>
+</tr>
+<tr>
+<td><strong>A2</strong></td>
+<td>「整改记录自动挂条文」对用户确有价值（↔H2）</td>
+<td>⚠️ <strong>[假设·待验证]</strong>——这是产品的差异化假设，需在原型测试中验证</td>
+</tr>
+<tr>
+<td><strong>A3</strong></td>
+<td>导出的整改记录被质检/监理<strong>接受</strong>（↔H3）</td>
+<td>⚠️ <strong>[假设·待验证]</strong>——信任成本未知（此前漏入本表，本版补上；验证计划见 4.4）</td>
+</tr>
+<tr>
+<td><strong>A4</strong></td>
+<td>「公司系统之外的个人自留档」需求成立（↔H4）</td>
+<td>⚠️ <strong>[假设·待验证]</strong>——未验证</td>
+</tr>
+<tr>
+<td><strong>A5</strong></td>
+<td>「笔记条文关联」被日常真实使用（↔H5）</td>
+<td>⚠️ <strong>[假设·待验证]</strong>——"写作时引用规范"是作者既有行为（v1.2 证据，见 4.1），但"在笔记中结构化关联条文"是否被需要未验证（v2.2 新增）</td>
+</tr>
+<tr>
+<td><strong>A6</strong></td>
+<td>「不绑定专业」的定位对非风电工程同样成立（↔ 2.4 定位广度；v2.2.1 新增，评审 S7）</td>
+<td>⚠️ <strong>[假设·待验证]</strong>——<strong>推论，非事实</strong>；验证方式：访谈 ≥2 名非风电一线（随 v2.2 前置访谈执行）</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote class="bq-note">
+<p>🛠 土木批注：这张「证据状态」表是 v2.0 最重要的新增写法——<strong>把"我知道什么"和"我猜什么"分开写</strong>。多数 PRD 把假设当事实写（"用户需要 X"），评审时一问就倒。这张表来自 Mom Test 的证据纪律：具体事件+已付代价+原话，三个齐了才叫证据，缺了就标假设。面试时主动说「这条我标了假设，验证计划在 4.4」，这是加分项不是减分项。</p>
+</blockquote>
+<h3 id="22-业务目标分两阶段"><span class="num">2.2</span>业务目标（分两阶段）</h3>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>指标</th>
+<th>目标值</th>
+<th>现状</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>原型阶段 v1.2（已完成）</td>
+<td>Playwright 自动化断言</td>
+<td>95/95 全部通过（四模块）</td>
+<td>✅ 已达标</td>
+</tr>
+<tr>
+<td>原型阶段 v2.0（已完成）</td>
+<td>整改模块原型 + 断言扩展</td>
+<td>规划口径：双端可演示 + 断言总数 ≥ 125 项（新增约 30 项，双端合计）；<strong>实测：双端 216 项全绿</strong>（新增 121 项）</td>
+<td>✅ 已达标</td>
+</tr>
+<tr>
+<td>原型阶段 v2.0（已完成）</td>
+<td>整改演示场景</td>
+<td>3 类：整改全流程 / 条文自动挂载 / 导出留档</td>
+<td>✅ 已达标</td>
+</tr>
+<tr>
+<td>产品化阶段（规划）</td>
+<td>真实 RAG 接入</td>
+<td>关键词路由升级为向量+BM25 混合检索</td>
+<td>⏳ 知识库侧已就绪</td>
+</tr>
+<tr>
+<td>产品化阶段（规划）</td>
+<td>评估集准确率</td>
+<td>≥ 90%</td>
+<td>待构建</td>
+</tr>
+<tr>
+<td>试点验证（规划）</td>
+<td>推荐采纳率（H2·试点验证线）</td>
+<td>≥ 50%（AI 推荐条文中被人工采纳的比例）</td>
+<td>待验证</td>
+</tr>
+<tr>
+<td>产品化阶段（规划）</td>
+<td>条文记录覆盖率（产品线）</td>
+<td>≥ 80%（整改记录中成功挂载 ≥1 条条文的占比）</td>
+<td>待验证</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p>口径说明（v2.1 拆分）：<strong>采纳率</strong>＝推荐质量（验证"推荐是否有用"，试点验证线 ≥50%）；<strong>覆盖率</strong>＝记录完整度（产品线目标 ≥80%）；<strong>评估集命中率</strong>＝技术线（A 章 A3，≥80%）。三者此前被混用为同一个"挂载率"（评审阻断项 B6），本版分列并统一编号。产品化阶段目标为上线后首个评估周期（约 3 个月）口径。</p>
+</blockquote>
+<h3 id="23-核心价值一句话"><span class="num">2.3</span>核心价值（一句话）</h3>
+<blockquote class="bq-note">
+<p>准绳是一本<strong>规范驱动的整改留痕本</strong>：发现问题 → 记一条整改记录 → AI 自动关联规范条文作为处置依据 → 整改前/后照片留痕 → 一键导出存档。<strong>问（查规范）→ 记（整改记录）→ 引（条文依据）→ 留（前后影像）→ 出（导出留档）</strong>——五个现场高频动作，一个产品闭环。</p>
+<p>🛠 土木批注：对比 v1.2 的「查 → 问 → 存 → 写」——v2.0 的价值链把落脚点从"写"改成了"出（导出留档）"。这个改动是整个定位重构的核心：v1.2 的闭环终点是"沉淀在自己的笔记里"，v2.0 的终点是"<strong>拿出一份带条文出处的可交付物</strong>"。前者是自我满足，后者有真实的交付对象（质检、监理、下次检查）——有交付对象，产品才有存在理由。</p>
+</blockquote>
+<h3 id="24-定位变更说明v12-v20-的决策过程"><span class="num">2.4</span>定位变更说明（v1.2 → v2.0 的决策过程）</h3>
+<p>v2.0 的定位重构不是拍脑袋，而是经过一次三视角产品评审后的收敛：</p>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>评审视角</th>
+<th>核心问题</th>
+<th>结论</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>用户价值核算（价值公式 + 替换成本）</td>
+<td>相比现状替代（群聊 + 水印相机 + 纸质日志 + 免费日志 App），新体验增量在哪？</td>
+<td>四个候选方向中，只有「整改前后记录」的账算得过来：旧体验最差（群聊翻照片）、替换成本最低（单边可用，不依赖他人装 App）</td>
+</tr>
+<tr>
+<td>证据分级（Mom Test 纪律）</td>
+<td>哪些方向有行为证据？哪些是自我投射？</td>
+<td>四个候选方向<strong>全部</strong>只有作者单信源、无代价级证据——因此全部标注假设，裁剪验证计划（4.4）</td>
+</tr>
+<tr>
+<td>风险取舍（四大风险）</td>
+<td>哪个方向碰得过？哪个碰不过？</td>
+<td>防篡改水印（授时+验真）和日历提醒（系统日历已解决）为负期望，砍除；差异化必须站在"条文"上</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>收敛结果</strong>：产品定位从「工程人工作笔记软件」（无行为证据的宽定位）收窄为「规范驱动的整改留痕助手」（有行为证据的场景 + 有壁垒的能力交叉点）。被砍项的完整论证见 4.3。</p>
+<p><strong>定位广度（v2.2 补）</strong>：收敛的是「场景」，不是「专业」——「整改留痕 + 条文挂载」对房建、市政、机电、钢结构、风电等各专业一线施工员同等成立；作者的海上风电项目背景是产品的<strong>起源场景</strong>，不是产品的边界。产品面向<strong>所有工程人</strong>，演示数据与示例须覆盖多专业（要求见 4.2）。<strong>该定位为推论、非已验证事实</strong>（v2.2.1 补注，评审 S7）——验证方式见 2.1 <strong>A6</strong>（访谈 ≥2 名非风电一线）。</p>
+<blockquote class="bq-note">
+<p>🛠 土木批注：这一节是 v2.0 的"设计说明图"——工程施工前要审图，产品动工前要审方向。注意结构：<strong>先列评审判据、再给结论、最后指向砍项论证</strong>，三步让评审者不用翻遍全文就能确认"这个收缩是算过账的"。作品集里呈现这种"决策可审计"的结构，比多写三个功能更有说服力。</p>
+</blockquote>
+<hr />
+<h2 id="3-目标用户与场景决策层"><span class="num">3.</span>目标用户与场景（决策层）</h2>
+<h3 id="31-用户画像v20-收窄"><span class="num">3.1</span>用户画像（v2.0 收窄）</h3>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>主用户：施工员 / 现场技术员</th>
+<th>协作对象：质检员 / 监理（<strong>不装本 App</strong>）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>特征</td>
+<td>25-40 岁，一线执行者，白天现场、晚上补资料；用手机为主，办公室用电脑；<strong>专业覆盖：房建 / 市政 / 机电安装 / 钢结构 / 风电等（v2.2 明确——产品不绑定单一工程类型）</strong></td>
+<td>检查发起与验收方，接收整改的"结果物"</td>
+</tr>
+<tr>
+<td>与产品关系</td>
+<td>使用者：记录整改、挂条文、留照片、导出</td>
+<td>接收者：收到导出的整改记录（PDF/长图/截图）</td>
+</tr>
+<tr>
+<td>痛点</td>
+<td>整改过程散落于即时通讯记录，报审/追责时重新拼装；处置依据无记录</td>
+<td>收到的整改材料是否规范、可追溯</td>
+</tr>
+<tr>
+<td>使用频率</td>
+<td>整改记录：每周 2-10 条（视检查频率）；查规范：日均 3-8 次</td>
+<td>—（产品不为其设计功能）</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote class="bq-note">
+<p><strong>边界说明</strong>：v1.2 曾把「项目总工/质检员」列为次用户并为其设计功能（见 v1.2 第 3.1 节）；v2.0 明确收窄——<strong>MVP 只为"记录者"设计</strong>，质检/监理作为"协作对象"仅存在于导出物的接收端。理由：记录者与检查者是两条工作流，同时服务会导致功能撕裂；且"对方是否愿意安装 App"是未验证的信任假设（见 4.4 H3）。</p>
+<p>🛠 土木批注：把用户从"两个人"收成一个"记录者"+一个"协作对象"，看似砍功能，实际是<strong>把产品的地基做窄做深</strong>。类比：模板支护先支稳一道墙，再谈整层楼。收窄的依据是"你的同类可以直接访谈"——施工员就是作者的同类，验证成本最低；而"让监理装 App"的假设验证成本极高（要动对方的工作习惯）。</p>
+</blockquote>
+<h3 id="32-用户故事"><span class="num">3.2</span>用户故事</h3>
+<blockquote>
+<p>作为<strong>施工员</strong>，我希望<strong>收到监理通知单或自查发现问题时，当场记一条结构化整改记录</strong>（部位、问题、期限、责任人），以便<strong>过程材料从一开始就是齐的，而不是事后拼装</strong>。</p>
+<p>作为<strong>施工员</strong>，我希望<strong>填写问题描述时 AI 自动推荐相关规范条文作为处置依据</strong>，以便<strong>不用自己翻规范找依据，每条处置都说得清出处</strong>。</p>
+<p>作为<strong>施工员</strong>，我希望<strong>整改前/整改后各留一组照片并附在图注里说明</strong>，以便<strong>影像证据与文字记录在一处，不散落在相册里</strong>。</p>
+<p>作为<strong>施工员</strong>，我希望<strong>一键导出一条完整的整改记录（含条文出处与前后照片）</strong>，以便<strong>直接发给质检/监理或存档，不用在群聊里翻找两个月的记录</strong>。</p>
+<p>作为<strong>施工员</strong>，我希望<strong>问到的规范答案能一键存进笔记、写日志时自动检查窗口期与报验资料</strong>（v1.2 已有能力），以便<strong>同一本笔记里"查到的"和"写下的"不断线</strong>。</p>
+</blockquote>
+<h3 id="33-核心使用场景"><span class="num">3.3</span>核心使用场景</h3>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>触发条件</th>
+<th>用户操作</th>
+<th>预期结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>整改记录（核心）</strong></td>
+<td>发现质量问题/收到通知单</td>
+<td>新建整改记录 → 填问题描述 → 一键采纳 AI 推荐的规范条文 → 加整改前照片</td>
+<td>一条"待整改"记录成型，条文出处已挂载</td>
+</tr>
+<tr>
+<td><strong>整改闭环（核心）</strong></td>
+<td>整改完成</td>
+<td>加整改后照片 + 处置说明 → 状态改为"已整改"</td>
+<td>前后对照完整，可导出</td>
+</tr>
+<tr>
+<td><strong>导出留档（核心）</strong></td>
+<td>需要报审/发送/自查</td>
+<td>点「导出」→ 预览 → 保存/发送</td>
+<td>一条含条文出处与前后影像的整改记录单</td>
+</tr>
+<tr>
+<td>现场速查（已有）</td>
+<td>施工中不确定做法</td>
+<td>手机/电脑提问</td>
+<td>秒级答案 + 引用卡</td>
+</tr>
+<tr>
+<td>条文核对（已有）</td>
+<td>需核对原文</td>
+<td>点击引用卡</td>
+<td>条文详情（规范名+条文号+原文）</td>
+</tr>
+<tr>
+<td>答案归档（已有）</td>
+<td>答案想留档</td>
+<td>点「💾 存为笔记」</td>
+<td>答案+引用存入「规范摘录」</td>
+</tr>
+<tr>
+<td>日志写作（已有）</td>
+<td>每天下班写日志</td>
+<td>桌面端写日志 + AI 辅助</td>
+<td>窗口期/规范关联/报验补全提示</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="4-功能概要-范围边界决策层"><span class="num">4.</span>功能概要 + 范围边界（决策层）</h2>
+<h3 id="41-功能清单与优先级"><span class="num">4.1</span>功能清单与优先级</h3>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>优先级</th>
+<th>功能</th>
+<th>说明</th>
+<th>实现状态</th>
+<th>证据状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>P0</strong></td>
+<td><strong>整改记录</strong></td>
+<td>结构化模板（来源/部位/描述/期限/责任人）+ 状态机（草稿→待整改→已整改→复查合格）+ 时间线（完整状态转移表见 5.2）</td>
+<td>✅ v2.0 已实现（216 项断言）</td>
+<td>⚠️ 假设 A1（2.1）</td>
+</tr>
+<tr>
+<td><strong>P0</strong></td>
+<td><strong>条文自动挂载</strong></td>
+<td>由问题描述推荐相关规范条文，一键引用为处置依据，<strong>以快照随记录存储</strong>（复用条文库，见 5.3；快照机制 v2.0 会话内已实现，持久化随 v2.2 任务④）</td>
+<td>✅ v2.0 已实现（216 项断言）</td>
+<td>⚠️ 假设 A2（差异化核心）</td>
+</tr>
+<tr>
+<td><strong>P0</strong></td>
+<td><strong>照片留痕</strong></td>
+<td>整改前/后照片附件 + 图注。<strong>普通照片，不做防篡改水印</strong>（见 4.3）；规格见 5.4</td>
+<td>✅ v2.0 已实现（216 项断言）</td>
+<td>✅ 拍照留痕是岗位普遍行为（"愿意记录"为 A1）</td>
+</tr>
+<tr>
+<td><strong>P0</strong></td>
+<td><strong>导出留档</strong></td>
+<td>导出整改记录单（含条文出处 + 前后照片 + 复查三字段），原型期做导出预览</td>
+<td>✅ v2.0 已实现（216 项断言）</td>
+<td>⚠️ 假设 A3</td>
+</tr>
+<tr>
+<td>P0</td>
+<td>笔记体系</td>
+<td>4 笔记本 8 篇笔记；三栏/全屏编辑器；富文本；自动保存。<strong>整改记录归属本模块</strong>（新增「整改记录」类型）</td>
+<td>✅ 已实现</td>
+<td>✅ 有行为证据</td>
+</tr>
+<tr>
+<td>P0</td>
+<td>规范智能问答</td>
+<td>快捷问题 8 个 + 自由输入路由（13 类答案库）</td>
+<td>✅ 已实现</td>
+<td>✅ 有行为证据</td>
+</tr>
+<tr>
+<td>P0</td>
+<td>条文溯源引用</td>
+<td>引用卡 → 条文详情（目录+原文）</td>
+<td>✅ 已实现</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>P0</td>
+<td>答案存为笔记</td>
+<td>答案+引用一键存入「规范摘录」</td>
+<td>✅ 已实现</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>P0</td>
+<td><strong>笔记条文关联（v2.2 新增）</strong></td>
+<td>笔记编辑中把规范"用起来"：关键词自动推荐 / 手动插入 / 编号识别三条路径，引用卡快照落库（见 5.7）。<strong>v2.2.1 定案：保留 P0 + 访谈第 5 题前置门</strong>（见 11 章）——保留理由含作品集演示价值，<strong>非需求验证结论</strong>（评审 M1）</td>
+<td>🔵 规划（v2.2 原型）</td>
+<td>✅ 写作时引用规范是作者既有行为（v1.2）；⚠️ 结构化关联是否被需要待验证（H5）</td>
+</tr>
+<tr>
+<td>P1</td>
+<td><strong>笔记导出（v2.2 新增，v2.2.1 定案纳入）</strong></td>
+<td>含条文笔记的导出：长图（复用 5.5 规则 3 同一链路与分页规则）；导出物含条文时页脚六要素（第⑥版权要素）——承接 5.7 规则 7 的合规声明（评审 B6）</td>
+<td>🔵 规划（v2.2 原型）</td>
+<td>—（合规承接项，非需求假设）</td>
+</tr>
+<tr>
+<td>P0</td>
+<td>规范库浏览</td>
+<td>8 组 42 本 + 跨分类搜索</td>
+<td>✅ 已实现</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>P0</td>
+<td>未找到兜底</td>
+<td>无结果时如实回复，严禁编造</td>
+<td>✅ 已实现</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>AI 辅助写作</td>
+<td>窗口期回顾/规范关联/资料补全 + 写作工具</td>
+<td>✅ 已实现</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>历史会话 / 笔记搜索</td>
+<td>会话回放 / 桌面端搜索</td>
+<td>✅ 已实现</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>真实 RAG 检索</td>
+<td>关键词路由 → 向量+BM25</td>
+<td>🔵 规划</td>
+<td>—</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>多人整改流转</td>
+<td>整改人/复查人角色流转、对方接收（产品化阶段探索）</td>
+<td>🔵 规划（远期）</td>
+<td>⚠️ 信任假设未验证</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>语音输入 / Bad case 反馈</td>
+<td>现场戴手套打字不便 / 数据闭环</td>
+<td>🔵 规划</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="42-范围边界明确不做什么"><span class="num">4.2</span>范围边界（明确不做什么）</h3>
+<p><strong>本期不做</strong>：</p>
+<ul>
+<li>❌ 不做设计计算类问答与施工方案自动生成（沿用 v1.2 边界：AI 不代替工程师决策）</li>
+<li>❌ 不接入企业内部系统（图纸库、OA、公司整改系统）——定位是个人工具，不是公司系统</li>
+<li>❌ 不做账号与跨端实时同步（原型期两端内容同源，非实时同步）</li>
+<li>❌ 不做防篡改水印（见 4.3 第 1 条）</li>
+<li>❌ 不做日历/会议提醒（见 4.3 第 2 条）</li>
+</ul>
+<p><strong>商密边界（沿用 v1.2 已执行标准；v2.2.1 扩展载体范围，评审 B7）</strong>：</p>
+<ul>
+<li>演示规范库不含涉密材料：内部文件类条目一律标注「示例」，条文正文为虚构示例文本；</li>
+<li><strong>所有演示数据一律为虚构示例文本</strong>——适用范围：整改记录的演示数据、<strong>笔记示例、快捷问题、现场模式部位选项、规范库「内部示例」条目</strong>（五类载体全覆盖）；<strong>单位 / 项目 / 人名一律虚构代称；不得直接复用真实日志、整改单、聊天记录</strong>（防真实素材按字面合规流入公开制品）</li>
+</ul>
+<p><strong>演示数据覆盖度（v2.2 新增，随原型迭代执行）</strong>：</p>
+<ul>
+<li>演示数据须覆盖 <strong>≥4 个工程专业</strong>（房建 / 市政 / 机电 / 钢结构 / 风电中至少四类），适用范围：笔记示例、整改示例、快捷问题、现场模式部位选项、规范库「内部示例」条目——<strong>产品面向所有工程人，演示不得只呈现单一专业视角</strong>（对应 2.4 定位广度）</li>
+</ul>
+<blockquote class="bq-note">
+<p>🛠 土木批注（v2.2）：演示数据的专业覆盖不是装修，是定位的证据——面试官（尤其施工行业出身的）第一眼就会注意"这东西是不是只适合风电"。起源场景（作者项目经历）写进问题陈述是诚信；产品边界（面向所有工程人）写进定位是野心——两者分开陈述，才既真实又通用。工程类比：模板支护的通用做法不因楼型不同而作废；"规范驱动的整改留痕"对房建、市政、机电、钢结构、风电同样成立。</p>
+</blockquote>
+<p><strong>原型期技术边界（诚实声明）</strong>：</p>
+<ul>
+<li>整改模块为 v2.0 新增，<strong>已按本文实现并通过双端 216 项断言</strong>（见 6.1）；本节保留「先写设计、再做实现」的次序记录——设计先行是本文档的方法论，不是完成度声明</li>
+<li><strong>存储实现状态修正（v2.2.1，评审 B1）</strong>：v2.0 原型（09/10）经实测为<strong>内存级演示数据</strong>——无 IndexedDB/localStorage、笔记不回写、事件日志为内存数组，刷新即重置；本文此前的「存 IndexedDB」表述为设计口径、与实测不符，本版已全部修正为「<strong>v2.0 内存级 / v2.2 起持久化</strong>」。<strong>笔记回写 + note.cites 落库 + 记录与照片持久化（IndexedDB）</strong> 列入 v2.2 迭代任务（11 章）</li>
+<li>照片在原型期以本地演示数据呈现（压缩嵌入）；产品化期走对象存储，<strong>选型延至 v3.0 试点前</strong>（v2.1 阶段不引入真实云存储）</li>
+<li>条文推荐在原型期可先用"关键词规则匹配"演示，产品化期接真实 RAG（与问答模块同链路）</li>
+</ul>
+<h3 id="43-主动砍掉什么为什么v20-新增"><span class="num">4.3</span>主动砍掉什么、为什么（v2.0 新增）</h3>
+<blockquote>
+<p>本节回答一个问题：<strong>为什么不把四个方向都做了？</strong> 每个"砍"都有独立的判断依据，可直接在评审会上复述。</p>
+</blockquote>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>被砍 / 降级项</th>
+<th>原设想</th>
+<th>决定</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>防篡改水印</strong></td>
+<td>参照「今日水印相机」做时间地点防篡改水印照片</td>
+<td><strong>降级</strong>为普通照片附件；明确不做防篡改</td>
+<td>① 防篡改的壁垒不在水印样式，在「真实时间地点」的信任背书（国家授时+验真机制），单人作品无法复刻；② 更要紧的是：<strong>一个无法验真的水印会暗示它没有的证据效力</strong>——在工程质量语境里，这从"功能不足"变成"诚信问题"；③ 照片本身（前后对比+图注）已满足个人留档需要</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>日历式会议提醒</strong></td>
+<td>例会/交底会日历提醒 + 联动会议纪要</td>
+<td><strong>砍除</strong></td>
+<td>① 手机系统日历已解决提醒需求，新体验增量≈0；② 该方向无任何行为证据（访谈无记录）；③ 与"规范/条文"核心能力零关联。会议纪要保留（含在笔记容器中）</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>「工作笔记软件」定位词</strong></td>
+<td>产品定位为"工程人要用的工作笔记软件"</td>
+<td><strong>弃用</strong>，改为「规范驱动的整改留痕助手」</td>
+<td>无"主动写笔记"的行为证据支撑宽定位；四个功能的实质是"合规留痕"而非"笔记"，定位必须与功能自洽（v1.2 的"笔记本"心智保留为<strong>容器</strong>，不升级为<strong>卖点</strong>）</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>水印照片独立模块</strong></td>
+<td>作为独立功能模块建设</td>
+<td><strong>并入</strong>照片附件能力</td>
+<td>独立模块=一条独立产品线；附件=一项基础能力。不给"红海且无壁垒"的能力以模块级投入</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>多人整改流转</strong></td>
+<td>整改人→复查人完整闭环（对方接收、复查确认）</td>
+<td><strong>推迟</strong>至产品化阶段</td>
+<td>① MVP 单边即可成立（自己记录自己导出）；② "对方愿意装 App 并在系统内响应"是未验证的信任假设（4.4 H3），不拿 MVP 赌它</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote class="bq-note">
+<p>🛠 土木批注：这一节是评审会上<strong>最有杀伤力的部分</strong>。工程语境里最能说明问题：一份标书写"我们做了 12 项"不如写"这 5 项为什么不做"——前者是功能清单，后者是判断力。注意每条砍项的理由结构：<strong>先说替代方案的现实（别人已经解决/壁垒在哪）→ 再说自己的边界（复刻不了/无证据）→ 最后说留下的部分怎么满足需求</strong>。这个三段式可以直接复用到任何"需求砍除"汇报。</p>
+</blockquote>
+<h3 id="44-核心假设与验证计划v20-新增v22-加-h5"><span class="num">4.4</span>核心假设与验证计划（v2.0 新增；v2.2 加 H5）</h3>
+<p>v2.0 的产品假设与验证方式（Mom Test 纪律：只问过去，不问意愿）：</p>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>编号</th>
+<th>核心假设</th>
+<th>验证方式</th>
+<th>通过标准</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H1</td>
+<td>A1</td>
+<td>施工员愿意在"问题发生时"当场记录整改（而非事后补）</td>
+<td>原型投放到 5 位以上一线同事试用；观察是否在真实场景打开</td>
+<td>≥3 人当周产生 ≥1 条<strong>提交为「待整改」</strong>的真实记录（仅草稿不计）</td>
+</tr>
+<tr>
+<td>H2</td>
+<td>A2</td>
+<td>「条文自动挂载」确被需要且被采纳（不是花架子）</td>
+<td>记录"AI 推荐→人工采纳"的比例（采纳率，埋点见 8 章）；访谈：上次整改你是怎么找处置依据的？</td>
+<td><strong>分两阶段</strong>：试点验证线 采纳率 ≥50%（回答"是否有用"）；产品化目标待试点基线复盘后另定（注：2.2 / 9 章的 ≥80% 属覆盖率口径，勿与采纳率混用）；访谈中听到"翻规范找依据"的真实案例</td>
+</tr>
+<tr>
+<td>H3</td>
+<td>A3</td>
+<td>导出的整改记录被质检/监理<strong>接受</strong>（信任成本）</td>
+<td>让试用者把导出物实际发给对方，并<strong>回传对方反应</strong>（群记录截图或 1 句话反馈表；接受/要求重做均记录）</td>
+<td>≥1 例"对方直接接受、未要求重做"</td>
+</tr>
+<tr>
+<td>H4</td>
+<td>A4</td>
+<td>「个人自留档」需求（公司系统之外）成立</td>
+<td>访谈：最近一次有人要两年前的整改记录，你怎么找的？找到没？</td>
+<td>出现"找不到/翻很久"的具体事件</td>
+</tr>
+<tr>
+<td>H5</td>
+<td>A5</td>
+<td>「笔记条文关联」（v2.2）被日常真实使用（不是摆设）</td>
+<td>原型试用（v2.2）：5 人、观察 2 周 + 埋点 note_clause_inserted（见 8 章）；<strong>访谈第 5 题（v2.2 开工前置门，见 11 章）</strong>：上次写日志/记录时引用规范，你是怎么记的？</td>
+<td>试用期：≥3 人<strong>非引导地</strong>完成 ≥1 次条文插入（"非引导"操作定义见 8 章；防误触：<strong>条带只推荐、不自动插入</strong>，插入须选中条目后主动点按——S2）；试点期：≥30% 活跃笔记含 ≥1 条条文引用（<strong>活跃笔记</strong>=统计窗口内被保存 ≥1 次，分母来源事件 note_saved）</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>执行时机（v2.1 统一，评审 M10；v2.2.1 加前置门，评审 M1）</strong>：访谈 5 人 + 承诺测试自 <strong>v2.0 原型期并行启动</strong>（各约 2~3 天，不占开发排期）；其中<strong>访谈 ≥5 人（含 ≥2 名非风电一线）为 v2.2 开工前置门</strong>——截至本次修订（2026-10-06）访谈尚未启动，本文不虚构其进度；若访谈第 5 题证据不足（不存在"写记录时引用规范"的过去行为），5.7 降为 P1（见 11 章）。H1–H5 的<strong>完整结论</strong>在 v3.0 试点阶段产出（H1/H3 依赖真实使用与真实发送，原型期样本不足；H5 随 v2.2 原型试用采集）。此前"前置动作 vs v3.0 执行"的矛盾在此统一。</p>
+<p><strong>访谈问题清单（可直接照问，只问过去）</strong>：</p>
+<ol>
+<li>最近一次整改单是谁开的？前后照怎么拍的？发给谁？对方怎么回的？</li>
+<li>有没有因为没留痕说不清、被追责（或被要求返工补材料）的一次？</li>
+<li>公司检查系统你们项目谁在用？你自己用吗？为什么？</li>
+<li>上一次你查处置依据的时候，翻了什么？花了多久？</li>
+<li>（v2.2 追加；<strong>设为 v2.2 开工前置门</strong>，见 11 章）你写施工日志/记录时，要引用规范会怎么记？抄编号还是抄原文？后来翻出来用过吗？</li>
+<li>（v2.2.1 追加，验证 A6，<strong>面向非风电一线提</strong>）你们专业平时查得最多的是哪几本规范？上次为了找一条依据翻规范是什么时候、怎么翻的？</li>
+</ol>
+<p><strong>承诺测试（试点前置门）</strong>：请一位同事把最近一次真实整改单/日志照片给你看——<strong>拿不到，说明假设验证未启动，不得推进产品化</strong>。该门槛在校验 v3.0 启动条件时使用（见 11 章）。<strong>他人材料收集约束（v2.2.1 新增，评审 S3）</strong>：征得对方时<strong>口头告知用途</strong>；材料仅<strong>脱敏留存</strong>（覆盖单位/项目/人名），<strong>不进入公开制品</strong>，验证完成后销毁——收集真实材料的动作本身不得制造合规风险。</p>
+<blockquote class="bq-note">
+<p>🛠 土木批注：注意这节的位置——放在"功能概要"之后而不是文末。因为评审者在读功能详述前，<strong>必须先知道哪些是已验证的、哪些是待验证的</strong>，否则会默认所有功能都是"确定要做的"。承诺测试这一条是 Mom Test 的经典动作：不要问"你会用吗"，要一个真实的行为凭证（要一份真的整改单照片）。这是最低成本的信号过滤。</p>
+</blockquote>
+<hr />
+<h2 id="5-功能详细描述方案层实现层"><span class="num">5.</span>功能详细描述（方案层+实现层）</h2>
+<h3 id="51-产品信息架构v20-更新"><span class="num">5.1</span>产品信息架构（v2.0 更新）</h3>
+<p><strong>「准绳」由四个模块组成，两端信息架构一致（沿用 v1.2 组织方式）；整改记录作为笔记模块中的「一等公民」呈现：</strong></p>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>模块</th>
+<th>定位</th>
+<th>移动端布局</th>
+<th>桌面端布局</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>笔记</td>
+<td>施工文档写作与沉淀（<strong>整改记录归属此模块</strong>）</td>
+<td>底部 Tab ①：笔记本 chips（新增「⚙️ 整改记录」）+ 列表 + 全屏编辑器</td>
+<td>左侧导航①：三栏工作区 + AI 面板</td>
+</tr>
+<tr>
+<td>问答</td>
+<td>规范智能问答</td>
+<td>底部 Tab ②</td>
+<td>左侧导航②</td>
+</tr>
+<tr>
+<td>规范库</td>
+<td>42 本规范浏览</td>
+<td>底部 Tab ③</td>
+<td>左侧导航③</td>
+</tr>
+<tr>
+<td>历史</td>
+<td>问答会话回放</td>
+<td>底部 Tab ④</td>
+<td>左侧导航④</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>整改记录的入口设计（v2.1 更新）</strong>：</p>
+<ul>
+<li>笔记模块中新增「⚙️ 整改记录」笔记本类型；</li>
+<li>笔记列表顶部新增「+ 新建整改记录」<strong>主按钮</strong>（模板化创建；视觉权重高于「新建笔记」次按钮——两个入口必须主次分明，评审 M1）；</li>
+<li>编辑器载入整改记录时呈现<strong>结构化表单 + 时间线</strong>视图（而非纯富文本）——单页结构：结构化表单为主区，附可折叠「备注」富文本（复用编辑器能力，不改动既有富文本主路径，评审 M5）；</li>
+<li><strong>移动端快捷入口（评审 B5/S2）</strong>：首页顶部固定「⚙️ 新建整改记录」入口，从打开 App 到进入整改表单 <strong>≤ 2 步</strong>（原 4 步）；</li>
+<li><strong>条文推荐区（定高常驻 56px，v2.2.1 定案，评审 M1）</strong>：输入框下方常驻<strong>固定高度 56px</strong> 的推荐条带——未命中时显示浅灰占位「<strong>输入问题描述，自动推荐处置依据</strong>」（字面文案 v2.2.1 核验补定；与 5.2「推荐为空」的引导提示「未关联条文，可手动从规范库引用」为两种语境——前者为默认占位、后者为推荐执行后无结果，各自固定），命中时显示 Top 1 + 「共 n 条」展开，推荐出现/消失<strong>不引起表单位移</strong>；自动推荐（防抖 800ms）与「找依据」显式触发并存、可切换。<strong>现状标注</strong>：v2.0 原型（09/10）的推荐区为<strong>常规文档流块</strong>（推荐卡从 0 展开、直接下推表单），与本节"固定占位"承诺不符——改为定高常驻纳入 v2.2 改造（11 章任务⑥）。</li>
+</ul>
+<p><strong>笔记条文关联入口（v2.2 新增，见 5.7；v2.2.1 评审修订）</strong>：</p>
+<ul>
+<li>编辑器工具条下方设<strong>定高常驻 56px 推荐条带</strong>（与整改侧同款空间模型，双端对照见 5.7）：未命中显示浅灰占位「输入关键词，自动推荐条文」；命中时 Top 1 + 「共 n 条」展开；</li>
+<li>工具栏「插入规范引用」按钮升级为真实链路（规范库选择器）——<strong>现状标注</strong>：v1.2 该按钮为硬编码演示（点击后正文固定插入一条示例条文），真实链路纳入 v2.2 改造（11 章任务①）。</li>
+</ul>
+<blockquote class="bq-note">
+<p>🛠 土木批注：为什么整改记录不单开一个 Tab？因为它的内核是"一种带结构的笔记"——复用笔记容器的全部基础设施（编辑器、列表、存储、两端同构），新增的只是一个<strong>结构化模板 + 状态机 + 导出</strong>。这是最小改动路径：单开模块 = 再造一套列表/编辑器/存储，成本翻倍而用户价值不变。PRD 里这种"能力归属"的决策要写出来，评审时才不纠缠"为什么不独立模块"。</p>
+</blockquote>
+<h3 id="52-功能一整改记录p0v20-核心已实现"><span class="num">5.2</span>功能一：整改记录（P0，v2.0 核心，<strong>已实现</strong>）</h3>
+<h4 id="功能描述">功能描述</h4>
+<blockquote>
+<p>结构化的整改过程记录工具：以模板创建，包含问题来源、部位、描述、期限、责任人等字段；以状态机推进（草稿 → 待整改 → 已整改 → 复查合格）；聚合条文依据（5.3）与前后照片（5.4）；最终可导出（5.5）。</p>
+</blockquote>
+<h4 id="用户故事">用户故事</h4>
+<blockquote>
+<p>作为<strong>施工员</strong>，我希望<strong>3 分钟内记完一条整改记录</strong>（含条文与照片），以便<strong>在问题现场就能把材料做齐，轻装离场</strong>。</p>
+</blockquote>
+<h4 id="前置条件-后置条件">前置条件 / 后置条件</h4>
+<ul>
+<li>前置：用户已打开笔记模块（或整改入口）；条文库已加载</li>
+<li>后置：记录处于「草稿」或「待整改」状态，出现在整改记录列表顶部；<strong>首次保存（含草稿）即上报埋点</strong>（评审 B7）</li>
+</ul>
+<h4 id="操作流程">操作流程</h4>
+<figure class="diag">
+<figcaption>图 1 · 整改记录主流程（发现问题 → 导出留档，共 10 步）</figcaption>
+<div class="fl">
+<div class="fl-stage s1"><span class="fl-tag">记录</span><ol>
+<li>发现问题 / 收到通知单</li><li>新建整改记录</li><li>填写字段 · 首次保存为草稿</li></ol></div>
+<div class="fl-arrow">&#8594;</div>
+<div class="fl-stage s2"><span class="fl-tag">挂条文</span><ol start="4">
+<li>AI 推荐关联条文 · 一键引用为处置依据</li></ol></div>
+<div class="fl-arrow">&#8594;</div>
+<div class="fl-stage s3"><span class="fl-tag">留证</span><ol start="5">
+<li>补齐必填 + 整改前照片 → 提交「待整改」</li><li>整改实施</li><li>后照片 + 处置说明 → 标记已整改</li></ol></div>
+<div class="fl-arrow">&#8594;</div>
+<div class="fl-stage s4"><span class="fl-tag">闭环</span><ol start="8">
+<li>线下复查</li><li>代记复查结果：合格 / 打回</li><li>导出留档 · 发送</li></ol></div>
+</div>
+<p class="diag-note">第 4 步是差异化核心：条文由规则匹配推荐（原型期），产品化期演进为 RAG 检索；采纳率是它的验证指标。</p>
+</figure>
+
+<h4 id="状态转换">状态转换</h4>
+<figure class="diag">
+<figcaption>图 2 · 整改记录状态机（四态 · 终态不可改）</figcaption>
+<div class="svgwrap"><svg viewBox="0 0 860 530" role="img"
+ aria-label="整改记录四态状态转移图：草稿 → 待整改 → 已整改 → 复查合格，后两态各有一条带原因必填守卫的回退边">
+<defs>
+<marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+<path d="M0,0 L10,5 L0,10 z" fill="#8C8C8C"/></marker>
+<marker id="ahb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+<path d="M0,0 L10,5 L0,10 z" fill="#C26A17"/></marker>
+</defs>
+<circle cx="140" cy="16" r="7" fill="#111111"/>
+<line x1="140" y1="23" x2="140" y2="39" stroke="#8C8C8C" stroke-width="1.6" marker-end="url(#ah)"/>
+<rect x="40" y="40" width="200" height="54" rx="8" fill="#F5F5F5" stroke="#E0E0E0" stroke-width="1.6"/><text x="140" y="64" text-anchor="middle" font-size="17" font-weight="700" fill="#8C8C8C">○ 草稿</text><text x="140" y="83" text-anchor="middle" font-size="11.5" fill="#8C8C8C" opacity=".78">首存豁免照片校验</text><rect x="40" y="160" width="200" height="54" rx="8" fill="#FFF4E8" stroke="#F0C79A" stroke-width="1.6"/><text x="140" y="184" text-anchor="middle" font-size="17" font-weight="700" fill="#C26A17">● 待整改</text><text x="140" y="203" text-anchor="middle" font-size="11.5" fill="#C26A17" opacity=".78">已提交 · 整改中</text><rect x="40" y="280" width="200" height="54" rx="8" fill="#EAF7F1" stroke="#A9DCC5" stroke-width="1.6"/><text x="140" y="304" text-anchor="middle" font-size="17" font-weight="700" fill="#1F9D6B">◆ 已整改</text><text x="140" y="323" text-anchor="middle" font-size="11.5" fill="#1F9D6B" opacity=".78">后照片 + 说明非空</text><rect x="40" y="400" width="200" height="54" rx="8" fill="#E8F0F7" stroke="#A9C6E0" stroke-width="1.6"/><text x="140" y="424" text-anchor="middle" font-size="17" font-weight="700" fill="#125A8F">■ 复查合格</text><text x="140" y="443" text-anchor="middle" font-size="11.5" fill="#125A8F" opacity=".78">终态 · 可导出</text><line x1="140" y1="94" x2="140" y2="159" stroke="#8C8C8C" stroke-width="1.6" marker-end="url(#ah)"/><text x="154" y="131" font-size="12.5" fill="#6A6A6A">提交</text><line x1="140" y1="214" x2="140" y2="279" stroke="#8C8C8C" stroke-width="1.6" marker-end="url(#ah)"/><text x="154" y="251" font-size="12.5" fill="#6A6A6A">标记已整改</text><line x1="140" y1="334" x2="140" y2="399" stroke="#8C8C8C" stroke-width="1.6" marker-end="url(#ah)"/><text x="154" y="371" font-size="12.5" fill="#6A6A6A">复查合格 · 代记</text>
+<line x1="140" y1="454" x2="140" y2="491" stroke="#8C8C8C" stroke-width="1.6" marker-end="url(#ah)"/>
+<circle cx="140" cy="505" r="10" fill="none" stroke="#111111" stroke-width="2"/>
+<circle cx="140" cy="505" r="5" fill="#111111"/>
+<text x="162" y="509" font-size="12.5" fill="#6A6A6A">终态 · 更正走「作废重建」</text>
+<path d="M 240,320 L 560,320 L 560,199" fill="none" stroke="#C26A17" stroke-width="1.6"
+ stroke-dasharray="5 4" marker-end="url(#ahb)"/>
+<line x1="555" y1="198" x2="243" y2="198" stroke="#C26A17" stroke-width="1.6" stroke-dasharray="5 4"
+ marker-end="url(#ahb)"/>
+<text x="572" y="256" font-size="12.5" fill="#C26A17" font-weight="600">复查不通过 / 撤销</text>
+<text x="572" y="274" font-size="11.5" fill="#C26A17" opacity=".8">守卫：原因必填（&#8804;100 字）</text>
+<path d="M 240,172 L 430,172 L 430,68" fill="none" stroke="#C26A17" stroke-width="1.6"
+ stroke-dasharray="5 4" marker-end="url(#ahb)"/>
+<line x1="425" y1="67" x2="243" y2="67" stroke="#C26A17" stroke-width="1.6" stroke-dasharray="5 4"
+ marker-end="url(#ahb)"/>
+<text x="442" y="124" font-size="12.5" fill="#C26A17" font-weight="600">撤销提交</text>
+<text x="442" y="142" font-size="11.5" fill="#C26A17" opacity=".8">守卫：原因必填</text>
+</svg></div>
+<p class="diag-note">实线 = 前进（各带守卫：提交需必填齐 + 前照片 &#8805;1；标记已整改需后照片 &#8805;1 且说明非空；复查三字段必填）；
+虚线 = 回退（原因必填，写入时间线）。完整守卫与不变量 R1-R3 见 5.2 节状态转移表。色 + 形状 + 文字三重编码，色弱可用。</p>
+</figure>
+
+<h4 id="状态转移表v21-新增评审-b1">状态转移表（v2.1 新增，评审 B1）</h4>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>当前</th>
+<th>事件</th>
+<th>目标</th>
+<th>守卫条件</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T1</td>
+<td>—（新建）</td>
+<td>首次保存</td>
+<td>草稿</td>
+<td>无（豁免照片与必填校验）</td>
+<td>现场"先记后补"的入口</td>
+</tr>
+<tr>
+<td>T2</td>
+<td>草稿</td>
+<td>提交</td>
+<td>待整改</td>
+<td>source / location / description 非空 且 photos_before ≥1</td>
+<td>缺项时定位并提示（见校验规则）</td>
+</tr>
+<tr>
+<td>T3</td>
+<td>待整改</td>
+<td>标记已整改</td>
+<td>已整改</td>
+<td>photos_after ≥1 且 action_note 非空</td>
+<td><strong>保存级校验</strong>，不可绕过（不变量 R1）</td>
+</tr>
+<tr>
+<td>T4</td>
+<td>已整改</td>
+<td>复查合格</td>
+<td>复查合格</td>
+<td>review_person / review_date / review_note 三字段必填</td>
+<td><strong>「复查合格」由记录者依线下复查结果代记</strong>（协作方不装 App，评审 B1）；时间线与导出物标注"代记"</td>
+</tr>
+<tr>
+<td>T5</td>
+<td>已整改</td>
+<td>复查不通过（打回）</td>
+<td>待整改</td>
+<td><strong>打回原因必填</strong>（≤100 字）</td>
+<td>代记；照片与说明保留</td>
+</tr>
+<tr>
+<td>T6</td>
+<td>待整改</td>
+<td>撤销提交</td>
+<td>草稿</td>
+<td>原因必填</td>
+<td>误操作修正</td>
+</tr>
+<tr>
+<td>T7</td>
+<td>已整改</td>
+<td>撤销「已整改」</td>
+<td>待整改</td>
+<td>原因必填（同 T5 机制）</td>
+<td>与打回以<strong>原因内容 + 时间线标签</strong>区分（"复查不通过" vs "撤销修正"），不新增审核角色</td>
+</tr>
+<tr>
+<td>T8</td>
+<td>复查合格</td>
+<td>更正</td>
+<td>新记录</td>
+<td>终态不可编辑/回退</td>
+<td><strong>作废重建</strong>：新建记录并在正文引用原记录 id，原记录保留（留痕产品不销毁历史）</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>状态不变量（保存层强制）</strong>：</p>
+<ul>
+<li>R1：<code>status=已整改</code> ⇒ <code>photos_after ≥1</code> 且 <code>action_note</code> 非空——编辑保存同样校验，杜绝"二次编辑抹掉照片"绕过闭环；</li>
+<li>R2：状态回退<strong>不删除</strong>任何照片与说明，仅改状态并追加原因；</li>
+<li>R3：终态（复查合格）内容不可修改，更正只能作废重建。</li>
+</ul>
+<blockquote class="bq-note">
+<p>🛠 土木批注（v2.1 新增）：状态机是整改模块的"结构施工图"——柱子（状态）和梁（转移）先定死，再谈装修（界面）。注意 T4 的"代记"设计：评审时有人问"复查人又不装你的 App，谁来点『复查合格』？"——答案是<strong>记录者依线下真实的复查结果代记</strong>，把"代"字写进时间线和导出物。既不假装系统里有第二个人，又不动线下流程，这是"单边工具"定位在状态机上的必然处理。</p>
+</blockquote>
+<h4 id="界面与交互说明v21-扩充">界面与交互说明（v2.1 扩充）</h4>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>区域</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>列表</td>
+<td>整改记录卡片：状态标签（<strong>色块 + 形状 + 文字三重编码</strong>，色弱可辨）——草稿○灰 / 待整改●橙 / 已整改◆绿 / 复查合格■蓝 + 部位 + 摘要 + 时间；<strong>空状态</strong>：「还没有整改记录——点右上角『+ 新建整改记录』开始第一条」</td>
+</tr>
+<tr>
+<td>表单区</td>
+<td>字段见 5.2.1 数据字典；「问题描述」为多行文本，输入时触发条文推荐（5.3）；「未关联条文」<strong>短标注</strong>（状态标注，唯一文案）：显示在表单「依据条文」区 + 导出物信息表；空推荐时的<strong>引导提示</strong>固定为「未关联条文，可手动从规范库引用」——标注与提示为两种语境，各固定唯一文案（评审 M11）</td>
+</tr>
+<tr>
+<td>时间线区</td>
+<td>按时间<strong>升序</strong>聚合，事件格式统一：<code>YYYY-MM-DD HH:mm 事件描述</code>。例（房建·混凝土养护）：<code>14:30 创建记录（草稿）</code>／<code>14:31 引用条文 GB 50666-2011 8.1.3（AI 推荐采纳）</code>／<code>15:02 状态：待整改 → 已整改</code>／<code>次日 09:10 状态：已整改 → 待整改（复查不通过：养护记录仍不完整）</code>／<code>次日 09:15 复查合格（线下复查人：质检员王工，代记）</code></td>
+</tr>
+<tr>
+<td>状态操作</td>
+<td>底部按钮随状态变化：草稿→「提交为待整改」；待整改→「标记已整改」；已整改→主按钮「复查合格（代记）」+ 次按钮「复查不通过（打回）」；<strong>所有回退类操作弹出原因输入框（必填 ≤100 字）后生效</strong>；终态显示「如需更正：作废重建」（T8）</td>
+</tr>
+<tr>
+<td>导出入口</td>
+<td>右上角「导出」，见 5.5；现场模式规格见 5.2.2，全屏状态规格见 5.2.3</td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="业务规则v21-修订">业务规则（v2.1 修订）</h4>
+<ul>
+<li>规则 1（保存级不变量）：状态为「已整改」时后照片 ≥1 且处置说明非空——在<strong>保存层</strong>强制，编辑保存同样校验（对应 R1，防"二次编辑抹掉照片"）</li>
+<li>规则 2：条文挂载为<strong>增强项而非阻塞项</strong>——推荐为空时允许保存，记录标注「未关联条文」</li>
+<li>规则 3：状态回退必须<strong>填写原因</strong>（≤100 字）并写入时间线；终态「复查合格」不可回退，更正走作废重建（T8）</li>
+<li>规则 4（草稿态，评审 M2）：<strong>首次保存允许无照片、缺必填</strong>（存为草稿），解决现场"先记后补"；草稿不参与 H1 统计口径（H1 只计提交为「待整改」的记录）</li>
+<li>规则 5（并发与双端，评审 M3）：原型期移动端与桌面端为两个独立单 HTML，<strong>存储各自独立、不做同步（明确声明）</strong>；同端内保存采用 last-write-wins 并写入时间线「本地覆盖」事件；产品化保存前比对 <code>updated_at</code>，冲突时提示"该记录已在另一端被修改"，由用户选择保留哪版</li>
+<li>规则 6：整改记录的演示数据必须为虚构示例；列表卡片显示「示例」<strong>可见角标</strong>（评审 S3），防止误认</li>
+<li>规则 7：照片规格按 5.4 执行（张数 / 体积 / 格式 / 存储）</li>
+</ul>
+<h4 id="521-数据字典整改记录v21-补约束列-复查三字段评审-b1b3"><span class="num">5.2.1</span>数据字典（整改记录，v2.1 补约束列 + 复查三字段，评审 B1/B3）</h4>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>必填</th>
+<th>约束</th>
+<th>说明</th>
+<th>示例值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>是</td>
+<td>UUID v4，本地生成（评审 S4）</td>
+<td>记录唯一标识</td>
+<td>9f1c…（uuid）</td>
+</tr>
+<tr>
+<td>source</td>
+<td>enum</td>
+<td>是</td>
+<td>4 值枚举</td>
+<td>问题来源：监理通知单/项目自查/上级检查/其他</td>
+<td>监理通知单</td>
+</tr>
+<tr>
+<td>source_other</td>
+<td>string</td>
+<td>条件</td>
+<td>「来源=其他」时必填；≤20 字</td>
+<td>其他来源补充说明</td>
+<td>集团巡检</td>
+</tr>
+<tr>
+<td>location</td>
+<td>string</td>
+<td>是</td>
+<td>≤60 字</td>
+<td>问题部位（叫法随专业）</td>
+<td>2# 楼三层剪力墙</td>
+</tr>
+<tr>
+<td>description</td>
+<td>text</td>
+<td>是</td>
+<td>≤500 字；触发条文推荐</td>
+<td>问题现象与事实描述</td>
+<td>混凝土浇筑后未按要求保湿养护</td>
+</tr>
+<tr>
+<td>severity</td>
+<td>enum</td>
+<td>否</td>
+<td>默认「一般」；用途：列表排序权重 + 提醒样式</td>
+<td>一般/较重/紧急</td>
+<td>一般</td>
+</tr>
+<tr>
+<td>deadline</td>
+<td>date</td>
+<td>否</td>
+<td>≥ 创建日期；逾期展示橙色描边 +「已逾期 n 天」（评审 S4）</td>
+<td>整改期限</td>
+<td>2026-10-08</td>
+</tr>
+<tr>
+<td>owner</td>
+<td>string</td>
+<td>否</td>
+<td>≤20 字；<strong>个人信息</strong>（隐私处理见 7 章）</td>
+<td>整改责任人</td>
+<td>李工（演示值）</td>
+</tr>
+<tr>
+<td>clauses</td>
+<td>cite[]</td>
+<td>否</td>
+<td>≤5 条；元素结构 <code>{clause_id, 快照原文, adopted_at, adopted_via}</code>——adopted_via ∈ {ai, manual}（枚举）；快照原文 ≤1000 字（超长截断存储，保留条文号定位）（评审 B8）</td>
+<td>关联规范条文（推荐+人工确认）；<strong>存快照</strong>，条文库更新不影响历史记录</td>
+<td><code>{clause_id:"gb50666-8.1.3", 快照原文:"…", adopted_at:"2026-10-05 14:31", adopted_via:"ai"}</code></td>
+</tr>
+<tr>
+<td>photos_before</td>
+<td>photo[]</td>
+<td>条件</td>
+<td>提交「待整改」时 ≥1；每组 ≤6 张；元素 <code>{data, caption≤50字, order}</code>（评审 B2）</td>
+<td>整改前照片 + 图注</td>
+<td>规格见 5.4</td>
+</tr>
+<tr>
+<td>action_note</td>
+<td>text</td>
+<td>条件*</td>
+<td>≤500 字；流转「已整改」时必填</td>
+<td>处置说明</td>
+<td>已安排专人保湿养护并补记养护记录</td>
+</tr>
+<tr>
+<td>photos_after</td>
+<td>photo[]</td>
+<td>条件*</td>
+<td>「标记已整改」时 ≥1；每组 ≤6 张；元素结构同 photos_before</td>
+<td>整改后照片 + 图注</td>
+<td>—</td>
+</tr>
+<tr>
+<td>status</td>
+<td>enum</td>
+<td>是</td>
+<td>草稿/待整改/已整改/复查合格；流转见状态转移表</td>
+<td>当前状态</td>
+<td>待整改</td>
+</tr>
+<tr>
+<td>review_person</td>
+<td>string</td>
+<td>条件</td>
+<td>「复查合格」时必填；≤20 字</td>
+<td>复查人（<strong>线下实际复查人</strong>，记录者代填）</td>
+<td>质检员王工</td>
+</tr>
+<tr>
+<td>review_date</td>
+<td>date</td>
+<td>条件</td>
+<td>「复查合格」时必填</td>
+<td>复查时间</td>
+<td>2026-10-10</td>
+</tr>
+<tr>
+<td>review_note</td>
+<td>text</td>
+<td>条件</td>
+<td>「复查合格」时必填；≤200 字</td>
+<td>复查结论</td>
+<td>养护记录已补齐，验收通过</td>
+</tr>
+<tr>
+<td>created_at / updated_at</td>
+<td>datetime</td>
+<td>是</td>
+<td>自动；<code>updated_at</code> 用于并发比对（规则 5）</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>timeline</td>
+<td>event[]</td>
+<td>是</td>
+<td>自动追加；事件格式见 5.2 界面（评审 M11）</td>
+<td>操作时间线</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p>示例值以房建场景贯穿（条文示例 <code>gb50666-8.1.3</code> 对应演示库「房屋建筑」组 GB 50666-2011 条目，示例文本为虚构演示内容）；演示数据按 4.2 覆盖 <strong>≥4 个专业</strong>，本节不逐一罗列各专业示例。</p>
+</blockquote>
+<h4 id="521a-表单校验规则v21-新增评审-b3">5.2.1a 表单校验规则（v2.1 新增，评审 B3）</h4>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>校验项</th>
+<th>规则</th>
+<th>触发时机</th>
+<th>提示形式与文案（唯一）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>必填（source / location / description）</td>
+<td>提交「待整改」时非空</td>
+<td>提交时拦截</td>
+<td>内联红框 + 自动聚焦首个缺失项；文案「请填写问题来源」「请填写问题部位」「请填写问题描述」</td>
+</tr>
+<tr>
+<td>来源补充（source_other）</td>
+<td>「来源=其他」时非空、≤20 字</td>
+<td>提交「待整改」时</td>
+<td>定位来源字段；「请补充来源说明（20 字内）」</td>
+</tr>
+<tr>
+<td>前照片</td>
+<td>photos_before ≥1</td>
+<td>提交「待整改」时</td>
+<td>定位到照片区；「请至少添加 1 张整改前照片」</td>
+</tr>
+<tr>
+<td>后照片 + 处置说明</td>
+<td>photos_after ≥1 且 action_note 非空</td>
+<td>点击「标记已整改」时（保存级）</td>
+<td>定位缺失项；「请补充整改后照片与处置说明」</td>
+</tr>
+<tr>
+<td>长度上限</td>
+<td>见数据字典约束列（20 / 60 / 200 / 500 字分档）</td>
+<td>输入时实时计数（右下角 n/上限）；超限不可再输入</td>
+<td>按字段显示「最多 n 字」：责任人/复查人「最多 20 字」、部位「最多 60 字」、复查结论「最多 200 字」、描述/处置「最多 500 字」</td>
+</tr>
+<tr>
+<td>照片规格</td>
+<td>≤6 张/组、单张 ≤300KB（自动压缩后）、JPG/PNG/WebP</td>
+<td>添加照片时即时校验</td>
+<td>「照片最多 6 张，单张不超过 300KB」/「格式不支持（支持 JPG/PNG/WebP）」</td>
+</tr>
+<tr>
+<td>日期</td>
+<td>deadline ≥ 创建日期</td>
+<td>失焦时</td>
+<td>「期限不能早于今天」</td>
+</tr>
+<tr>
+<td>原因输入</td>
+<td>回退类操作原因必填、≤100 字</td>
+<td>弹窗确认时</td>
+<td>「请填写原因（将记入时间线）」</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p>校验时机总则：<strong>输入时即时提示 → 失焦时校验 → 提交时汇总拦截</strong>；内联提示为主，提交失败附 Toast 汇总（「还有 n 项待完善」）。</p>
+</blockquote>
+<h4 id="异常分支流程v21-扩充">异常/分支流程（v2.1 扩充）</h4>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>异常</th>
+<th>系统行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>照片添加失败（格式/体积，评审 B2）</td>
+<td>「单张超过 300KB 将自动压缩（长边 1600px）；压缩后仍超 300KB 或格式不支持时拦截」；保留已填字段，可重试</td>
+</tr>
+<tr>
+<td>条文推荐为空</td>
+<td>不阻塞保存；表单提示「未关联条文，可手动从规范库引用」</td>
+</tr>
+<tr>
+<td>保存失败（存储异常）</td>
+<td>已保存内容不丢失（草稿保存至记录列表——v2.0 会话内 / v2.2 起 IndexedDB 持久化）；未保存内容保留于本地临时缓冲，重试后可恢复</td>
+</tr>
+<tr>
+<td>状态误操作</td>
+<td>允许回退；<strong>必填原因</strong>并写入时间线（T6/T7）</td>
+</tr>
+<tr>
+<td>创建缺必填（评审 B3）</td>
+<td>提交「待整改」时缺必填/前照片 → 拦截并定位首个缺失项（见校验规则）</td>
+</tr>
+<tr>
+<td>双端修改冲突（评审 M3）</td>
+<td>产品化比对 <code>updated_at</code> → 「该记录已在另一端被修改」，用户选择保留版本；原型期双端独立（规则 5）</td>
+</tr>
+<tr>
+<td>照片存储空间不足（v2.2 起可触发，评审 B1）</td>
+<td>提示「存储空间不足，建议导出后清理旧照片」——<strong>随 v2.2 持久化实现</strong>（v2.0 为内存级、无配额问题；IndexedDB 配额监控随 11 章任务④落地）</td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="522-现场模式v21-新增评审-b5v221-补-chips-规格"><span class="num">5.2.2</span>现场模式（v2.1 新增，评审 B5；v2.2.1 补 chips 规格）</h4>
+<blockquote>
+<p><strong>基准口径（v2.2.1）</strong>：移动端为现场基准；<strong>部位两级 chips 与来源/严重度 chip 双端同构</strong>（桌面端同为 chip 单选，仅几何尺寸差异，不因端而异构）。</p>
+</blockquote>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>设计项</th>
+<th>移动端现场规格</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>触控目标</td>
+<td>全部可点元素 ≥ 56×56px；主操作按钮高度 ≥ 56px（戴手套可点）。<strong>现状标注</strong>：v2.0 原型 chips 实测 36/32px，改造为 ≥56px 纳入 v2.2，由 6.3 断言（boundingBox ≥ 56）验收</td>
+</tr>
+<tr>
+<td>输入方式</td>
+<td>来源 / 严重度改 <strong>chip 单选</strong>（点击即选、不弹键盘）；部位改<strong>两级 chip 快选（v2.2 全工程化）</strong>——先选「专业」chip（房建 / 市政 / 机电 / 钢结构 / 风电 / 其他，记住上次选择），再选该专业常用「部位」chip（示例：房建＝基础 / 主体结构 / 砌体 / 装饰装修；市政＝道路 / 管道 / 构筑物；机电＝设备安装 / 管道 / 电气 / 通风空调；钢结构＝焊接 / 高强螺栓 / 吊装 / 涂装；风电＝塔筒 / 机位 / 升压站 / 海缆），任意一级可选「其他」转手动输入；期限提供快捷选项（+3 天 / +7 天 / 自定义）；键盘输入仅限「问题描述」「处置说明」「部位补充」「责任人」四项，其余字段零键盘</td>
+</tr>
+<tr>
+<td>拍照入口</td>
+<td>置于首屏（表单顶部「📷 添加整改前照片」），不折叠</td>
+</tr>
+<tr>
+<td>对比度</td>
+<td>强光可读：正文对比度 ≥ 7:1，主按钮高饱和色</td>
+</tr>
+<tr>
+<td>入口路径</td>
+<td>从打开 App 进入整改表单 ≤ 2 步（见 5.1）</td>
+</tr>
+<tr>
+<td>单手操作</td>
+<td>主操作固定底部安全区；左右滑手势不承担关键操作（防误触）</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>部位两级 chips 规格（v2.2.1 补全，评审 B3/M8/M9）</strong>：</p>
+<p>一级「专业」chip 与二级「部位」chip 的映射关系——<strong>一级只决定二级集合、不写入 location；写入 location 的始终是二级部位文本，且保持可编辑</strong>：</p>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>一级专业</th>
+<th>二级部位集合（示例，可扩展）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>房建</td>
+<td>基础 / 主体结构 / 砌体 / 装饰装修</td>
+</tr>
+<tr>
+<td>市政</td>
+<td>道路 / 管道 / 构筑物</td>
+</tr>
+<tr>
+<td>机电</td>
+<td>设备安装 / 管道 / 电气 / 通风空调</td>
+</tr>
+<tr>
+<td>钢结构</td>
+<td>焊接 / 高强螺栓 / 吊装 / 涂装</td>
+</tr>
+<tr>
+<td>风电</td>
+<td>塔筒 / 机位 / 升压站 / 海缆</td>
+</tr>
+<tr>
+<td>其他</td>
+<td>无二级（隐藏），直接手输</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>状态规则（五条）</strong>：</p>
+<ol>
+<li><strong>选专业</strong>：切换一级 chip 只改变二级集合，<strong>保留</strong>已填入 location 的文本（不静默清空用户已输入内容）；</li>
+<li><strong>选部位</strong>：点选二级 chip 为<strong>覆盖式写入</strong> location 字段；</li>
+<li><strong>二级「其他」</strong>：聚焦 location 输入框供手输；</li>
+<li><strong>一级「其他」</strong>：隐藏二级行，仅手输；</li>
+<li><strong>记忆</strong>：记忆最近一次「专业+部位」配对，<strong>随 IndexedDB 跨刷新保留</strong>（v2.2 任务④）；新建记录时自动预选该配对，行尾提供「重置」清除记忆。</li>
+</ol>
+<h4 id="523-界面状态矩阵v21-新增评审-b4双端共用移动端为全屏页-桌面端为三栏右区"><span class="num">5.2.3</span>界面状态矩阵（v2.1 新增，评审 B4；双端共用，移动端为全屏页 / 桌面端为三栏右区）</h4>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>屏幕</th>
+<th>默认</th>
+<th>空</th>
+<th>加载</th>
+<th>错误</th>
+<th>成功</th>
+<th>禁用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>整改列表</td>
+<td>卡片列表 + 状态标签</td>
+<td>「还没有整改记录——点右上角…」</td>
+<td>骨架卡片 ×3（列表区固定高度）</td>
+<td>「加载失败，点击重试」＋「本地记录不受影响」</td>
+<td>保存/提交成功后新卡片<strong>置顶 + 高亮 1.5s</strong></td>
+<td>—（列表无禁用态）</td>
+</tr>
+<tr>
+<td>整改表单</td>
+<td>表单 + 推荐区占位</td>
+<td>—（表单始终含默认值，无空态）</td>
+<td>推荐区骨架行（固定高度，不跳动）</td>
+<td>保存失败 Toast「保存失败，请重试」；<strong>已填内容不丢失</strong></td>
+<td>Toast「已保存（草稿）」/「已提交，待整改」</td>
+<td>校验未过时提交按钮<strong>保持可点</strong>（点击定位首个缺失项并高亮），不置灰</td>
+</tr>
+<tr>
+<td>照片组件</td>
+<td>缩略图网格 + 图注</td>
+<td>虚线框「+ 添加整改前照片」</td>
+<td>占位转圈 +「压缩中…」</td>
+<td>「格式不支持（支持 JPG/PNG/WebP）或超过 300KB」</td>
+<td>缩略图出现 + 数量角标</td>
+<td>满 6 张后「+」禁用 +「每组最多 6 张」</td>
+</tr>
+<tr>
+<td>导出预览</td>
+<td>成品预览 + 保存/发送</td>
+<td>—（导出入口仅在记录存在时可用，无空态）</td>
+<td>按钮转圈「正在生成…」</td>
+<td>「导出失败，请重试」（可重试）</td>
+<td>「已保存到本地」</td>
+<td>生成中按钮禁用（防重复提交）</td>
+</tr>
+<tr>
+<td>问答 / 笔记等已有屏幕</td>
+<td>沿用 v1.2 状态规格（v1.2 PRD 6 章，已随 95 项断言验证）——本次为整改线新增模块，旧屏状态不在本轮复评范围</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="53-功能二条文自动挂载p0差异化核心已实现"><span class="num">5.3</span>功能二：条文自动挂载（P0，差异化核心，<strong>已实现</strong>）</h3>
+<h4 id="功能描述_1">功能描述</h4>
+<blockquote>
+<p>用户填写「问题描述」时，系统基于描述中的关键词/语义检索规范库，推荐 Top 3 相关条文（含规范名/条文号/原文摘要；<strong>展示于定高 56px 常驻条带——默认展示第 1 条 + 「共 n 条」展开，空间模型见 5.1</strong>）；用户一键采纳后，条文以「处置依据」形式挂载到整改记录（复用 v1.2 的 cite-inline 引用组件与条文详情链路）。<strong>这是本产品与其他工具的本质差异：整改记录自带"处置依据"，而非只有照片和文字。</strong></p>
+</blockquote>
+<h4 id="操作流程_1">操作流程</h4>
+<ol>
+<li>用户在「问题描述」输入（如「混凝土浇筑后未按要求保湿养护」（房建）／「管道灌水试验未做」（机电）／「吊装警戒区隔离范围不足」（钢结构·吊装）——推荐机制不分专业）</li>
+<li>停止输入后（防抖 ~800ms），系统检索条文库 → 推荐清单出现在描述框下方</li>
+<li>用户点击某条推荐的「引用」→ 该条文以引用样式插入「依据条文」区</li>
+<li>用户可继续补充/删除条文；也可从规范库手动添加</li>
+</ol>
+<h4 id="业务规则v21-修订_1">业务规则（v2.1 修订）</h4>
+<ul>
+<li>规则 1：推荐结果必须来自条文库数据，<strong>不得由模型生成条文号</strong>（沿用 v1.2 铁律）</li>
+<li>规则 2：推荐默认 Top 3，标注「推荐」标签（条带内默认展示第 1 条 + 「共 n 条」展开，见 5.1）；用户未采纳不做静默挂载；推荐卡固定文案「<strong>AI 推荐仅供参考，请核实后采用</strong>」（评审 M7）</li>
+<li>规则 3（v2.1 细化，评审 M4；v2.2.1 实测核对）：原型期复用规范库<strong>既有检索链路</strong>（与问答模块同一关键词路由实现）+ 随原型交付演示映射表——<strong>实测现为 39 条</strong>（代码注释旧称"约 20~30 条"已滞后，以实测为准）；v2.2 扩充至 <strong>≥60 条、覆盖 8 组规范</strong>（见 5.7 规则 6）；产品化期接 RAG 同链路</li>
+<li>规则 4：条文状态标签沿用 v1.2 体系（现行有效 / 内部文件）；演示库已不含「厂家手册」类条目（见 v2.1.3 修订记录）</li>
+<li>规则 5（快照落库，评审 B8）：采纳的条文以快照结构 <code>{clause_id, 快照原文, adopted_at, adopted_via}</code> 存入记录——<strong>条文库此后更新不影响历史记录</strong>；详情页与导出一律读快照（留痕产品可信性的根基）</li>
+<li>规则 6（防陈旧结果，评审 M4）：查询携带<strong>请求序号</strong>，仅渲染最新序号的返回；描述编辑后自动重新推荐（同一防抖 800ms + 序号机制），已采纳的条文不因重推被移除；<strong>已采纳条文的文本不参与后续匹配</strong>（防自我增强——与 5.7 推荐排序排除口径一致，v2.2.1 核验收口）</li>
+<li>规则 7（版权声明，评审 M7；v2.2.1 承接口径统一）：条文详情页注明「条文版权归发布机构所有，仅供个人工作参考」；<strong>导出物按 5.5 规则 2 第⑥要素承接</strong>——含条文时统一附加同一版权句</li>
+</ul>
+<blockquote class="bq-note">
+<p>🛠 土木批注：这个功能的写法要点是"<strong>设计一个不存在的技术也可信</strong>"——原型期用关键词匹配、产品化接 RAG，和问答模块同一条演进路线。面试时这条链路会被追问（"你怎么保证推荐的条文是对的？"），答题要点在规则 1 和 2：不生成条文号 + 不静默挂载，人始终在环里。AI 辅助留痕的边界感就是这个。</p>
+</blockquote>
+<h3 id="54-功能三照片留痕p0已实现"><span class="num">5.4</span>功能三：照片留痕（P0，<strong>已实现</strong>）</h3>
+<h4 id="功能描述_2">功能描述</h4>
+<blockquote>
+<p>整改前/后照片以附件形式添加，每张可附图注（说明拍摄内容）。<strong>产品不做防篡改水印、不做时间地点验真</strong>（理由见 4.3 第 1 条）——照片的证明力来自"前后对照 + 与文字记录的时间线一致性"，而非水印背书。</p>
+</blockquote>
+<h4 id="照片规格v21-新增评审-b2">照片规格（v2.1 新增，评审 B2）</h4>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>项</th>
+<th>规格</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>张数</td>
+<td>每组 ≤6 张（前组、后组分别计数），组内可排序</td>
+</tr>
+<tr>
+<td>体积</td>
+<td>单张 ≤300KB（<strong>自动压缩后</strong>：长边 ≤1600px、JPEG 质量逐级下调直至达标）</td>
+</tr>
+<tr>
+<td>格式</td>
+<td>JPG / PNG / WebP；HEIC 选取时自动转 JPG，转换失败则提示改用相册导出（移动端）</td>
+</tr>
+<tr>
+<td>图注</td>
+<td>每张可附 ≤50 字图注，显示于缩略图下方，点击可直接编辑</td>
+</tr>
+<tr>
+<td>存储</td>
+<td><strong>v2.0 实测为内存级演示</strong>（刷新重置；v2.2.1 修正，评审 B1）——<strong>v2.2 起本地持久化</strong>（IndexedDB，按 50MB+ 容量设计——localStorage ≈5MB 存不下多组照片，评审 B2），随 11 章任务④实现；产品化走对象存储，<strong>选型延至 v3.0 试点前</strong>（v2.1 阶段不引入真实云存储）</td>
+</tr>
+<tr>
+<td>异常</td>
+<td>压缩后仍超 300KB → 拦截并提示；配额不足 → 提示清理（见 5.2 异常表）</td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="界面与交互v21-新增">界面与交互（v2.1 新增）</h4>
+<ul>
+<li>添加照片：虚线卡片「+ 添加」；移动端点击弹出「拍照 / 从相册选择」（拍照直调相机），桌面端为文件选择</li>
+<li>前后对照视图：详情与导出中，前组 / 后组<strong>移动端上下对照、桌面端左右对照</strong>；组内横向滑动；展示拍摄建议文案（「建议同角度、同距离拍摄前后对比」）</li>
+<li>大图查看：点击缩略图全屏查看，左右滑动切换</li>
+</ul>
+<h4 id="业务规则">业务规则</h4>
+<ul>
+<li>规则 1：后照片为状态流转到「已整改」的必填项（保存级，见 R1）</li>
+<li>规则 2：照片按「整改前/整改后」两组展示，组内可排序</li>
+<li>规则 3：界面<strong>不出现</strong>"防篡改""真实时间"等暗示性文案（对应 4.3 的诚信边界）</li>
+<li>规则 4：原型期照片用演示图按上述规格压缩嵌入（已实现）；产品化存储方案为对象存储，选型延至 v3.0 试点前（见上表存储行）</li>
+</ul>
+<h3 id="55-功能四导出留档p0已实现"><span class="num">5.5</span>功能四：导出留档（P0，<strong>已实现</strong>）</h3>
+<h4 id="功能描述_3">功能描述</h4>
+<blockquote>
+<p>将一条整改记录导出为可发送/存档的成果物：包含问题信息、处置依据（条文出处）、前后照片、时间线。原型期实现「导出预览 + 图片/长文保存」演示；产品化期支持 PDF 导出与分享。</p>
+</blockquote>
+<h4 id="业务规则v21-修订_2">业务规则（v2.1 修订）</h4>
+<ul>
+<li>规则 1：导出物版式包含：标题（部位+摘要）、基本信息表（<strong>含复查三字段：复查人/复查时间/复查结论</strong>，评审 B1）、依据条文（规范名+条文号+快照原文摘要）、前后照片对照、时间线</li>
+<li>
+<p>规则 2（评审 B9，法务口径；v2.2.1 扩第⑥要素）：导出物<strong>固定页脚</strong>：<strong>常置五要素</strong>——①产品名「准绳」②版本号（如 v2.1）③生成时间 ④「内容由用户自行录入、未经第三方核验，不构成验收或责任认定依据」⑤「条文以官方发布文本为准」；<strong>含条文时追加第⑥要素</strong>——「条文版权归发布机构所有，仅供个人工作参考」（<strong>含条文判定</strong>：整改记录 clauses 非空 / 笔记 note.cites 非空或正文含库内编号）。排版为两行：</p>
+<blockquote>
+<p><strong>准绳 v2.1 · 生成于 YYYY-MM-DD HH:mm</strong>
+内容由用户自行录入、未经第三方核验，不构成验收或责任认定依据；条文以官方发布文本为准。
+  版本号口径（v2.1.2 明确）：页脚版本号采用<strong>产品版本号</strong>（11 章路线图的阶段口径，如 v2.1），与本文档修订号（如 v2.1.2）<strong>解耦</strong>——两套编号不同源，页脚只随产品版本走。
+  （用事实限定，不写"不得作为诉讼证据"——后者无效且显规避；也不冒充官方文件，与 4.3 诚信边界同源）</p>
+</blockquote>
+</li>
+<li>
+<p>规则 3：导出格式原型期做「长图预览」演示：单 HTML 内联 <strong>html2canvas（约 200KB）</strong> 生成；超长内容按 A4 分页切图（每页限高 1600px），不做全页无分页长图（避免 canvas 高度上限截断，评审 M5）；PDF 为产品化目标——原型期做长图是取舍而非妥协：长图零依赖、断网可演示；PDF 需引入排版库，与「单 HTML 离线交付」的验证标准冲突，故延后至产品化阶段</p>
+</li>
+<li>规则 4：导出前<strong>剥离照片 EXIF 地理位置信息</strong>（评审 M6），仅保留拍摄时间</li>
+<li>规则 5（示例标识，v2.2.1 新增，评审 S4）：<strong>内部示例</strong>条目的引用卡与导出物保留「示例」角标；快照结构<strong>冗余存示例标记</strong>——条文库条目后续变更不影响历史导出物上"示例"标识的呈现</li>
+</ul>
+<blockquote class="bq-note">
+<p>🛠 土木批注：规则 2 是一条容易被忽略但极重要的边界。个人工具导出的东西如果长得"太像"官方整改单，可能被误用——这在质量责任语境里是真问题。写明"事实限定（自录未核验 / 条文以官方文本为准）"既是合规意识，也反过来证明你理解"正式留痕的责任结构在哪"。这类细节是作品集里"超越执行层的产品意识"的体现。</p>
+</blockquote>
+<h3 id="56-已实现资产摘要v12-四模块详细定义见-v12-prd"><span class="num">5.6</span>已实现资产摘要（v1.2 四模块，详细定义见 v1.2 PRD）</h3>
+<blockquote>
+<p>以下功能已随 v1.2 原型交付（双端 95 项断言验证），本版原样继承，仅在必要处与整改模块联动。</p>
+</blockquote>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>功能</th>
+<th>核心定义</th>
+<th>与整改模块的联动点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>笔记体系（P0）</td>
+<td>笔记本/列表/编辑器；富文本+自动保存；「整改记录」为新增笔记本类型</td>
+<td>整改记录归属其中；编辑器内可直接插入条文引用（v1.2 为演示级插入；v2.2 升级为真实链路，见 5.7）</td>
+</tr>
+<tr>
+<td>规范智能问答（P0）</td>
+<td>快捷问题 + 关键词路由；未找到兜底</td>
+<td>整改时的问题排查也可直接提问</td>
+</tr>
+<tr>
+<td>条文溯源引用（P0）</td>
+<td>引用卡 → 条文详情；不得编造条文号</td>
+<td>整改记录的「依据条文」复用同一条文详情链路</td>
+</tr>
+<tr>
+<td>答案存为笔记（P0）</td>
+<td>答案+引用一键入「规范摘录」</td>
+<td>问到的答案可存入整改记录相关笔记</td>
+</tr>
+<tr>
+<td>规范库浏览（P0）</td>
+<td>8 组 42 本；跨分类搜索</td>
+<td>整改记录手动补条文时从这里取</td>
+</tr>
+<tr>
+<td>AI 辅助写作（P1）</td>
+<td>窗口期回顾/规范关联/资料补全</td>
+<td>日志与整改记录的写作辅助共用；其中「规范关联」子能力<strong>并入 5.7 条带实现——条文推荐的唯一入口</strong>（v2.2.1 裁决，评审 M4），不另设第二套推荐 UI</td>
+</tr>
+<tr>
+<td>历史会话 / 笔记搜索（P1）</td>
+<td>会话回放 / 桌面端搜索</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h3 id="57-功能五笔记条文关联v22-新增-规划v221-评审修订"><span class="num">5.7</span>功能五：笔记条文关联（v2.2 新增，🔵 规划；v2.2.1 评审修订）</h3>
+<blockquote>
+<p>定位：把「条文能力」从整改场景扩展到<strong>每天都在写</strong>的笔记场景——全工程化是「条文能力不挑专业」，本节是「条文能力不挑场景」，两者共同构成 v2.2 的差异化扩展。解决的现状缺口：v1.2 编辑器里的「插入规范引用」只是<strong>硬编码演示</strong>（写死一条风电条文），不是真实链路。</p>
+</blockquote>
+<h4 id="功能描述_4">功能描述</h4>
+<blockquote>
+<p>笔记（施工日志 / 施工记录 / 规范摘录 / 会议纪要等各笔记本）编辑过程中，支持三条路径把规范条文「用起来」：
+1. <strong>关键词自动推荐</strong>：正文输入命中条文关键词（复用 5.3 同一引擎与演示映射表）→ 编辑器工具条下方<strong>定高条带</strong>显示推荐（Top 1 + 「共 n 条」展开）→ 一键插入引用卡；
+2. <strong>手动插入</strong>：工具栏「插入规范引用」→ 打开规范库选择器（8 组 42 本、跨分类搜索）→ 在光标处插入引用卡（升级 v1.2 的演示级按钮）；
+3. <strong>编号识别</strong>：正文中的规范编号（如「GB 50666-2011」「GB 50204-2015」）自动识别为条文入口，点击打开条文详情（复用 v1.2 引用卡 → 条文详情链路）。</p>
+</blockquote>
+<h4 id="用户故事_1">用户故事</h4>
+<blockquote>
+<p>作为<strong>一线施工员（不限专业）</strong>，我希望<strong>写施工日志/记录时随手把规范条文引用进笔记</strong>，以便<strong>"写下的"和"该遵守的"在同一处</strong>——事后翻笔记即带处置依据，不用再翻规范。</p>
+</blockquote>
+<h4 id="业务规则_1">业务规则</h4>
+<ul>
+<li>规则 1（铁律沿用）：推荐结果必须来自条文库数据，<strong>不得由模型生成条文号</strong>（同 5.3 规则 1）；推荐卡固定文案「AI 推荐仅供参考，请核实后采用」（同 5.3 规则 2）</li>
+<li>规则 2（助手而非阻塞）：不插入任何条文也能正常保存笔记——笔记无状态机，条文关联完全可选（与 5.3 规则 2 的"增强项"逻辑同源）</li>
+<li>规则 3（快照落库，评审 B8 机制沿用；v2.2.1 补数据字典，评审 B2）：插入的条文以结构化数组存入笔记（note.cites）——<strong>字段规格见下方「note.cites 数据字典」</strong>；条文库此后更新不影响历史笔记（含导出物）</li>
+<li>规则 4（防陈旧结果，同 5.3 规则 6）：推荐携带请求序号，仅渲染最新序号返回；已插入的引用卡不因重推被移除</li>
+<li>规则 5（编号识别边界）：仅对规范库内<strong>已存在的编号</strong>建入口；库外编号不做链接、不臆造条文（规则 1 的延伸）</li>
+<li>规则 6（一次维护、两处服务；v2.2.1 措辞修正 + 扩充口径）：5.3 的演示映射表由整改推荐与笔记推荐<strong>共用</strong>——<strong>单端内共享同一份映射表，跨端为同源复制</strong>（两个独立单 HTML 各自内嵌同一份）；v2.2 扩充至 <strong>≥60 条、覆盖全部 8 组规范</strong>，并按「推荐锚点对照表」验收推荐质量：</li>
+</ul>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>锚点输入（≥5 篇演示日志片段）</th>
+<th>期望 Top 3 命中</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>房建·混凝土养护未保湿</td>
+<td>GB 50666 养护条文</td>
+</tr>
+<tr>
+<td>2</td>
+<td>市政·管道闭水试验未做</td>
+<td>给排水管道试验条文</td>
+</tr>
+<tr>
+<td>3</td>
+<td>机电·接地装置安装</td>
+<td>电气装置接地条文</td>
+</tr>
+<tr>
+<td>4</td>
+<td>钢结构·高强螺栓终拧</td>
+<td>钢结构紧固条文</td>
+</tr>
+<tr>
+<td>5</td>
+<td>风电·塔筒吊装风速</td>
+<td>GB/T 50571 吊装条文</td>
+</tr>
+</tbody>
+</table></div>
+<p>（锚点与期望值为演示数据验收依据，随 11 章任务⑦落地）</p>
+<ul>
+<li>规则 7（版权与导出承接，v2.2.1 改写）：笔记内引用卡详情同样携带「条文版权归发布机构所有，仅供个人工作参考」（同 5.3 规则 7）；<strong>笔记导出</strong>（v2.2 新增能力）长图链路复用 5.5 规则 3（分页/限高口径一致）；<strong>含条文时页脚追加第⑥要素</strong>（版权句，见 5.5 规则 2）</li>
+<li>规则 8（推荐入口唯一性，v2.2.1 裁决，评审 M4）：条文自动推荐<strong>只此一处</strong>——5.6「AI 辅助写作」中的「规范关联」子能力并入本条带实现，<strong>不另设第二套推荐 UI</strong>；后续推荐类需求一律先归并到本条带评估</li>
+</ul>
+<h4 id="notecites-数据字典v221-新增评审-b2">note.cites 数据字典（v2.2.1 新增，评审 B2）</h4>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>键</th>
+<th>类型</th>
+<th>约束</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>clause_id</td>
+<td>string</td>
+<td>条文库内唯一编号</td>
+<td>必须来自库内（规则 1）；键名与整改 clauses 对齐</td>
+</tr>
+<tr>
+<td>snapshot</td>
+<td>string</td>
+<td>≤1000 字（超长截断，保留条文号定位）</td>
+<td>快照原文，口径同 5.3 规则 5</td>
+</tr>
+<tr>
+<td>inserted_at</td>
+<td>datetime</td>
+<td>格式 <code>YYYY-MM-DD HH:mm</code></td>
+<td>插入时间</td>
+</tr>
+<tr>
+<td>inserted_via</td>
+<td>enum</td>
+<td ai_="ai," manual="manual">∈</td>
+<td><strong>不设 code 值</strong>——编号识别不产生插入（见下方规格）</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>落库约束</strong>：单篇 ≤10 条；<strong>同条去重</strong>（重复插入保留首次，不重复计数）；<strong>正文为准</strong>——用户删除正文中的引用卡，note.cites 同步移除该条（正文为唯一事实源）；<strong>详情与导出一律读快照</strong>（快照为唯一数据源，同 5.3 规则 5），条文库更新不影响历史笔记与导出物。</p>
+<h4 id="推荐排序与范围v221-新增评审-m7">推荐排序与范围（v2.2.1 新增，评审 M7）</h4>
+<ul>
+<li><strong>输入文本范围</strong>：参与匹配的为正文文本，<strong>排除引用卡内文字</strong>（已插入条文的卡面不参与匹配——防自我触发与自我增强；整改侧同理，见 5.3 规则 6）；</li>
+<li><strong>排序规则</strong>（笔记长文本多主题下的 Top 质量保障）：① 命中权重（关键词命中数）→ ② <strong>当前光标所在段落优先</strong>（段落内命中优先于全文他处命中）→ ③ 数组序兜底（同权同段时按演示映射表原序，保证结果确定性、可复现）；</li>
+<li><strong>Top N</strong>：候选 ≤3 条进入条带（默认展示第 1 条 + 「共 n 条」，见界面规格）；</li>
+<li><strong>防抖容差（6.3 断言口径）</strong>：停止输入后 <strong>800ms 内不渲染、1400ms 时必须已渲染</strong>——低于下限视为防抖失效，高于上限视为卡顿缺陷。</li>
+</ul>
+<h4 id="编号识别规格v221-新增评审-m5m6m7">编号识别规格（v2.2.1 新增，评审 M5/M6/M7）</h4>
+<p>识别对象为正文中的规范编号（如「GB 50666-2011」），<strong>归一化后</strong>与库内编号匹配：</p>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>变体</th>
+<th>例</th>
+<th>归一侧</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>破折号变体</td>
+<td>GB/T—50571 / GB/T-50571</td>
+<td>统一「-」</td>
+</tr>
+<tr>
+<td>空格变体</td>
+<td>GB 50571-2010 / GB50571-2010</td>
+<td>去空格</td>
+</tr>
+<tr>
+<td>全角斜杠</td>
+<td>GB／T 50571</td>
+<td>全角「／」→「/」</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>匹配实现（v2.2.1 核验补）</strong>：以<strong>库内编号白名单</strong>为匹配源（由 42 本规范编号集合生成，前缀含 GB / GB/T / JGJ / CJJ / JTG / DL / SL / CECS / T/CECS 等）——变体经归一化后逐条比对，<strong>不做通用启发式正则</strong>（白名单机制即误报边界的技术落实）；</li>
+<li><strong>渲染层</strong>：识别发生在<strong>非编辑态渲染层</strong>（阅读视图）；编辑态正文不实时加链（避免输入干扰与光标跳动）；</li>
+<li><strong>视觉区分</strong>：识别到的编号为<strong>弱色虚线下划线 + 小图标</strong>（提示可点），与<strong>引用卡实底样式</strong>明确区分——两种对象不可混淆；</li>
+<li><strong>误报边界</strong>：只做编号匹配、<strong>不作语义判断</strong>（<strong>库内</strong>编号出现即建入口——库外编号按规则 5 不做链接）；<strong>引用卡内的编号不重复识别</strong>（已是条文入口，不自嵌套）；</li>
+<li><strong>点击落点</strong>：打开该条文详情（规范目录页内定位）；详情页附<strong>免责固定小字</strong>「由正文编号自动识别，仅作定位，非产品推荐或核验」（唯一文案）；</li>
+<li><strong>导出物</strong>：导出长图中编号为<strong>普通文本</strong>（静态成图无点击语义，不保留识别样式）。</li>
+</ul>
+<h4 id="界面与交互v221-重写评审-m8">界面与交互（v2.2.1 重写，评审 M8）</h4>
+<ul>
+<li><strong>推荐条带（定高常驻 56px）</strong>：位于滚动容器之外、编辑器工具条下方，<strong>固定高度不随内容变化</strong>（不位移正文，同 5.1 整改推荐区规格）——未命中显示浅灰占位「输入关键词，自动推荐条文」；命中显示 Top 1 + 「共 n 条」浮层展开（默认选 1 条展示防挤压，全量在浮层内）；</li>
+<li><strong>条带关闭（三要素）</strong>：①「×」关闭本次展示；②<strong>本页面生命周期</strong>内不再出现（刷新/重进恢复）；③工具条「条文推荐」开关可恢复——关闭<strong>不删除</strong>已插入引用卡；</li>
+<li><strong>手动插入异常</strong>：选择器空结果「未找到相关规范，试试换个关键词」；插入失败可重试；<strong>无光标时插入文末</strong>并提示「已插入到笔记末尾」（与常规「已插入」toast 有意区分——文末插入是有意行为，须明确告知落点）；</li>
+<li><strong>引用卡（正文内）</strong>：行内引用样式（复用 v1.2 cite-inline 组件）；点击展开条文详情（规范名 + 条文号 + 原文 + 版权注明）；</li>
+<li><strong>双端对照（M8）</strong>：移动端条带位于工具条下方全宽；桌面端位于编辑器顶部工具条下方同高——<strong>双端同为 56px 定高、同为「Top 1 + 共 n 条」模型</strong>，几何与交互同构；</li>
+<li><strong>状态行</strong>：未命中（浅灰占位）/ 推荐加载（56px 内骨架，不跳高）/ 命中（Top 1 + 「共 n 条」）/ 已插入（引用卡 + toast「已插入」）/ 条带已关闭（<strong>占位保留、空间恒定</strong>，仅不显示推荐）。</li>
+</ul>
+<blockquote class="bq-note">
+<p>🛠 土木批注（v2.2）：条文能力"下沉"到笔记，逻辑同混凝土养护——不是浇一次水，是全过程保湿。整改记录是低频偶发场景（一周几条），笔记是每天都写的容器；规范只在整改时出现，用户的价值感知就是"偶尔有用"；写日志时随手能引条文、翻旧笔记随时能看到依据，才像"这本子懂规范"。特别注意复用清单：<strong>同一引擎、同一映射表、同一快照机制、同一引用卡组件</strong>——一次能力建设、两处场景受益，这是 v2.2 最经济的架构决策，也是评审问"为什么不另起炉灶"的标准答案。另补一条 v2.2.1 的教训：本节初稿同时写了「固定占位（不跳动）」和「不命中不显示」两种条带空间模型——<strong>自相矛盾的规格比缺失的规格更贵</strong>：缺失的会在开发前被发现，矛盾的要到双端实现对不齐时才炸出来。定高常驻 56px 是这次评审的核心修正。</p>
+</blockquote>
+<hr />
+<h2 id="6-原型验证v20-更新"><span class="num">6.</span>原型验证（v2.0 更新）</h2>
+<h3 id="61-已有资产v12-存量-v20-增量均已完成"><span class="num">6.1</span>已有资产（v1.2 存量 + v2.0 增量，均已完成）</h3>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>验证脚本</th>
+<th>覆盖</th>
+<th>断言数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>07-验证-规答-移动端-v3.py</td>
+<td>v1.2 四模块、问答闭环、存笔记、条文弹层、规范库、历史、兜底</td>
+<td>45</td>
+</tr>
+<tr>
+<td>08-验证-规答-桌面端-v2.py</td>
+<td>v1.2 四模块、三栏工作区、搜索、AI 面板、问答闭环、条文弹窗</td>
+<td>50</td>
+</tr>
+<tr>
+<td>11-验证-准绳-移动端-v4.py</td>
+<td>v1.2 全覆盖 + 整改记录、条文挂载、照片规格、状态机、现场模式、导出页脚</td>
+<td>79</td>
+</tr>
+<tr>
+<td>12-验证-准绳-桌面端-v3.py</td>
+<td>v1.2 全覆盖 + 整改三栏工作区、状态流转、复查代记、导出、空态与窄屏</td>
+<td>137</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>双端合计 216 项断言全部通过</strong>（口径注：以 11/12 双端脚本为准 = 79 + 137，其覆盖已含 v1.2 四模块 + v2.0 整改模块，即 v1.2 存量 95 项 + v2.0 新增 121 项；<strong>07/08 为 v1.2 时期独立脚本（45 + 50），覆盖面与 11/12 重叠、不重复计入 216</strong>——v2.2.1 补口径注，评审组 A 核验）；测试曾抓出 2 个真实缺陷并修复（v1.2 第 6.2 节）。</p>
+<h3 id="62-v20-新增验证计划整改模块已完成v21-改三列表-统一断言口径评审-b3"><span class="num">6.2</span>v2.0 新增验证计划（整改模块，<strong>已完成</strong>；v2.1 改三列表 + 统一断言口径，评审 B3）</h3>
+<p><strong>断言口径（v2.1.2 改「规划 / 实测」并列）</strong>：</p>
+<ul>
+<li><strong>规划口径</strong>（v2.1 制定）：新增约 30 项（<strong>双端合计</strong>，非每端），加上 v1.2 的 95 项，<strong>总计 ≥125 项</strong>；</li>
+<li><strong>实测口径</strong>（交付后回填）：双端<strong>新增 121 项，总计 216 项全绿</strong>——是规划值的 1.7 倍。</li>
+</ul>
+<blockquote>
+<p>两个口径并列保留、不用实测覆盖规划：「按计划交付」与「超额交付」是两条不同的证据。若只留实测数字，读者无法判断这是计划内的还是事后补出来的；两行并列，「规划 ≥125 → 实测 216」才是完整的事实。</p>
+</blockquote>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>验证点（可翻译为用例）</th>
+<th>预期（元素 + 文案）</th>
+<th>对应规则</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>创建·缺必填提交</td>
+<td>拦截保存；缺失字段内联标红 + Toast「还有 n 项待完善」</td>
+<td>5.2.1a</td>
+</tr>
+<tr>
+<td>创建·草稿首存</td>
+<td>首存豁免校验（必填未齐、无照片也可保存）；状态显示「○ 草稿」；不触发照片校验</td>
+<td>T1；5.2 规则④</td>
+</tr>
+<tr>
+<td>创建·提交守卫</td>
+<td>缺整改前照片时拦截，定位缺失项「请至少添加 1 张整改前照片」</td>
+<td>T2；不变量 R1</td>
+</tr>
+<tr>
+<td>创建·演示数据标注</td>
+<td>「示例」角标可见；清除演示数据后角标消失</td>
+<td>5.2 规则⑥</td>
+</tr>
+<tr>
+<td>条文·推荐为空</td>
+<td>显示「未关联条文，可手动从规范库引用」；不阻塞保存</td>
+<td>5.3 规则 2</td>
+</tr>
+<tr>
+<td>条文·采纳快照</td>
+<td>详情与导出读快照；条文库更新后历史记录内容不变</td>
+<td>5.3 规则 5</td>
+</tr>
+<tr>
+<td>条文·防陈旧结果</td>
+<td>连续输入触发多次请求时，仅渲染最新序号返回</td>
+<td>5.3 规则 6</td>
+</tr>
+<tr>
+<td>照片·规格拦截</td>
+<td>超限图自动压缩；压缩不达标则拦截并提示</td>
+<td>5.4 规格表</td>
+</tr>
+<tr>
+<td>照片·对照视图</td>
+<td>移动端上下对照 / 桌面端左右对照；组内可横向滑动</td>
+<td>5.4 界面交互</td>
+</tr>
+<tr>
+<td>状态·已整改守卫</td>
+<td>缺后照片或说明时点击「已整改」被拦截并定位</td>
+<td>T3；不变量 R1</td>
+</tr>
+<tr>
+<td>状态·回退必填原因</td>
+<td>原因空 → 确认按钮禁用（内联提示「请填写原因（将记入时间线）」，≤100 字）；提交后时间线按 5.2 界面格式追加回退事件（含打回/撤销类型与原因）</td>
+<td>T5/T6/T7</td>
+</tr>
+<tr>
+<td>状态·复查代记</td>
+<td>复查三字段填写后至「■ 复查合格」；导出含三字段</td>
+<td>T4；5.5 规则 1</td>
+</tr>
+<tr>
+<td>导出·页脚声明</td>
+<td>常置五要素（①产品名 ②版本 ③生成时间 ④自录未核验声明 ⑤条文以官方文本为准）+ <strong>含条文时追加第⑥要素</strong>（条文版权句，v2.2.1 统一口径）；文案逐字一致</td>
+<td>5.5 规则 2</td>
+</tr>
+<tr>
+<td>导出·分页切图</td>
+<td>超长内容按 1600px 分页，无截断丢内容</td>
+<td>5.5 规则 3</td>
+</tr>
+<tr>
+<td>导出·EXIF 剥离</td>
+<td>导出图中照片无地理位置 EXIF</td>
+<td>5.5 规则 4</td>
+</tr>
+<tr>
+<td>双端一致性</td>
+<td>以上用例双端各跑一遍（实测双端合计新增 121 项断言）</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote class="bq-note">
+<p>🛠 土木批注：注意本节对"95 项断言"的处理——实测 216 与规划 ≥125 两行并列，是为了保住「按计划交付」这条证据（见上方口径说明）；它被放在<strong>已有资产</strong>里陈述，而不是当作本版卖点。一个交付质量指标（测试通过数）不等于产品证据（用户是否要用）；v2.0 真正的验证重点在 4.4 的假设验证计划。面试时如果有人夸"测试做得真好"，回答"测试保证的是交付质量，需求真伪靠另一套验证"，这句回应本身就是产品成熟度的证明。</p>
+</blockquote>
+<h3 id="63-v22-新增验证点规划v221-扩项评审-b5m6m7m9实现后按-62-口径回填实测数"><span class="num">6.3</span>v2.2 新增验证点（规划；v2.2.1 扩项，评审 B5/M6/M7/M9；实现后按 6.2 口径回填实测数）</h3>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>验证点（可翻译为用例）</th>
+<th>预期（元素 + 文案）</th>
+<th>对应规则</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>笔记·关键词推荐</td>
+<td>输入命中关键词 → 条带显示 Top 1 + 「共 n 条」；<strong>排序链：命中权重 → 光标所在段落优先 → 数组序兜底（同场景复跑结果一致）</strong>；<strong>排除引用卡内文字（仅正文文本参与匹配）</strong>；<strong>防抖容差（800ms 内不渲染 / 1400ms 已渲染）</strong>；含「AI 推荐仅供参考，请核实后采用」</td>
+<td>5.7 规则 1/4；排序块</td>
+</tr>
+<tr>
+<td>笔记·未命中占位</td>
+<td>条带显示浅灰占位「输入关键词，自动推荐条文」；笔记正常保存</td>
+<td>5.7 规则 2；界面</td>
+</tr>
+<tr>
+<td>笔记·条带不位移</td>
+<td>推荐出现/消失前后，编辑器正文区 boundingBox 不变化（定高 56px）</td>
+<td>5.7 界面</td>
+</tr>
+<tr>
+<td>笔记·关闭与恢复</td>
+<td>「×」关闭后占位保留；工具条开关可恢复；已插入引用卡不删除</td>
+<td>5.7 界面·关闭三要素</td>
+</tr>
+<tr>
+<td>笔记·手动插入</td>
+<td>工具栏按钮 → 规范库选择器（分组 + 搜索）→ 光标处插入引用卡；空结果「未找到相关规范，试试换个关键词」/失败可重试/无光标插文末 toast「已插入到笔记末尾」</td>
+<td>5.7 功能描述②；界面</td>
+</tr>
+<tr>
+<td>笔记·编号识别变体</td>
+<td>破折号/空格/全角斜杠三种变体均识别为入口（归一化匹配）</td>
+<td>5.7 编号识别规格</td>
+</tr>
+<tr>
+<td>笔记·编号识别误报边界</td>
+<td>库外编号不建入口；引用卡内编号不重复识别；编辑态不加链</td>
+<td>5.7 规则 5；编号识别规格</td>
+</tr>
+<tr>
+<td>笔记·编号识别点击</td>
+<td>阅读视图点击编号 → 条文详情 + 免责固定小字「由正文编号自动识别，仅作定位，非产品推荐或核验」</td>
+<td>5.7 编号识别规格</td>
+</tr>
+<tr>
+<td>笔记·快照与防陈旧</td>
+<td>条文库更新后历史笔记引用卡不变（<strong>受控测试钩子 <code>window.__test.setClauseText</code> + MutationObserver</strong> 触发重渲染）；连发请求仅渲染最新序号</td>
+<td>5.7 规则 3/4</td>
+</tr>
+<tr>
+<td>笔记·删卡同步与去重</td>
+<td>删除正文引用卡 → note.cites 同步移除；同条重复插入保留首次；单篇 &gt;10 条拦截</td>
+<td>5.7 note.cites 数据字典</td>
+</tr>
+<tr>
+<td>笔记·推荐质量锚点</td>
+<td>5 篇锚点日志输入的 Top 3 命中与「推荐锚点对照表」一致</td>
+<td>5.7 规则 6</td>
+</tr>
+<tr>
+<td>笔记·推荐入口唯一</td>
+<td>除 5.7 条带外无第二处自动推荐 UI（AI 面板「规范关联」并入）</td>
+<td>5.7 规则 8</td>
+</tr>
+<tr>
+<td>笔记·导出与版权</td>
+<td>导出长图分页口径同 5.5 规则 3；含条文时页脚第⑥要素；导出图中编号为普通文本</td>
+<td>5.7 规则 7；5.5 规则 2</td>
+</tr>
+<tr>
+<td>埋点·本地日志</td>
+<td>事件推入本地日志（现 <code>window.__events</code>）：note_saved / note_clause_recommended / note_clause_inserted（inserted_via ∈ {ai, manual}）/ note_strip_dismissed / note_cite_clicked</td>
+<td>8 章</td>
+</tr>
+<tr>
+<td>部位两级 chips</td>
+<td>切换「专业」chip 后部位 chip 组联动更换；五条状态规则逐条验证（含「保留已填文本」「新建第二条记录自动预选」「重置清除记忆」）；「其他」转手输</td>
+<td>5.2.2 规格块</td>
+</tr>
+<tr>
+<td>触控目标 56px</td>
+<td>现场模式可点元素 boundingBox ≥ 56×56（含 chips——<strong>现原型 36/32px 为改造项</strong>）</td>
+<td>5.2.2 触控行</td>
+</tr>
+<tr>
+<td>整改侧条带同款</td>
+<td>整改表单推荐区为定高 56px 常驻（未命中占位「输入问题描述，自动推荐处置依据」；空推荐提示「未关联条文，可手动从规范库引用」）；推荐出现/消失不位移表单</td>
+<td>5.1；5.2.3</td>
+</tr>
+<tr>
+<td>多专业数据虚构化核验</td>
+<td>演示数据覆盖 ≥4 专业且全部虚构（单位/项目/人名为代称）；扫描无真实名称残留</td>
+<td>4.2 商密边界/覆盖度</td>
+</tr>
+<tr>
+<td>双端一致性</td>
+<td>笔记条带、chips、编号识别双端同构；以上用例双端各跑一遍</td>
+<td>全节</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>存量断言影响分析（v2.2.1 新增，评审 B5/M6）</strong>——v2.2 改造会触碰 v2.0 已交付断言，逐类记账、避免"改了断言当通过"：</p>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>类别</th>
+<th>存量断言位置</th>
+<th>影响</th>
+<th>处置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>插入路径断言（点击现有「插入规范引用」→ 断言 cite-inline 出现）</td>
+<td>07 行 50-51 / 08 行 76-77 / 11 行 76-77 / 12 行 79-80（<strong>实测为四个脚本</strong>，比评审报告所述的 07/08 多出 11/12）</td>
+<td>硬编码按钮改为真实链路后，"点击→直接插断"的断言失效</td>
+<td>改写为「点击 → 选择器出现 → 选择条文 → 插入」三段式</td>
+</tr>
+<tr>
+<td>风电话料引用（塔筒吊装 / 10m/s 风速 / 机位 / 海缆等字样；<strong>断言/输入行分列</strong>）</td>
+<td>11 行 8 处：72/116/163/178（check 断言）+ 268/269/284/291（输入/操作行）；12 行 5 处：66/105/162/171（check 断言）+ 313（输入行）——<strong>行号经复评核验实测复核（v2.2.1 收口：原列 12 行 63 经实测无风电字样、为等待语句，已剔除）</strong></td>
+<td>演示数据多专业重写后，单风电话料断言失效</td>
+<td>随多专业数据重写——保留并改写类 / 新增类<strong>分列记账</strong>（任务⑦）</td>
+</tr>
+<tr>
+<td>其余存量断言</td>
+<td>11/12 其余条目；07/08 其余条目（插入路径两条除外，见表首行）</td>
+<td>不受 v2.2 改造影响</td>
+<td>原样复跑须全绿</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>通过标准（v2.2.1 改）</strong>：v2.2 交付时<strong>全量回归（存量改写 + 新增）全绿</strong>——不以「6.3 新增全绿」单独过关（存量被改写到失败而不知，是本类改造最常见的偷跑方式）。</p>
+<blockquote>
+<p>规划口径：随 v2.2 原型实现，实测断言数实现后回填——沿用 6.2「规划 / 实测并列」的写法，不以设计充实测。</p>
+</blockquote>
+<hr />
+<h2 id="7-非功能需求"><span class="num">7.</span>非功能需求</h2>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>类别</th>
+<th>要求</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>部署形态（原型期）</td>
+<td>单 HTML 文件，离线可用（沿用 v1.2 离线交付标准：CSS 本地编译、断网可演示）</td>
+</tr>
+<tr>
+<td>性能（产品化）</td>
+<td>答案生成 P95 ≤ 3s；条文推荐 P95 ≤ 1s（防抖后）</td>
+</tr>
+<tr>
+<td>兼容性（产品化）</td>
+<td>移动端小程序 + Android/iOS WebView；PC 端 Chrome/Edge 最新两版本</td>
+</tr>
+<tr>
+<td>安全（产品化）</td>
+<td>登录鉴权；内容安全审核；商密分级入库（内部文件仅目录 + 示例条款）</td>
+</tr>
+<tr>
+<td><strong>数据与隐私·数据归属（v2.1 补，评审 M6；v2.2.1 扩笔记口径）</strong></td>
+<td><strong>用户创建的笔记、问答记录、整改记录与照片等内容归用户所有</strong>；平台不将其用于训练、不做二次分发</td>
+</tr>
+<tr>
+<td><strong>数据与隐私·个人信息（v2.1 补；v2.2.1 扩，评审 M13）</strong></td>
+<td>owner 为姓名（个人信息），界面标注用途；照片可能含工人肖像；<strong>笔记中可能含他人姓名 / 联系方式 / 班组等信息</strong>——原型与试点仅本地存储；产品化上传前提示肖像与个人信息合规责任，并预留上传提示位</td>
+</tr>
+<tr>
+<td><strong>数据与隐私·存储与传输（v2.1 定案，评审 S4；v2.2.1 修正实现口径，评审 B1）</strong></td>
+<td><strong>默认仅本地不上云</strong>（原 [待确认] 定案）：原型期单 HTML 本地运行（<strong>v2.0 实测内存级、刷新重置</strong>；<strong>v2.2 起本地 IndexedDB 持久化</strong>）；产品化云同步为可选开启项，开启后 HTTPS 传输 + 服务端加密存储</td>
+</tr>
+<tr>
+<td><strong>数据与隐私·留存与删除（v2.1.2 定案）</strong></td>
+<td>用户可随时删除单条/全部数据，本地即时生效；云同步数据提供一键删除入口。<strong>云端留存期不定值</strong>——随 v2.1 产品化 demo 阶段的用户协议一并确定（默认仅本地不上云，当前不构成风险敞口）</td>
+</tr>
+<tr>
+<td><strong>数据与隐私·导出剥离（v2.1 补）</strong></td>
+<td>导出前剥离照片 EXIF 地理位置信息（见 5.5 规则 4）</td>
+</tr>
+<tr>
+<td>可用性（产品化）</td>
+<td>服务可用性 ≥ 99.5%；高峰期并发 500 QPM</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote class="bq-note">
+<p>🛠 土木批注：v2.0 新增的「数据与隐私」条目是被整改功能带出来的——照片+部位信息组合起来可能暴露项目现场情况，这比 v1.2 的纯文本敏感度高一个量级。非功能需求不是模板里抄来的条目，是<strong>你的功能实际带来的风险</strong>倒推出来的。</p>
+</blockquote>
+<hr />
+<h2 id="8-数据需求与埋点产品化规划"><span class="num">8.</span>数据需求与埋点（产品化规划）</h2>
+<p><strong>公共参数（v2.1 新增，评审 B7；v2.2.1 扩至笔记线）</strong>：所有 v2.0 / v2.2 新增事件（整改线 + 笔记线）统一附带 <code>user_id</code>（<strong>操作者</strong>，试点期用匿名编号；owner 是整改责任人、不等于操作者，H1 的「≥3 人」必须按 user_id 算）、<code>device_id</code>（端与设备维度去重；<strong>双端各自独立计数、不做跨端合并去重</strong>——两个独立单 HTML 之间无跨端身份）、<code>platform</code>、<code>ts</code>（毫秒时间戳）。推荐→采纳的归因依赖 <code>recommend_id</code>，缺它无法完成 H2 计算。</p>
+<p><strong>v1.2 已有事件（沿用）</strong>：question_submit / answer_generated / source_card_click / no_result_shown / feedback_submit / note_saved_from_qa / ai_insert_used</p>
+<p><strong>v2.0 新增事件（整改线，v2.1 修订）</strong>：</p>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>事件名</th>
+<th>触发时机</th>
+<th>参数</th>
+<th>用于验证</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>rectify_created</td>
+<td><strong>首次保存即上报</strong>（草稿也上报，带 is_draft；同一 record_id 只计一次，后续状态变化不重复计数）</td>
+<td>record_id, is_draft, source, project_id</td>
+<td>使用频率、来源分布（H1）</td>
+</tr>
+<tr>
+<td>rectify_clause_recommended</td>
+<td>推荐渲染完成（<strong>空结果也上报</strong>，recommend_count=0）</td>
+<td>record_id, recommend_id, recommend_count, query_len</td>
+<td>推荐覆盖率</td>
+</tr>
+<tr>
+<td>rectify_clause_linked</td>
+<td>条文被采纳挂载</td>
+<td>record_id, recommend_id, clause_id, adopted_via, ts</td>
+<td><strong>条文采纳率（H2）</strong>——以 recommend_id 归因，防抖多次展示不重复计分母</td>
+</tr>
+<tr>
+<td>rectify_photo_added</td>
+<td>照片添加成功</td>
+<td>record_id, stage(before/after), count</td>
+<td>前后照片完成度</td>
+</tr>
+<tr>
+<td>rectify_status_changed</td>
+<td>状态流转成功</td>
+<td>record_id, from, to, reason_len</td>
+<td>闭环完成率、打回率</td>
+</tr>
+<tr>
+<td>rectify_exported</td>
+<td>导出成功</td>
+<td>record_id, format, platform</td>
+<td><strong>导出率（H3 前置）</strong>——按唯一 record_id 去重（同一记录多次导出计 1）</td>
+</tr>
+<tr>
+<td>rectify_error（v2.1 新增，评审 S6）</td>
+<td>异常发生</td>
+<td>record_id, error_type(photo_compress / submit_blocked / export_fail / db_quota)</td>
+<td>异常路径频次与分布</td>
+</tr>
+<tr>
+<td>note_saved（v2.2 新增，v2.2.1 补，评审 B4）</td>
+<td>笔记保存成功（<strong>H5 分母来源</strong>：活跃笔记 = 统计窗口内被保存 ≥1 次）</td>
+<td>note_id, cite_count（保存时 note.cites 条数）</td>
+<td>笔记活跃度基线（H5 分母）</td>
+</tr>
+<tr>
+<td>note_clause_recommended（v2.2 新增）</td>
+<td>条带渲染完成（<strong>空结果也上报</strong>，count=0）</td>
+<td>note_id, recommend_id, count, query_len</td>
+<td>推荐触发频次（含零命中）</td>
+</tr>
+<tr>
+<td>note_clause_inserted（v2.2 新增）</td>
+<td>插入条文引用卡（<strong>仅 ai / manual 两条路径产生插入</strong>；编号识别不产生，见下方口径块）</td>
+<td>note_id, clause_id, inserted_via(ai/manual), ts</td>
+<td><strong>笔记条文使用率（H5）</strong></td>
+</tr>
+<tr>
+<td>note_strip_dismissed（v2.2 新增）</td>
+<td>用户关闭推荐条带</td>
+<td>note_id, dismiss_via(close/toggle)</td>
+<td>打扰度信号（条带是否被频繁关掉）</td>
+</tr>
+<tr>
+<td>note_cite_clicked（v2.2 新增）</td>
+<td>点击笔记内引用卡 / 编号入口</td>
+<td>note_id, clause_id, from(inline/recognized)</td>
+<td>引用卡有效性（插入后是否被读）；<strong>编号识别点击由此归因</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>笔记线埋点口径（v2.2.1 新增，评审 B4/S1/S8/M13）</strong>：</p>
+<ul>
+<li><strong>三路径 → 埋点映射</strong>：三路径中<strong>仅「关键词推荐（ai）」与「手动插入（manual）」产生插入事件</strong>；<strong>编号识别不产生插入</strong>（识别为被动渲染，用户可只点击查看）——编号识别的使用由 <code>note_cite_clicked.from=recognized</code> 归因；</li>
+<li><strong>「非引导」操作定义</strong>（H5 判据，4.4 引用）：排除 ① 访谈/演示当场发生的插入、② 研究者提示后当次操作；仅计用户自主发起、无人在场提示的插入；</li>
+<li><strong>试用期采集载体</strong>：本地事件日志（现原型为内存数组 <code>window.__events</code>；v2.2 落 IndexedDB、可在设置页导出 JSON），<strong>不接远端上报</strong>——试用期数据由试用者自愿导出提供；</li>
+<li><strong>试点期采集告知</strong>（产品化前置）：采集字段、用途、匿名编号（user_id 用匿名编号）、可随时删除——告知文本随 v3.0 用户协议一并确定（评审 M13）。</li>
+</ul>
+<blockquote class="bq-note">
+<p>H1 计数口径（v2.1.1 复评补，评审 B7）：H1 的「周创建数/人」= 以 rectify_status_changed 中<strong>首次 from=草稿 → to=待整改</strong>的事件，按 record_id 去重、按 user_id 归因计数（即"提交为待整改"的记录数）；仅草稿不计——与 5.2 规则 4、4.4 H1 的口径一致。</p>
+<p>🛠 土木批注：整改线的埋点设计围绕 H2/H3 两个假设布点——<code>rectify_clause_linked</code> 直接测"条文挂载是否被真实采纳"（不是推荐了多少，而是<strong>采纳</strong>了多少），<code>rectify_exported</code> 测"导出物是否真的被需要"。埋点永远服务于"要验证的假设"，不是"能记的都记"。</p>
+</blockquote>
+<hr />
+<h2 id="9-成功指标"><span class="num">9.</span>成功指标</h2>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>类型</th>
+<th>指标</th>
+<th>现状</th>
+<th>目标</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>原型 v1.2（已完成）</td>
+<td>交付结果</td>
+<td>Playwright 断言</td>
+<td>✅ 95/95</td>
+<td>—</td>
+</tr>
+<tr>
+<td>原型 v2.0（已完成）</td>
+<td>交付结果</td>
+<td>整改模块断言</td>
+<td>✅ <strong>216/216</strong>（双端合计 = v1.2 存量 95 + v2.0 新增 121）</td>
+<td>规划 ≥125；实测 216</td>
+</tr>
+<tr>
+<td>原型 v2.0（已完成）</td>
+<td>交付结果</td>
+<td>演示场景</td>
+<td>✅ 已达标</td>
+<td>整改全流程/条文挂载/导出 3 类</td>
+</tr>
+<tr>
+<td>产品化（规划）</td>
+<td>交付结果</td>
+<td>评估集准确率</td>
+<td>待构建</td>
+<td>≥ 90%（陷阱题 100%）</td>
+</tr>
+<tr>
+<td>产品化（规划）</td>
+<td>交付结果</td>
+<td>评估集命中率（整改推荐专项 50 例，A3）</td>
+<td>待构建</td>
+<td>≥ 80%</td>
+</tr>
+<tr>
+<td>试点验证（规划）</td>
+<td>假设指标</td>
+<td><strong>推荐采纳率</strong>（H2 验证线）</td>
+<td>待验证</td>
+<td>≥ 50%</td>
+</tr>
+<tr>
+<td>产品化（规划）</td>
+<td>业务结果</td>
+<td><strong>条文记录覆盖率</strong>（产品线）</td>
+<td>待验证</td>
+<td>≥ 80%</td>
+</tr>
+<tr>
+<td>试点验证（规划）</td>
+<td>假设指标</td>
+<td>整改记录周创建数/人（H1，按 user_id 计；计数口径见 8 章）</td>
+<td>待验证</td>
+<td><strong>待试点基线校准</strong>（不设数值——作品集阶段无真实使用数据，硬写数值会被追问来源）</td>
+</tr>
+<tr>
+<td>试点验证（规划）</td>
+<td>假设指标</td>
+<td>导出率（H3 前置）</td>
+<td>待验证</td>
+<td>≥ 30%；导出后回传对方反应（评审 M9 采集动作）</td>
+</tr>
+<tr>
+<td>原型 v2.2（规划）</td>
+<td>交付结果</td>
+<td>笔记条文关联 + 多专业演示验证点</td>
+<td>待实现</td>
+<td><strong>全量回归（存量改写 + 新增）全绿</strong>（见 6.3 通过标准），实现后回填实测数</td>
+</tr>
+<tr>
+<td>试点验证（规划）</td>
+<td>假设指标</td>
+<td><strong>笔记条文引用率</strong>（H5）</td>
+<td>待验证</td>
+<td>≥ 30%（<strong>活跃笔记</strong>=统计窗口内被保存 ≥1 次，分母来源事件 note_saved）；试用期方向性信号（≥3 人非引导插入）见 4.4 H5</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p>口径与去重（v2.1，评审 B6/B7；v2.2.1 补 H1 判据来源）：采纳率／覆盖率／评估集命中率三个率的定义见 2.2 口径说明；导出率按<strong>唯一 record_id 去重</strong>（同一记录多次导出计 1 次）；周创建数按 user_id 归因到人。<strong>H1 判据的唯一来源为 4.4 表 H1 行</strong>（本表与 11 章退出线仅引用、不另立口径——v2.2.1 统一，评审 M2）。
+时间维度说明（评审 S7）：本表不设绝对日期——作品集项目按版本推进，各阶段的相对周期与执行时机见 4.4 与 11 章路线图。</p>
+</blockquote>
+<hr />
+<h2 id="10-异常处理"><span class="num">10.</span>异常处理</h2>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>异常场景</th>
+<th>触发条件</th>
+<th>系统行为</th>
+<th>用户提示</th>
+<th>状态（=原型实现状态）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>检索无结果（沿用）</td>
+<td>关键词路由未命中</td>
+<td>不生成，回复"未找到"</td>
+<td>"未找到相关规范条文，试试换个问法"</td>
+<td>✅ 已实现</td>
+</tr>
+<tr>
+<td><strong>创建缺必填（v2.1 新增，评审 B3）</strong></td>
+<td>提交时缺必填项</td>
+<td>拦截并定位首个缺失项；已填内容不丢失</td>
+<td>"还有 n 项待完善"</td>
+<td>✅ 已实现（v2.1）</td>
+</tr>
+<tr>
+<td><strong>条文推荐为空（v2.0）</strong></td>
+<td>描述未匹配到条文</td>
+<td>不阻塞保存</td>
+<td>"未关联条文，可手动从规范库引用"</td>
+<td>✅ 已实现（v2.0）</td>
+</tr>
+<tr>
+<td><strong>照片添加失败（v2.0）</strong></td>
+<td>格式/体积不符（规格见 5.4）</td>
+<td>自动压缩；压缩不达标则拦截，保留已填内容</td>
+<td>"照片压缩后仍超过 300KB，请重拍或更换（支持 JPG/PNG/WebP）"</td>
+<td>✅ 已实现（v2.0）</td>
+</tr>
+<tr>
+<td><strong>状态流转校验失败（v2.0）</strong></td>
+<td>缺后照片/说明时点击"已整改"</td>
+<td>拦截并定位缺失项</td>
+<td>"请补充整改后照片与处置说明"</td>
+<td>✅ 已实现（v2.0）</td>
+</tr>
+<tr>
+<td><strong>导出失败（v2.0）</strong></td>
+<td>生成异常</td>
+<td>提示重试，不改变记录数据（超长内容分页属正常路径，见 5.5 规则 3，非"降级"分支——v2.1 二义已拆分）</td>
+<td>"导出失败，请重试"</td>
+<td>🔵 规划</td>
+</tr>
+<tr>
+<td><strong>本地存储空间不足（v2.1 新增，评审 S3）</strong></td>
+<td>IndexedDB 配额告急（<strong>v2.2 持久化后才可能存在</strong>）</td>
+<td>提示清理；可跳转记录列表</td>
+<td>"本地存储空间不足，请删除部分记录的照片或先导出后清理"</td>
+<td>🔵 规划（v2.2 回填）</td>
+</tr>
+<tr>
+<td>模型服务超时（规划）</td>
+<td>生成 &gt; 10s</td>
+<td>降级返回条文原文列表</td>
+<td>"生成超时，已展示相关条文原文"</td>
+<td>🔵 规划</td>
+</tr>
+<tr>
+<td>商密越界（规划）</td>
+<td>提问涉密细节</td>
+<td>拒答</td>
+<td>"该内容涉及商密资料…"</td>
+<td>🔵 规划</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p><strong>状态列口径（v2.2.1 新增，评审 M11）</strong>：本列 = <strong>原型实现状态</strong>——✅ = 已随 09/10 原型交付并有断言覆盖；🔵 = 待实现——「导出失败」随 v2.2 导出链路完善回填；「本地存储空间不足」需持久化后配额才可能触发（<strong>v2.0 内存级无此路径</strong>，与评审 B1 的存储口径修正关联），随 v2.2 任务④回填。</p>
+</blockquote>
+<hr />
+<h2 id="11-迭代路线图"><span class="num">11.</span>迭代路线图</h2>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>范围</th>
+<th>核心任务</th>
+<th>通过标准</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.1 / v1.2 原型（已完成）</td>
+<td>问答产品 → 统一「规范笔记本」</td>
+<td>双端四模块 + 95 项断言</td>
+<td>95/95 通过</td>
+</tr>
+<tr>
+<td><strong>v2.0 原型（本版范围，已完成）</strong></td>
+<td><strong>整改留痕模块</strong></td>
+<td>整改记录模板 + 条文挂载 + 前后照片 + 导出预览（<strong>已交付</strong>）；断言规划 ≥125 / <strong>实测 216 全绿</strong>；<strong>并行（不计入开发工期）：用户访谈 5 人 + 承诺测试</strong>（评审 M10）</td>
+<td>✅ 整改 3 类场景双端可演示（已达成）；⬜ 访谈与测试完成并记录结论（<strong>未启动</strong>，见 4.4 与 04a-C2）</td>
+</tr>
+<tr>
+<td>v2.1 产品化 demo</td>
+<td>真实 RAG 接入</td>
+<td>关键词路由 → qmd 混合检索；问答与条文推荐同链路</td>
+<td>3 类场景在真实 RAG 下跑通；<strong>用户协议与隐私政策初稿</strong>（评审 S5，作品集阶段留位）</td>
+</tr>
+<tr>
+<td><strong>v2.2 原型（本版新增范围，规划；v2.2.1 重写任务清单）</strong></td>
+<td><strong>全工程化 + 笔记条文关联 + 持久化 + 笔记导出</strong></td>
+<td>① 笔记编辑器三路径条文关联（5.7）；② 演示数据覆盖 ≥4 专业（4.2）；③ 部位两级 chips 双端改造（5.2.2，含触控 ≥56px）；④ <strong>本地持久化层</strong>（笔记回写 + note.cites + 记录/照片 + chips 记忆，IndexedDB）；⑤ <strong>笔记导出</strong>（长图复用 5.5 规则 3，含条文时六要素）；⑥ <strong>条带统一改造</strong>（整改 + 笔记均为定高常驻 56px，5.1/5.7）；⑦ 演示数据重写 + 存量断言回归修复（按 6.3 影响分析表）；⑧ 验证点扩项（6.3）；⑨ 访谈 ≥5 人（含 ≥2 非风电；<strong>开工前置门</strong>见下注）+ 5 人试用</td>
+<td><strong>全量回归（存量改写 + 新增）全绿</strong>；演示数据覆盖 ≥4 个专业</td>
+</tr>
+<tr>
+<td>v3.0 试点</td>
+<td>1 个项目部试用</td>
+<td>假设验证（H1-H5）、评估集、埋点；<strong>按准入清单先行（先 5 人 → 培训 → 全项目部）、预设退出线</strong>（评审 M8）；<strong>埋点采集告知到位</strong>（字段/用途/匿名编号/可删除）</td>
+<td>H1-H5 有结论；评估集 ≥ 90%；用户协议与隐私政策定稿；<strong>试点采集告知已向参与者逐项说明</strong>（评审 M13 检查项）</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p>验证时机说明（评审 M10）：访谈 5 人与承诺测试<strong>自 v2.0 并行启动</strong>（数天内可完成），H1–H5 的完整结论需要真实使用数据、在 v3.0 收口；延后风险是"原型投入未被验证"，故以承诺测试作为<strong>试点前置门</strong>。</p>
+<p><strong>v2.2 开工前置门（v2.2.1 新增，评审 M1）</strong>：v2.2 开工前须完成<strong>访谈 ≥5 人（含 ≥2 名非风电一线）</strong>（题目见 4.4 第 5/6 题；<strong>降级判据为第 5 题</strong>——第 6 题验证 A6 普适性、不作 5.7 降级判据）——若访谈第 5 题证据不足（不存在"写记录时引用规范"的过去行为），<strong>5.7 降为 P1</strong>（条带能力延后，手动插入与编号识别保留）。截至本次修订（2026-10-06）访谈<strong>未启动</strong>——本路线图是条件计划，非既成事实。</p>
+<p><strong>v2.1 与 v2.2 的关系（v2.2.1 新增，评审 S6）</strong>：两者为<strong>并行可选项、无串行依赖</strong>——v2.1（真实 RAG）是产品化 demo 性质，v2.2 是原型线迭代；先后次序取决于访谈结论与演示需要，互不阻塞。</p>
+</blockquote>
+<p><strong>风险预案（v2.1 扩充，评审 M8）</strong>：</p>
+<ul>
+<li>问答 AI 错误：评估集准确率 <strong>&lt; 80%</strong>（回滚阈值——达线目标 ≥90%，80%~90% 为「需优化、不回滚」区间；<strong>勿与 A3 推荐命中率 ≥80% 混淆</strong>——v2.2.1 澄清，评审组 C）或出现"答案严重错误导致错误施工"投诉 → 回滚至仅"规范原文检索"模式（关闭 AI 生成）</li>
+<li>条文推荐错误：设 <strong>kill switch（v2.2.1 重写，评审 M12）</strong>——覆盖整改线 + 笔记线，<strong>一键关闭全部自动推荐</strong>（两线开关合一，防"关了一半"）；笔记侧保留<strong>手动插入 + 编号识别</strong>（离线可用能力不陪绑推荐）；原型期以<strong>本地配置开关</strong>实现（无服务端）；已采纳 / 已插入条文的快照不受影响</li>
+<li>试点退出线（v2.2.1 修，评审 M2/M3）：<strong>H1 不成立的判据以 4.4 表 H1 行为准</strong>（≥3 人当周产生 ≥1 条；周创建数/人无绝对数值、待试点基线校准——见 9 章注，本行不另立数值）；H2 不成立（采纳率 &lt; 50%）→ 停止扩建，回到需求验证而非继续加功能；<strong>H5 不成立（试用期无 ≥3 人非引导插入）→ 关闭笔记条带、保留手动插入与编号识别</strong></li>
+</ul>
+<blockquote class="bq-note">
+<p>🛠 土木批注：v2.0 的路线图有一个硬约束要记住——<strong>先做原型、再做验证、最后才产品化</strong>。作品集语境下最容易犯的错是跳过 H1–H5 的假设验证直接冲"功能扩建"。当前 v2.0 的任务边界就一句话：把整改模块做进原型、把断言跑绿；假设验证是 v3.0 的事，但<strong>验证计划（4.4）现在就写好，挂在墙上</strong>。</p>
+</blockquote>
+<hr />
+<h2 id="12-附录"><span class="num">12.</span>附录</h2>
+<h3 id="121-名词解释"><span class="num">12.1</span>名词解释</h3>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>术语</th>
+<th>定义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>整改留痕</td>
+<td>对"发现问题→整改→复查"全过程的记录，含问题描述、处置依据、前后影像</td>
+</tr>
+<tr>
+<td>条文挂载</td>
+<td>将规范条文以"处置依据"形式关联到整改记录（本产品差异化能力）</td>
+</tr>
+<tr>
+<td>笔记条文关联</td>
+<td>v2.2 能力：笔记编辑中通过关键词自动推荐 / 手动插入 / 编号识别三条路径关联规范条文（引用卡 + 快照，见 5.7）</td>
+</tr>
+<tr>
+<td>单边工具</td>
+<td>无需对方配合（不装 App、不进系统）即可独立使用的个人工具</td>
+</tr>
+<tr>
+<td>草稿态</td>
+<td>首存豁免照片与完整校验的记录状态（○ 草稿），支持现场「先记后补」；不参与 H1 统计口径</td>
+</tr>
+<tr>
+<td>采纳率</td>
+<td>H2 试点验证线——AI 推荐条文中被人工采纳的比例（≥50%），验证"推荐是否有用"</td>
+</tr>
+<tr>
+<td>记录覆盖率</td>
+<td>产品线指标——整改记录中成功挂载 ≥1 条条文的占比（≥80%），衡量记录完整度</td>
+</tr>
+<tr>
+<td>评估集命中率</td>
+<td>离线评估口径——整改推荐专项 50 例（问题描述→条文）中推荐命中正确答案的比例（A3，≥80%）；与线上采纳率、产品线覆盖率是三个不同的率</td>
+</tr>
+<tr>
+<td>复查代记</td>
+<td>单边工具约束下的闭环方案：由记录者依线下复查结果代记复查人/时间/结论（T4）</td>
+</tr>
+<tr>
+<td>RAG / 关键词路由 / 混合检索 / 幻觉 / Bad case / 信息架构同构</td>
+<td>沿用 v1.2 术语定义（见 v1.2 PRD 12.1）</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="122-参考资料"><span class="num">12.2</span>参考资料</h3>
+<ul>
+<li>v1.2 完整 PRD：《准绳 v1.2 PRD》</li>
+<li>已交付原型（v1.2）：《准绳 v1.2 双端原型》（双端原型 + 95 项断言脚本）</li>
+<li>已交付原型（v2.0 整改模块）：<code>PRD作品1-准绳-整改留痕助手/09</code>（移动端 v4）/ <code>10</code>（桌面端 v3）+ <code>11</code>/<code>12</code>（双端验证脚本，合计 216 项断言）</li>
+<li>待确认项清单（2026-10-05）：《待确认项清单》——C1-C10 / A1-A4 / D1-D4；v2.1.2 已落实 D1-D4 与 C1/C5/C6/C7/C8/C9（10 条文档级修正），C3/C4/C10 已在公开站点环节落地，C2 与 A1-A4 为行为项（未执行）</li>
+<li>行业依据（v2.1.2 补）：<strong>GB/T 50319—2013《建设工程监理规范》</strong> 第 5.2.15 条 + 附录表 B.0.9《监理通知回复单》——整改留痕闭环的规范出处（见 2.1）</li>
+<li>定位重构评审材料（2026-10-05）：三视角产品评审记录（用户价值核算 / 证据分级 / 风险取舍），评审驱动了 2.4、4.3、4.4 三节</li>
+<li>首轮六角色评审报告（2026-10-05）：《六角色评审报告》——9 阻断 / 11 重要 / 7 建议，驱动本版 v2.1.0 全部修订</li>
+<li>复评报告（2026-10-05）：《复评报告》——三组独立核验 9 项阻断修订（6 项直接达标 / B3·B4·B6 部分达标），残余项已在 v2.1.1 收口</li>
+<li>第二轮六角色评审报告（2026-10-06）：<code>07-评审报告-准绳2.2-全工程化与笔记条文关联.md</code>——7 阻断 / 13 重要 / 8 建议（合计 28 条），驱动本版 v2.2.1 全部修订</li>
+<li>复评报告（2026-10-06）：<code>08-复评报告-准绳2.2-修订复评.md</code>——三组独立核验 07 号「复评清单」11 项（10 项直接达标 / B5 经实测修正后达标），残余 16 处已在 v2.2.1 收口，<strong>复评通过</strong></li>
+<li>技术预研：本地 RAG 知识库（qmd，混合检索链路已验证）</li>
+</ul>
+<hr />
+<h2 id="a-ai-产品增量章节v20-更新"><span class="num">A.</span>AI 产品增量章节（v2.0 更新）</h2>
+<h3 id="a1-检索方案选型与演进更新">A1. 检索方案选型与演进（更新）</h3>
+<div class="rtwrap"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>方案</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>原型期</td>
+<td>关键词路由（问答 13 类答案库；整改推荐<strong>复用规范库既有检索链路 + 演示映射表</strong>——实测现 39 条，v2.2 扩至 ≥60 条、覆盖 8 组，见 5.3 规则 3 / 5.7 规则 6）</td>
+<td>零成本验证交互；条文推荐可先用规则匹配演示，不阻塞原型</td>
+</tr>
+<tr>
+<td>产品化</td>
+<td>RAG + 向量 + BM25 混合检索，Top 5 召回</td>
+<td>问答与整改推荐<strong>同链路</strong>——一次接入两处受益</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="a2-prompt-策略更新">A2. Prompt 策略（更新）</h3>
+<ul>
+<li>沿用 v1.2 系统提示词铁律；整改场景新增：<em>"仅从给定条文中推荐处置依据；推荐 ≤3 条；不得为凑数推荐弱相关条文"</em></li>
+</ul>
+<h3 id="a3-评估集与准确率要求更新">A3. 评估集与准确率要求（更新）</h3>
+<ul>
+<li>200 道标准题（沿用）+ <strong>整改推荐专项评估 50 例</strong>（问题描述→条文，<strong>评估集命中率 ≥80%</strong>）——命名区分（评审 B6）：这是<strong>离线评估口径</strong>，与线上 H2「采纳率 ≥50%」、产品线「覆盖率 ≥80%」是三个不同的率</li>
+</ul>
+<h3 id="a4-a7-幻觉控制-安全护栏-成本-bad-case-闭环">A4-A7. 幻觉控制 / 安全护栏 / 成本 / Bad case 闭环</h3>
+<ul>
+<li>沿用 v1.2 定义；新增一条（v2.1 更新，评审 B9；v2.2.1 扩六要素口径）：导出物固定页脚——<strong>常置五要素</strong>（①产品名「准绳」②版本号 ③生成时间 ④「内容由用户自行录入、未经第三方核验，不构成验收或责任认定依据」⑤「条文以官方发布文本为准」）+ <strong>含条文时追加第⑥要素</strong>（「条文版权归发布机构所有，仅供个人工作参考」），落于 5.5 规则 2</li>
+</ul>
+<blockquote class="bq-note">
+<p>🛠 土木批注（A 章总结）：A 章的改动点全在"一次能力、两处复用"——RAG 一次接入，问答和整改推荐同时升级；这是把 v1.2 的技术弧线自然延伸，不是另起炉灶。作品集讲技术演进时，这条"复用弧线"比"我又做了个新功能"值钱得多。</p>
+</blockquote>
+<hr />
+<blockquote>
+<p><strong>待确认项与假设汇总（供评审逐条过）</strong>：另编有配套《待确认项清单》（2026-10-05，项目内部工作文档）：3 必须确认 / 4 建议确认 / 3 可后续补充 / 4 条假设台账 A1-A4 / 4 条文档口径校正）。</p>
+<p><strong>v2.1.2 落实状态</strong>：D1-D4 与 C1 / C5 / C6 / C7 / C8 / C9 的建议值已全部落进本文；C3 / C4 / C10 已在站点发布环节落地（脱敏渲染 + 批注说明）；<strong>C2（访谈 5 人 + 承诺测试）未执行</strong>，A1-A4 四条假设仍为「未启动」——不虚构进度。首轮 9 项阻断（B1-B9）的修改建议已逐条复核，全部采纳。</p>
+<p><strong>v2.1.3 落实情况</strong>：原型两轮改造后的口径同步已全部落进本文（断言口径 216 项 / 规范库 8 组 42 本 / 知识库发布口径 62-85-9）。<code>04a</code> 与 v2.1.2 修订记录保留当时口径、不回填——<strong>口径变更要留痕，不是把旧数字擦掉</strong>。</p>
+<p><strong>v2.2.0 落实情况</strong>：全工程化（2.4 / 3.1 / 4.1 / 4.2 / 5.2.1 / 5.2.2 / 5.3 / 5.6）与「笔记条文关联」设计（4.1 / 4.4 / 5.1 / 5.7 / 6.3 / 8 / 9 / 11 / 12.1）已全部落进本文——<strong>设计定稿，原型（演示数据 + 5.7 能力）待 v2.2 迭代实现</strong>；实现后按 6.2 口径回填 6.3 与 9 章实测数。</p>
+<p><strong>v2.2.1 落实情况（评审修订轮，2026-10-06）</strong>：按第二轮六角色评审（<code>07-评审报告</code>）「复评清单」完成全数修订（B1-B7 / M1-M13 / S1-S8，合计 28 条），含四项拍板决策落地——① 5.7 保留 P0 + 设 v2.2 开工前置门（访谈 ≥5 人含 ≥2 非风电；<strong>保留理由含作品集演示价值，非需求验证结论</strong>）；② 笔记导出纳入 v2.2；③ v2.2 补本地持久化（<strong>v2.0 实测内存级的存储口径修正</strong>）；④ 条带定高常驻 56px 空间模型（整改 + 笔记双线统一）。逐项核验见 <code>08-复评报告-准绳2.2-修订复评.md</code>（<strong>复评通过，11 项全部关闭</strong>）。</p>
+</blockquote></div></div></div>
+<script>
+(function(){
+  var d=document.documentElement,bar=document.getElementById('pgbar');
+  function upd(){var h=d.scrollHeight-d.clientHeight;bar.style.transform='scaleX('+(h>0?Math.min(1,d.scrollTop/h):0)+')';}
+  addEventListener('scroll',upd,{passive:true});addEventListener('resize',upd);upd();
+  var links=[].slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+  if(!links.length||!window.IntersectionObserver)return;
+  var byId={};
+  links.forEach(function(a){var id=a.getAttribute('href').slice(1),el=document.getElementById(id);if(el)byId[id]=a;});
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){if(e.isIntersecting){
+      for(var k in byId)byId[k].classList.remove('cur');
+      if(byId[e.target.id])byId[e.target.id].classList.add('cur');
+    }});
+  },{rootMargin:'-80px 0px -70% 0px'});
+  for(var k in byId)io.observe(document.getElementById(k));
+})();
+</script>
+</body>
+</html>

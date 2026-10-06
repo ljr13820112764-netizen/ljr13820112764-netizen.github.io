@@ -6,41 +6,52 @@
 <title>刘久瑞 · AI 产品经理作品集</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: "Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif; color: #12263A; background: #F2F5F8; }
+  body { font-family: "Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif;
+         color: #111111; background: #F0F0F0; border-top: 3px solid #111111; }
   .wrap { max-width: 1060px; margin: 0 auto; padding: 0 20px; }
-  .hero { background: linear-gradient(135deg,#0E2A52 0%,#16406B 55%,#1B6FAC 100%); color: #fff; padding: 54px 0 42px; }
+  /* 页首：白底开场，靠字号与留白立住，不用色块 */
+  .hero { background: #FFFFFF; color: #111111; padding: 54px 0 42px; border-bottom: 1px solid #E8E8E8; }
   .hero .wrap { display: flex; justify-content: space-between; gap: 30px; flex-wrap: wrap; }
   h1 { font-size: 40px; letter-spacing: 3px; }
-  .sub { color: #FFD9BF; margin-top: 8px; font-size: 15px; letter-spacing: 1px; }
-  .tagline { margin-top: 18px; font-size: 14.5px; color: #D9E9F5; line-height: 1.7; }
-  .hero-side { font-size: 12.5px; color: #BBD3E8; line-height: 2.05; border-left: 2px solid rgba(255,255,255,.25); padding-left: 16px; align-self: flex-end; }
+  .sub { color: #6A6A6A; margin-top: 8px; font-size: 15px; letter-spacing: 1px; }
+  .tagline { margin-top: 18px; font-size: 14.5px; color: #333333; line-height: 1.7; }
+  .hero-side { font-size: 12.5px; color: #6A6A6A; line-height: 2.05;
+               border-left: 1px solid #D8D8D8; padding-left: 16px; align-self: flex-end; }
   .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(300px,1fr)); gap: 18px; margin: 36px 0 8px; }
-  .card { background: #fff; border: 1px solid #DCE4EC; border-top: 3px solid #1B6FAC; border-radius: 8px;
+  .card { background: #FFFFFF; border: 1px solid #E0E0E0; border-radius: 8px;
           padding: 22px 22px 20px; display: flex; flex-direction: column;
           transition: transform .18s ease, box-shadow .18s ease; }
-  .card:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(14,42,82,.10); }
-  .badge { align-self: flex-start; font-size: 11.5px; color: #C75A17; background: #FFF1E8;
-           border: 1px solid #FFD9BF; border-radius: 20px; padding: 3px 11px; }
-  h2 { font-size: 18px; color: #0E2A52; margin: 11px 0 9px; }
-  .desc { font-size: 13.5px; color: #3D4D61; line-height: 1.7; }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(0,0,0,.09); }
+  .badge { align-self: flex-start; font-size: 11.5px; color: #555555; background: #F5F5F5;
+           border: 1px solid #E0E0E0; border-radius: 20px; padding: 3px 11px; }
+  h2 { font-size: 18px; color: #111111; margin: 11px 0 9px; }
+  .desc { font-size: 13.5px; color: #444444; line-height: 1.7; }
   ul { list-style: none; margin: 12px 0 16px; }
-  ul li { font-size: 12.8px; color: #3D4D61; line-height: 1.65; padding-left: 14px; position: relative; margin-bottom: 6px; }
-  ul li::before { content: ""; position: absolute; left: 0; top: .58em; width: 6px; height: 6px; border-radius: 50%; background: #FF6B2C; }
+  ul li { font-size: 12.8px; color: #444444; line-height: 1.65; padding-left: 14px;
+          position: relative; margin-bottom: 6px; }
+  ul li::before { content: ""; position: absolute; left: 0; top: .58em; width: 6px; height: 6px;
+                  border-radius: 50%; background: #B0B0B0; }
   .links { margin-top: auto; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-  .btn { display: inline-block; background: #1B6FAC; color: #fff; text-decoration: none; font-size: 13px;
-         padding: 8px 16px; border-radius: 6px; transition: background .15s ease; }
-  .btn:hover { background: #125A8F; }
-  .btn.ghost { background: #fff; color: #1B6FAC; border: 1px solid #1B6FAC; }
-  .btn.ghost:hover { background: #F0F7FC; }
-  .note { font-size: 12px; color: #8A99AB; }
-  .resume-band { background: #fff; border: 1px solid #DCE4EC; border-left: 4px solid #FF6B2C;
+  .links.docs { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #E0E0E0; }
+  /* 按钮三级（对齐原型 .btn-p / .btn-s：白底黑描边 · 透明发丝线，hover 一律压灰底） */
+  .btn { display: inline-block; background: #FFFFFF; color: #111111; border: 1px solid #111111;
+         text-decoration: none; font-size: 13px; padding: 8px 16px; border-radius: 6px;
+         transition: background .15s ease; }
+  .btn:hover { background: #F0F0F0; }
+  .btn.ghost { background: transparent; border-color: #C8C8C8; }
+  .btn.ghost:hover { background: #F0F0F0; }
+  .btn.doc { background: transparent; border-color: #C8C8C8; color: #6A6A6A; }
+  .btn.doc:hover { background: #F0F0F0; color: #111111; }
+  .note { font-size: 12px; color: #8C8C8C; }
+  .resume-band { background: #FFFFFF; border: 1px solid #E0E0E0; border-left: 4px solid #111111;
                  border-radius: 8px; padding: 20px 24px; display: flex; justify-content: space-between;
                  align-items: center; gap: 16px; flex-wrap: wrap; margin: 18px 0 42px; }
   .resume-band h2 { margin: 0 0 6px; }
-  .resume-band p { font-size: 13px; color: #5A6B7E; }
-  footer { background: #0E2A52; color: #BBD3E8; padding: 26px 0; font-size: 13px; }
+  .resume-band p { font-size: 13px; color: #6A6A6A; }
+  footer { background: #111111; color: #B0B0B0; padding: 26px 0; font-size: 13px; }
   .dim { opacity: .6; font-size: 12px; margin-top: 6px; }
-  @media (max-width: 640px) { h1 { font-size: 30px; } .hero { padding: 40px 0 30px; } .hero-side { align-self: flex-start; } }
+  @media (max-width: 640px) { h1 { font-size: 30px; } .hero { padding: 40px 0 30px; }
+                              .hero-side { align-self: flex-start; } }
 </style>
 </head>
 <body>
@@ -53,7 +64,7 @@
       <p class="tagline">一线工程背景 × 独立 AI 产品交付<br>把真实现场的痛点，做成可演示、可验证的产品。</p>
     </div>
     <div class="hero-side">
-      「规答」AI 规范问答助手 —— PRD + 双端原型 + 95 项断言<br>
+      「准绳」规范驱动的整改留痕助手 —— 产品文档 + 双端原型 + 216 项断言<br>
       个人知识库系统 —— 62 来源 / 157 节点 3D 图谱<br>
       AI 自动化工作流 —— 日报汇总 · 企业调查 · 离线问答
     </div>
@@ -65,17 +76,23 @@
 
     <article class="card">
       <span class="badge">可交互 Demo</span>
-      <h2>「规答」AI 施工规范问答助手</h2>
-      <p class="desc">面向施工现场的规范问答工具：提问 → 条文溯源 → 存笔记 → AI 写作，一套信息架构贯穿双端。</p>
+      <h2>「准绳」规范驱动的整改留痕助手</h2>
+      <p class="desc">面向施工现场的整改留痕工具：发现问题 → 挂条文依据 → 留前后照片 → 导出可发送的留档，单点闭环。</p>
       <ul>
-        <li>独立完成 PRD v1.2：功能清单、溯源引用机制、双端四模块同构</li>
+        <li>独立完成 PRD v2.2.1：先做需求判断，再写 PRD；两轮六角色模拟评审共查出 16 项阻断问题，修订全部闭环</li>
         <li>手写 HTML 双端高保真原型——本页 Demo 即原型，离线可用</li>
-        <li>Playwright 95 项自动化断言全部通过，修复 2 个真实缺陷</li>
-        <li>18 本规范、6 大类条文结构化，引用全溯源；演示数据均为示例</li>
+        <li>Playwright 216 项自动化断言全部通过（v2.0 整改模块新增 121 项）</li>
+        <li>四态状态机 + 不变量约束；条文推荐防抖防陈旧；照片压缩剥离 EXIF；导出留档页脚含自录未核验声明</li>
+        <li>把「已知」与「假设」分开写：5 条核心假设标注待验证并附验证计划，未验证不表述为事实</li>
       </ul>
       <div class="links">
-        <a class="btn" href="guanda/index.html">桌面端 Demo ↗</a>
-        <a class="btn ghost" href="guanda/mobile.html">移动端 Demo ↗</a>
+        <a class="btn" href="zhunsheng/index.html">桌面端 Demo ↗</a>
+        <a class="btn ghost" href="zhunsheng/mobile.html">移动端 Demo ↗</a>
+      </div>
+      <div class="links docs">
+        <span class="note">产品文档</span>
+        <a class="btn doc" href="prd/index.html">PRD 全文 ↗</a>
+        <a class="btn doc" href="prd/review.html">评审摘要 ↗</a>
       </div>
     </article>
 
@@ -117,7 +134,7 @@
     </div>
     <div class="links">
       <a class="btn" href="resume/index.html">网页版 ↗</a>
-      <a class="btn ghost" href="resume/liujiurui-resume-v8.pdf">下载 PDF ↓</a>
+      <a class="btn ghost" href="resume/liujiurui-resume.pdf">下载 PDF ↓</a>
     </div>
   </section>
 </main>
