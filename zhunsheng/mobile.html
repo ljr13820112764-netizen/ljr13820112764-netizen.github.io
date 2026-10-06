@@ -329,7 +329,7 @@
                   </div>
                   <div>
                     <div class="text-[15px] font-bold text-ink">准绳 AI 助手</div>
-                    <div class="text-[12px] text-sub">已接入 42 本工程规范 · 答案可存为笔记</div>
+                    <div class="text-[12px] text-sub">已接入 50 本工程规范 · 答案可存为笔记</div>
                   </div>
                 </div>
                 <p class="mt-3 text-[13px] leading-relaxed text-sub">施工中拿不准的做法，直接问。<br>每条答案都带<span class="text-deep-600 font-semibold">条文出处</span>，可点开核对原文，也可<span class="text-deep-600 font-semibold">一键存进你的笔记本</span>。</p>
@@ -363,6 +363,12 @@
                 <button class="quick press text-left bg-white border border-line rounded-xl px-3 py-3 text-[13px] font-medium text-ink shadow-sm hover:border-deep-100">
                   <span class="block text-deep-600 text-[11px] font-semibold mb-0.5"><svg class="ic"><use href="#i-wind"></use></svg> 防台撤离</span>台风预警后如何撤离？
                 </button>
+                <button class="quick press text-left bg-white border border-line rounded-xl px-3 py-3 text-[13px] font-medium text-ink shadow-sm hover:border-deep-100">
+                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5"><svg class="ic"><use href="#i-note"></use></svg> 钢筋保护层（房建）</span>保护层厚度怎么验收？
+                </button>
+                <button class="quick press text-left bg-white border border-line rounded-xl px-3 py-3 text-[13px] font-medium text-ink shadow-sm hover:border-deep-100">
+                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5"><svg class="ic"><use href="#i-compass"></use></svg> 见证取样（监理）</span>见证取样与旁站有什么要求？
+                </button>
               </div>
             </div>
             <!-- 消息流 -->
@@ -390,9 +396,9 @@
             <div class="bg-white border border-line rounded-2xl p-4 shadow-sm">
               <div class="text-[13px] text-sub">已内置规范</div>
               <div class="flex items-end gap-2 mt-1">
-                <span class="text-[30px] font-bold leading-none">42</span><span class="text-[12px] text-sub pb-0.5">本 · 现行有效 36 · 内部文件 6</span>
+                <span class="text-[30px] font-bold leading-none">50</span><span class="text-[12px] text-sub pb-0.5">本 · 现行有效 44 · 内部文件 6</span>
               </div>
-              <div class="text-[11px] text-sub mt-2">房建 / 机电 / 钢结构 / 施工安全 / 起重吊装 / 市政 / 风电 / 项目文件 · 版次按现行有效版本整理（2026-10 核对）</div>
+              <div class="text-[11px] text-sub mt-2">房建 / 施工检测 / 机电 / 钢结构 / 施工安全 / 起重吊装 / 市政 / 风电 / 项目文件 · 版次按现行有效版本整理（2026-10 核对）</div>
             </div>
             <div id="lib-groups"></div>
           </div>
@@ -648,7 +654,7 @@
         <div id="pv-cap" class="absolute bottom-0 inset-x-0 px-5 pb-6 pt-3 text-[12px] text-white/90"></div>
       </div>
 
-      <!-- ================= v2.2 手动插入规范引用：规范库选择器（8 组 42 本 · 跨分类搜索） ================= -->
+      <!-- ================= v2.2 手动插入规范引用：规范库选择器（9 组 50 本 · 跨分类搜索） ================= -->
       <div id="picker-overlay" class="absolute inset-0 z-[45] bg-mist flex flex-col transition-transform duration-300" style="transform:translateX(100%)">
         <div class="flex items-center gap-2 px-3 pt-3 pb-2 shrink-0">
           <button id="btn-picker-back" class="press w-11 h-11 rounded-xl bg-white border border-line flex items-center justify-center text-ink shadow-sm">
@@ -1561,7 +1567,7 @@
       }
     });
   });
-  /* 手动插入路径（5.7 路径②）：打开规范库选择器（8 组 42 本 · 跨分类搜索），选中后插入到光标位置；无光标时插入文末 */
+  /* 手动插入路径（5.7 路径②）：打开规范库选择器（9 组 50 本 · 跨分类搜索），选中后插入到光标位置；无光标时插入文末 */
   document.getElementById("btn-insert-clause").addEventListener("click", function () { openNotePicker(); });
 
   /* ---------- AI 辅助抽屉 ---------- */
@@ -1689,7 +1695,7 @@
     track("note_saved_from_qa", { note_id: note.id });
   }
 
-  /* ---------- 问答知识库（13 类高频问题，与桌面端一致） ---------- */
+  /* ---------- 问答知识库（27 类高频问题，与桌面端一致） ---------- */
   var ANSWERS = {
     tower: {
       html:
@@ -1786,11 +1792,88 @@
         '<p>接地装置安装与测试要求：</p>' +
         '<p>① 接地装置的<b>接地电阻值必须符合设计要求</b><br>② 安装完成后应进行接地电阻测试并留存记录<br>③ 等电位联结干线应与接地装置可靠连接<br>④ 测试记录归档后方可进入下道工序</p>',
       cite: citeCard("GB 50303-2015", "建筑电气工程施工质量验收规范", "12.1.1", "现行有效", "text-ok border-ok/40")
+    },
+    cover: {
+      html:
+        '<p>钢筋混凝土保护层厚度验收（GB 50204-2015）：</p>' +
+        '<p>① 允许偏差（表 5.5.3）：基础 <b>±10mm</b>；柱、梁 <b>±5mm</b>；板、墙、壳 <b>±3mm</b><br>② 合格点率应达到 <b>90% 及以上</b>，且不合格点的最大偏差不应大于允许偏差的 1.5 倍<br>③ 检查数量：同一检验批内按构件数量抽查 10% 且不少于 3 件（板类按间抽查 10% 且不少于 3 间）<br>④ 结构实体保护层厚度按附录 E 检验：梁类 +10/-7mm、板类 +8/-5mm</p>',
+      cite: citeCard("GB 50204-2015", "混凝土结构工程施工质量验收规范", "5.5.3 / 附录 E", "现行有效", "text-ok border-ok/40")
+    },
+    rebar: {
+      html:
+        '<p>钢筋机械连接现场检验（JGJ 107-2016）：</p>' +
+        '<p>① 同一施工条件下同等级、同型式、同规格接头以 <b>500 个为一个验收批</b><br>② 每批随机截取 <b>3 个试件</b>做极限抗拉强度试验；不足 500 个也按一批计<br>③ 有 1 个试件不合格时再取 6 个复检；复检仍不合格则该批不合格<br>④ 现场应按接头数量抽查 <b>10% 做扭矩校核</b>，记录随工序同步形成</p>',
+      cite: citeCard("JGJ 107-2016", "钢筋机械连接技术规程", "7.0.5", "现行有效", "text-ok border-ok/40")
+    },
+    piletest: {
+      html:
+        '<p>混凝土桩桩身完整性检测数量（JGJ 106-2014）：</p>' +
+        '<p>① 甲级桩基，或地质条件复杂、成桩可靠性低的灌注桩：抽检不少于总桩数 <b>30% 且不少于 20 根</b><br>② 其他桩基工程：不少于总桩数 <b>20% 且不少于 10 根</b><br>③ <b>每个柱下承台检测桩数不少于 1 根</b><br>④ 大直径嵌岩灌注桩应按不少于总桩数 10% 的比例采用声波透射法或钻芯法检测</p>',
+      cite: citeCard("JGJ 106-2014", "建筑基桩检测技术规范", "3.3.3", "现行有效", "text-ok border-ok/40")
+    },
+    strength: {
+      html:
+        '<p>混凝土强度检验评定（GB/T 50107-2010）：</p>' +
+        '<p>① 试件以同一强度等级、同一配合比、生产工艺相同的混凝土为一组，标准养护 28d 后试验<br>② <b>非统计方法评定</b>（试件不足 10 组）：平均值不小于标准值的 1.15 倍（C60 以下）或 1.10 倍（C60 及以上），最小值不小于 0.95 倍<br>③ 统计方法评定按标准差已知、未知两种情况分别处理<br>④ 评定不合格时可委托检测机构对结构实体进行检测鉴定</p>',
+      cite: citeCard("GB/T 50107-2010", "混凝土强度检验评定标准", "5.2", "现行有效", "text-ok border-ok/40")
+    },
+    roofw: {
+      html:
+        '<p>屋面防水工程完工检验（GB 50207-2012）：</p>' +
+        '<p>① 屋面工程完工后应进行 <b>淋水试验</b>：持续淋水 <b>2h</b> 后检查有无渗漏<br>② 有可能蓄水检验的屋面应做 <b>蓄水试验</b>：蓄水时间 <b>不少于 24h</b><br>③ 检查应形成记录并留存影像资料，渗漏部位整改后重新检验<br>④ 防水层验收合格后方可进行保护层施工</p>',
+      cite: citeCard("GB 50207-2012", "屋面工程质量验收规范", "9.0.8", "现行有效", "text-ok border-ok/40")
+    },
+    underw: {
+      html:
+        '<p>地下防水混凝土要求（GB 50208-2011）：</p>' +
+        '<p>① 防水混凝土的 <b>抗渗等级不得小于 P6</b>（设计有更高要求时随设计）<br>② 水胶比不得大于 <b>0.50</b>，胶凝材料总量不宜小于 320kg/m³<br>③ 结构裂缝宽度不应大于 <b>0.2mm</b> 且不得贯通<br>④ 施工缝、变形缝、后浇带等细部节点应按规定设防，隐蔽前留存影像</p>',
+      cite: citeCard("GB 50208-2011", "地下防水工程质量验收规范", "4.1.1 / 4.1.7", "现行有效", "text-ok border-ok/40")
+    },
+    masonry: {
+      html:
+        '<p>砌体水平灰缝砂浆饱满度（GB 50203-2011）：</p>' +
+        '<p>① 砖砌体水平灰缝砂浆饱满度不得小于 <b>80%</b>；砖柱水平灰缝和竖向灰缝饱满度不得小于 <b>90%</b><br>② 检查方法：用百格网检查砖底面与砂浆的粘结痕迹面积<br>③ 每一检验批抽查 <b>不少于 5 处</b>，每处检测 3 块砖<br>④ 竖向灰缝不得出现透明缝、瞎缝和假缝</p>',
+      cite: citeCard("GB 50203-2011", "砌体结构工程施工质量验收规范", "5.2.2", "现行有效", "text-ok border-ok/40")
+    },
+    scaffold: {
+      html:
+        '<p>脚手架搭设检查与验收（JGJ 130-2011）：</p>' +
+        '<p>① 脚手架搭设完毕，<b>经检查验收合格并挂合格牌后</b>方可使用<br>② 作业层脚手板应铺满、铺稳，不得有探头板<br>③ 连墙件按竖向 3 步、水平 3 跨设置，<b>严禁随意拆除</b><br>④ 遇 <b>六级及以上大风、雨雪后</b>应全面检查，合格后方可继续使用</p>',
+      cite: citeCard("JGJ 130-2011", "建筑施工扣件式钢管脚手架安全技术规范", "8.2", "现行有效", "text-ok border-ok/40")
+    },
+    power: {
+      html:
+        '<p>施工现场临时用电基本要求（JGJ/T 46-2024）：</p>' +
+        '<p>① 低压配电系统应采用 <b>三级配电、TN-S 系统、二级剩余电流动作保护</b><br>② 每台用电设备应有各自专用的开关箱，<b>严禁一个开关箱控制 2 台及以上设备</b><br>③ 开关箱剩余电流保护器额定动作电流不应大于 30mA、动作时间不应大于 0.1s（潮湿场所不应大于 15mA）<br>④ 分配电箱与开关箱距离不宜大于 30m，开关箱与固定式用电设备距离不宜大于 3m</p>',
+      cite: citeCard("JGJ/T 46-2024", "建筑与市政工程施工现场临时用电安全技术标准", "3.1.1 / 4.1.2", "现行有效", "text-ok border-ok/40")
+    },
+    witness: {
+      html:
+        '<p>见证取样与旁站监理（GB/T 50319-2013）：</p>' +
+        '<p>① <b>见证取样</b>：对涉及结构安全的试块、试件及材料，应在项目监理机构见证下现场取样，见证人员与取样人员共同对试样真实性负责<br>② 试样应做出标识、封样，见证记录随试样同步留存送检<br>③ <b>旁站</b>：关键部位、关键工序施工时，监理机构应安排人员旁站并记录施工过程<br>④ 旁站记录与巡视、平行检验记录一并归档</p>',
+      cite: citeCard("GB/T 50319-2013", "建设工程监理规范", "5.2.9 / 5.2.11", "现行有效", "text-ok border-ok/40")
+    },
+    settle: {
+      html:
+        '<p>施工期间沉降观测周期（JGJ 8-2016）：</p>' +
+        '<p>① 观测宜在基础完工或地下室砌完后开始；民用高层建筑<b>每加高 2~3 层观测 1 次</b><br>② 施工均匀增高时，至少在增加荷载的 <b>25%、50%、75%、100%</b> 时各观测 1 次<br>③ 暂时停工期间每隔 2~3 个月观测 1 次，复工前再观测 1 次<br>④ 观测成果应及时整理，出现异常立即上报</p>',
+      cite: citeCard("JGJ 8-2016", "建筑变形测量规范", "7.1.5", "现行有效", "text-ok border-ok/40")
     }
   };
 
   /* ---------- 关键词匹配规则（顺序即优先级） ---------- */
   function matchAnswer(text) {
+    if (/保护层/.test(text)) return "cover";
+    if (/机械连接|直螺纹|套筒|丝头|电渣压力焊|闪光对焊|钢筋连接|钢筋焊接/.test(text)) return "rebar";
+    if (/桩身|低应变|声波透射|静载|桩基检测/.test(text)) return "piletest";
+    if (/强度评定|标养|同条件|回弹|混凝土强度/.test(text)) return "strength";
+    if (/屋面|淋水|卷材|蓄水/.test(text)) return "roofw";
+    if (/地下防水|防水混凝土|止水带|后浇带/.test(text)) return "underw";
+    if (/砌体|砂浆|饱满度|拉结筋/.test(text)) return "masonry";
+    if (/脚手架/.test(text)) return "scaffold";
+    if (/临时用电|配电箱|漏电|三级配电|一机一闸/.test(text)) return "power";
+    if (/见证|旁站|平行检验/.test(text)) return "witness";
+    if (/沉降/.test(text)) return "settle";
     if (/焊接|焊条|焊工/.test(text)) return "weld";
     if (/高强螺栓|终拧|扭矩检查|螺栓/.test(text)) return "bolt";
     if (/主机|机舱|轮毂|对中|箱变/.test(text)) return "turbine";
@@ -1894,7 +1977,7 @@
     });
   });
 
-  /* ---------- 规范库（8 分类 42 本：房建/机电/钢结构/施工安全/起重吊装/市政/风电/项目文件，双端一致） ---------- */
+  /* ---------- 规范库（9 分类 50 本：房建/施工检测/机电/钢结构/施工安全/起重吊装/市政/风电/项目文件，双端一致） ---------- */
   var LIB = [
     {
       group: "房屋建筑 · 国标", items: [
@@ -1911,7 +1994,27 @@
         { code: "GB 50210-2018", name: "建筑装饰装修工程质量验收标准", status: "现行有效", st: "text-ok border-ok/40",
           toc: ["1 总则", "4 抹灰工程", "6 饰面板工程", "12 涂饰工程"], clause: "4.1.11 抹灰工程应对水泥的凝结时间和安定性进行复验。" },
         { code: "GB 50496-2018", name: "大体积混凝土施工标准", status: "现行有效", st: "text-ok border-ok/40",
-          toc: ["1 总则", "5 温控施工", "6 混凝土浇筑", "7 温度监测"], clause: "5.2 大体积混凝土应保温保湿养护不少于 14d，混凝土内外温差不宜大于 25℃。" }
+          toc: ["1 总则", "5 温控施工", "6 混凝土浇筑", "7 温度监测"], clause: "5.2 大体积混凝土应保温保湿养护不少于 14d，混凝土内外温差不宜大于 25℃。" },
+        { code: "GB/T 50319-2013", name: "建设工程监理规范", status: "现行有效", st: "text-ok border-ok/40",
+          toc: ["1 总则", "3 项目监理机构", "5 施工阶段监理工作", "6 监理文件资料管理"], clause: "5.2.9 项目监理机构应对用于工程的材料进行见证取样、平行检验；关键部位、关键工序应安排旁站监理。" },
+        { code: "GB/T 50107-2010", name: "混凝土强度检验评定标准", status: "现行有效", st: "text-ok border-ok/40",
+          toc: ["1 总则", "3 基本规定", "4 混凝土的取样与试验", "5 混凝土强度的检验评定"], clause: "5.2 非统计方法评定时，强度平均值不应小于标准值的 1.15 倍（C60 以下），最小值不应小于 0.95 倍。" },
+        { code: "GB 50207-2012", name: "屋面工程质量验收规范", status: "现行有效", st: "text-ok border-ok/40",
+          toc: ["1 总则", "3 基本规定", "6 防水与密封工程", "9 屋面工程验收"], clause: "9.0.8 屋面工程完工后应做淋水试验（持续淋水 2h）或蓄水试验（蓄水不少于 24h），检查有无渗漏。" },
+        { code: "GB 50208-2011", name: "地下防水工程质量验收规范", status: "现行有效", st: "text-ok border-ok/40",
+          toc: ["1 总则", "3 基本规定", "4 主体结构防水工程", "5 细部构造防水工程"], clause: "4.1.1 防水混凝土的抗渗等级不得小于 P6；4.1.7 水胶比不得大于 0.50。" }
+      ]
+    },
+    {
+      group: "施工检测 · 行标", items: [
+        { code: "JGJ 18-2012", name: "钢筋焊接及验收规程", status: "现行有效", st: "text-ok border-ok/40",
+          toc: ["1 总则", "3 材料", "4 钢筋焊接施工", "5 质量检验与验收"], clause: "5.1 每 300 个同类型接头为一批，每批随机切取试件做拉伸试验（闪光对焊接头取 6 个：3 拉 3 弯）。" },
+        { code: "JGJ 107-2016", name: "钢筋机械连接技术规程", status: "现行有效", st: "text-ok border-ok/40",
+          toc: ["1 总则", "3 接头的性能要求", "5 接头工艺检验", "7 现场检验与验收"], clause: "7.0.5 同一施工条件下同等级、同型式、同规格接头应以 500 个为一个验收批，每批随机截取 3 个试件做极限抗拉强度试验。" },
+        { code: "JGJ 106-2014", name: "建筑基桩检测技术规范", status: "现行有效", st: "text-ok border-ok/40",
+          toc: ["1 总则", "3 基本规定", "3.3 检测方法选择和检测数量"], clause: "3.3.3 甲级或地质复杂工程桩身完整性抽检不少于总桩数 30% 且不少于 20 根；其他工程不少于 20% 且不少于 10 根；每个柱下承台不少于 1 根。" },
+        { code: "JGJ 8-2016", name: "建筑变形测量规范", status: "现行有效", st: "text-ok border-ok/40",
+          toc: ["1 总则", "3 基本规定", "7 沉降观测"], clause: "7.1.5 施工期间民用高层建筑宜每加高 2~3 层观测 1 次；增加荷载 25%、50%、75%、100% 时各观测 1 次。" }
       ]
     },
     {
@@ -2078,7 +2181,7 @@
     var hit = matchAnswer(text);
     if (!hit) {
       aiQaAnswer.classList.remove("hidden");
-      document.getElementById("ai-qa-body").innerHTML = "未找到相关规范条文（示例库仅覆盖 13 类高频问题）。";
+      document.getElementById("ai-qa-body").innerHTML = "未找到相关规范条文（示例库仅覆盖 27 类高频问题）。";
       document.getElementById("ai-qa-cite").innerHTML = "";
       document.getElementById("ai-qa-save").classList.add("hidden");
       return;
@@ -2265,7 +2368,7 @@
   window.__events = _events;
   window.__exportEvents = function () { return JSON.stringify({ events: _events, op_log: opLog }); };   /* v2.3：埋点+审计日志导出（核验用） */
 
-  /* ---------- 条文推荐：演示映射表（v2.2 共 69 条，覆盖 8 组；条文号只来自映射表，不由模型生成） ---------- */
+  /* ---------- 条文推荐：演示映射表（v2.2 共 78 条，覆盖 9 组；条文号只来自映射表，不由模型生成） ---------- */
   var REC_MAP = [
     { re: /警戒|隔离|隔离带|回转半径/, code: "Q/QY-JZ 示例", no: "3.4", name: "海上风电项目施工安全专项方案编制指南（示例）",
       snap: "吊装作业按吊臂回转半径外扩 5m 设置警戒区，专人警戒，无关人员、车辆禁止进入。" },
@@ -2345,7 +2448,7 @@
       snap: "现浇钢筋混凝土构筑物的模板及支架应具有足够的承载能力、刚度和稳定性。" },
     { re: /风机基础|箱变基础|风电工程|风机吊装/, code: "GB/T 51121-2015", no: "6.1.1", name: "风力发电工程施工与验收规范",
       snap: "风力发电机组安装前应编制专项施工方案，并经审批后实施。" },
-    /* ===== v2.2 扩充（39 → 69 条，覆盖 8 组；推荐质量锚点：房建·养护 / 市政·闭水 / 机电·接地 / 钢结构·终拧 / 风电·吊装风速） ===== */
+    /* ===== v2.2 扩充 + 项目经理访谈增强（39 → 78 条，覆盖 9 组；推荐质量锚点：房建·养护/保护层 / 市政·闭水 / 机电·接地 / 钢结构·终拧 / 风电·吊装风速） ===== */
     /* 房建国标 */
     { re: /保湿|养护|洒水|覆盖|土工布/, code: "GB 50666-2011", no: "8.1.3", name: "混凝土结构工程施工规范",
       snap: "混凝土浇筑完毕后应在 12h 内加以覆盖并保湿养护，养护时间应符合规范要求。" },
@@ -2414,6 +2517,25 @@
       snap: "占道施工应办理审批手续，按批准的交通导改方案设置围挡与警示标志。" },
     { re: /电气调试|调试记录表|送电/, code: "JD-DB 示例", no: "2.3", name: "电气调试记录管理规定（示例）",
       snap: "电气系统送电前应完成相关调试并填写调试记录，记录应经专业工程师确认。" },
+    /* ===== 项目经理访谈增强（69 → 78 条）：房建/监理高频考点 ===== */
+    { re: /机械连接|直螺纹|套筒|丝头|钢筋接头/, code: "JGJ 107-2016", no: "7.0.5", name: "钢筋机械连接技术规程",
+      snap: "同一施工条件下同等级、同型式、同规格接头以 500 个为一个验收批，每批截取 3 个试件做极限抗拉强度试验。" },
+    { re: /电渣压力焊|闪光对焊|钢筋焊接|焊接接头/, code: "JGJ 18-2012", no: "5.1", name: "钢筋焊接及验收规程",
+      snap: "每 300 个同类型接头为一批，每批随机切取试件做拉伸试验；闪光对焊接头取 6 个（3 拉 3 弯）。" },
+    { re: /桩身|低应变|声波透射|静载|桩基检测/, code: "JGJ 106-2014", no: "3.3.3", name: "建筑基桩检测技术规范",
+      snap: "甲级或地质复杂工程桩身完整性抽检不少于总桩数 30% 且不少于 20 根；其他不少于 20% 且不少于 10 根。" },
+    { re: /强度评定|强度检验|标养|同条件|回弹|混凝土强度/, code: "GB/T 50107-2010", no: "5.2", name: "混凝土强度检验评定标准",
+      snap: "非统计方法评定时，强度平均值不应小于标准值的 1.15 倍（C60 以下），最小值不应小于 0.95 倍。" },
+    { re: /屋面|淋水|卷材|蓄水/, code: "GB 50207-2012", no: "9.0.8", name: "屋面工程质量验收规范",
+      snap: "屋面工程完工后应做淋水试验（持续淋水 2h）或蓄水试验（蓄水不少于 24h），检查有无渗漏。" },
+    { re: /地下防水|防水混凝土|止水带|后浇带/, code: "GB 50208-2011", no: "4.1.1", name: "地下防水工程质量验收规范",
+      snap: "防水混凝土抗渗等级不得小于 P6，水胶比不得大于 0.50，结构裂缝宽度不得大于 0.2mm 且不得贯通。" },
+    { re: /见证取样|见证员|封样/, code: "GB/T 50319-2013", no: "5.2.9", name: "建设工程监理规范",
+      snap: "对涉及结构安全的试块、试件及材料应在监理见证下现场取样，见证记录随试样同步留存。" },
+    { re: /旁站/, code: "GB/T 50319-2013", no: "5.2.11", name: "建设工程监理规范",
+      snap: "关键部位、关键工序施工时，项目监理机构应安排人员旁站并记录施工过程。" },
+    { re: /沉降/, code: "JGJ 8-2016", no: "7.1.5", name: "建筑变形测量规范",
+      snap: "施工期间民用高层建筑宜每加高 2~3 层观测 1 次；增加荷载 25%、50%、75%、100% 时各观测 1 次。" },
   ];
 
   var recSeq = 0, recDebounceTimer = null, REC_LATENCY = 300;
@@ -3774,7 +3896,7 @@
   }
   byId("btn-read-view").addEventListener("click", function () { if (readMode) { exitReadView(); } else { enterReadView(); } });
 
-  /* ---------- 手动插入路径：规范库选择器（8 组 42 本 · 跨分类搜索） ---------- */
+  /* ---------- 手动插入路径：规范库选择器（9 组 50 本 · 跨分类搜索） ---------- */
   var pickerOverlay = byId("picker-overlay");
   function pickerClose() { pickerOverlay.style.transform = "translateX(100%)"; }
   function renderPicker(q) {
