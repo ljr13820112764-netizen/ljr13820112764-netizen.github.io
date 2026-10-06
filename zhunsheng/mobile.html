@@ -2414,6 +2414,7 @@
     }, REC_LATENCY);
   }
   function scheduleRecommend() {
+    recSeq += 1;  /* 新输入即失效在途回调：仅渲染最新序号返回（防陈旧，5.3 规则 6） */
     clearTimeout(recDebounceTimer);
     recDebounceTimer = setTimeout(function () {
       if (rcCur) recommendFor(rcDesc.value.trim(), textareaPara(rcDesc));
@@ -3296,6 +3297,7 @@
     }, REC_LATENCY);
   }
   function scheduleNoteRecommend() {
+    edSeq += 1;   /* 新输入即失效在途回调：旧请求结果不因新输入上屏（防陈旧，5.7 规则 4） */
     clearTimeout(edDebounce);
     edDebounce = setTimeout(function () { noteRecommendNow("typing"); }, 800);
   }
@@ -3418,7 +3420,7 @@
       var alnum = code.replace(/[^A-Za-z0-9]/g, "");
       var parts = code.split(/[^A-Za-z0-9]+/).filter(Boolean);
       if (parts.length < 2 && alnum.length < 4) return;   /* 过短编号不建通用入口，防误报 */
-      var body = parts.map(function (p) { return p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }).join("[\\s\\-—–/]*");
+      var body = parts.map(function (p) { return p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }).join("[\\s\\-—–/／]*");
       out.push({ code: code, re: new RegExp(body, "g") });
     });
     return out;
@@ -3640,7 +3642,7 @@
     clone.innerHTML = note.body || "";
     var refSec = clone.querySelector(".ref-sec");
     if (refSec) refSec.parentNode.removeChild(refSec);
-    Array.prototype.slice.call(clone.querySelectorAll(".cite-ref")).forEach(function (m) {
+    Array.prototype.slice.call(clone.querySelectorAll(".cite-ref, .num-ref")).forEach(function (m) {
       m.parentNode.replaceChild(document.createTextNode(m.textContent), m);
     });
     var sections = [];
