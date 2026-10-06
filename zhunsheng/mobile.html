@@ -66,6 +66,11 @@
   .press { transition: transform .12s ease, opacity .12s ease; }
   .press:active { transform: scale(.94); opacity: .85; }
 
+  /* 笔记列表（v2.3 列表整理）：行内仅保留纵向滚动手势、抑制原生长按菜单；
+     置顶后短暂高亮（列表重排的位置反馈） */
+  #note-list .note-item { touch-action: pan-y; -webkit-touch-callout: none; }
+  .note-flash { border-color: #111 !important; box-shadow: 0 0 0 3px rgba(17,17,17,.10); }
+
   /* 编辑器工具栏按钮：不压缩、不换行（字始终在框内），容器整体折行 */
   .tb-btn { flex: 0 0 auto; white-space: nowrap; }
   /* 只裁剪、不可滚动的容器（overflow:clip，hidden 作旧浏览器降级）：
@@ -128,6 +133,41 @@
   @keyframes rcFlash { 0% { background: #F2F2F2; } 100% { background: #fff; } }
   .rc-flash { animation: rcFlash 1.5s ease; }
 
+  /* ---------- v2.2 新增：定高条带（整改 + 笔记统一 56px）/ 两级 chips 触控 / 编号识别 ---------- */
+  .rc-strip { position: relative; height: 56px; }
+  .strip-layer { position: absolute; inset: 0; display: flex; align-items: center; gap: 8px; padding: 0 12px; }
+  .strip-layer.hidden, .strip-pop.hidden { display: none; }
+  /* v2.3 空态占位（替代预填正文；随输入消失） */
+  #ed-title:empty::before { content: "未命名笔记"; color: #B9B9B9; }
+  #ed-body:empty::before { content: "开始记录…输入关键词可自动推荐条文"; color: #B9B9B9; }
+  .strip-pop { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 45; background: #fff;
+    border: 1px solid #E8E8E8; border-radius: 12px; box-shadow: 0 10px 28px rgba(0,0,0,.12); padding: 8px; }
+  .chip-touch { min-height: 56px; min-width: 56px; }
+  /* 编号识别（阅读视图）：弱色虚线下划线 + 小图标，与引用卡实底样式区分 */
+  .num-ref { color: #6A6A6A; border-bottom: 1px dashed #9A9A9A; cursor: pointer; }
+  .num-ref svg { width: 10px !important; height: 10px !important; vertical-align: -0.1em !important; margin-left: 1px !important; opacity: .65; }
+  .cite-inline[data-clause-id] { cursor: pointer; }
+  /* v2.2 引用规范（顺序编码制）：正文上标 [n] + 文末「引用规范」参考文献表；[S]=标准 [Z]=内部示例 */
+  .cite-ref { display: inline-block; min-width: 15px; text-align: center; background: #F5F5F5; color: #333333;
+    border: 1px solid #E8E8E8; border-radius: 3px; font-size: 10px; line-height: 14px; padding: 0 2px;
+    margin: 0 1px; vertical-align: super; cursor: pointer; user-select: none; font-family: ui-monospace, monospace; }
+  .cite-ref:hover { border-color: #9A9A9A; }
+  .ref-sec { margin-top: 20px; border-top: 1px dashed #D9D9D9; padding-top: 10px; }
+  .ref-sec-title { font-size: 12px; font-weight: 700; color: #111111; letter-spacing: .5px; margin-bottom: 6px; }
+  .ref-item { font-size: 11.5px; color: #333333; line-height: 1.7; padding: 2px 4px; border-radius: 4px; cursor: pointer; }
+  .ref-item:hover { background: #F5F5F5; }
+  .ref-sec-note { font-size: 10px; color: #9A9A9A; margin-top: 6px; }
+  .ref-flash { animation: ref-flash 1.1s ease-out; }
+  @keyframes ref-flash { 0% { background: #EFEFEF; } 100% { background: transparent; } }
+  .tb-toggle-off { opacity: .5; }
+  .note-exp-body h1 { font-size: 15px; font-weight: 700; margin: 6px 0 4px; }
+  .note-exp-body h2 { font-size: 13px; font-weight: 700; margin: 5px 0 3px; }
+  .note-exp-body p { margin: 3px 0; }
+  .note-exp-body ul, .note-exp-body ol { padding-left: 18px; margin: 3px 0; }
+  .note-exp-body ul { list-style: disc; }
+  .note-exp-body ol { list-style: decimal; }
+  .note-exp-body blockquote { border-left: 3px solid #C9CFCE; background: #F5F5F5; padding: 6px 10px; margin: 5px 0; }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
   }
@@ -172,7 +212,6 @@
               <div class="text-[11px] text-sub">v2.0 移动端原型 · 与桌面端数据同源</div>
             </div>
           </div>
-          <button id="btn-new-rectify-top" class="press w-9 h-9 rounded-xl btn-s flex items-center justify-center" title="新建整改记录"><svg class="ic"><use href="#i-gear"></use></svg></button>
           <button id="btn-new-note" class="press h-9 px-3 rounded-xl btn-p text-[12px] font-semibold">＋ 新建</button>
         </template>
         <template id="hdr-qa">
@@ -207,7 +246,18 @@
           <button id="btn-new-rectify" class="press mx-4 mb-2 h-12 shrink-0 rounded-xl btn-p text-[13px] font-bold flex items-center justify-center gap-1.5"><svg class="ic"><use href="#i-gear"></use></svg> ＋ 新建整改记录</button>
           <!-- 笔记列表 -->
           <div id="note-list" class="flex-1 overflow-y-auto px-4 pb-3"></div>
-          <p class="text-center text-[10px] text-sub/80 py-2 shrink-0">示例数据 · 点击笔记进入编辑，写作时可唤出 AI 辅助</p>
+          <p class="text-center text-[10px] text-sub/80 pt-2 shrink-0">笔记仅存本机浏览器（清除浏览数据即丢失）· 导出长图可存档，不含照片</p>
+          <p id="nb-hint" class="text-center text-[12px] text-sub pb-2 shrink-0">长按或点「⋯」可置顶、多选或删除</p>
+          <!-- 多选批量操作条（长按菜单「多选笔记」进入后显示） -->
+          <div id="ms-bar" class="hidden shrink-0 px-4 pb-2">
+            <div class="bg-ink text-white rounded-2xl shadow-lg px-3.5 py-2.5 flex items-center gap-2">
+              <div class="text-[12px] font-semibold flex-1 whitespace-nowrap">已选 <span id="ms-count">0</span> 篇</div>
+              <button id="ms-all" class="press h-8 px-2.5 rounded-lg bg-white/15 text-[12px] font-semibold">全选</button>
+              <button id="ms-pin" class="press h-8 px-2.5 rounded-lg bg-white/15 text-[12px] font-semibold">置顶</button>
+              <button id="ms-del" class="press h-8 px-2.5 rounded-lg bg-white/15 text-[12px] font-semibold" style="color:#F2B8B6">删除</button>
+              <button id="ms-cancel" class="press h-8 px-2.5 rounded-lg bg-white/15 text-[12px] font-semibold">退出</button>
+            </div>
+          </div>
         </section>
 
         <!-- 页面2：问答 -->
@@ -234,28 +284,28 @@
               <div class="text-[11px] font-semibold text-sub mb-2 tracking-wider">快捷问题</div>
               <div class="grid grid-cols-2 gap-2" id="quick-grid">
                 <button class="quick press text-left bg-white border border-line rounded-xl px-3 py-3 text-[13px] font-medium text-ink shadow-sm hover:border-deep-100">
-                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5"><svg class="ic"><use href="#i-hook"></use></svg> 塔筒吊装要求</span>吊装风速限制是多少？
+                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5"><svg class="ic"><use href="#i-factory"></use></svg> 混凝土养护（房建）</span>浇筑后养护有哪些要求？
                 </button>
                 <button class="quick press text-left bg-white border border-line rounded-xl px-3 py-3 text-[13px] font-medium text-ink shadow-sm hover:border-deep-100">
-                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5"><svg class="ic"><use href="#i-leaf"></use></svg> 叶片安装安全</span>叶片吊装注意什么？
+                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5"><svg class="ic"><use href="#i-wave"></use></svg> 管道闭水试验（市政）</span>闭水试验怎么做？
                 </button>
                 <button class="quick press text-left bg-white border border-line rounded-xl px-3 py-3 text-[13px] font-medium text-ink shadow-sm hover:border-deep-100">
-                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5"><svg class="ic"><use href="#i-factory"></use></svg> 升压站验收</span>交接试验有哪些项目？
+                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5"><svg class="ic"><use href="#i-bolt"></use></svg> 接地测试（机电）</span>接地电阻测试有什么要求？
                 </button>
                 <button class="quick press text-left bg-white border border-line rounded-xl px-3 py-3 text-[13px] font-medium text-ink shadow-sm hover:border-deep-100">
-                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5"><svg class="ic"><use href="#i-shield"></use></svg> 构件防腐施工</span>防腐施工环境要求？
+                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5"><svg class="ic"><use href="#i-gear"></use></svg> 高强螺栓（钢结构）</span>高强螺栓终拧怎么检查？
                 </button>
                 <button class="quick press text-left bg-white border border-line rounded-xl px-3 py-3 text-[13px] font-medium text-ink shadow-sm hover:border-deep-100">
-                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5"><svg class="ic"><use href="#i-wave"></use></svg> 海缆敷设</span>海缆埋深有什么要求？
+                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5"><svg class="ic"><use href="#i-hook"></use></svg> 塔筒吊装（风电）</span>吊装风速限制是多少？
                 </button>
                 <button class="quick press text-left bg-white border border-line rounded-xl px-3 py-3 text-[13px] font-medium text-ink shadow-sm hover:border-deep-100">
-                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5"><svg class="ic"><use href="#i-bolt"></use></svg> 基础沉桩</span>沉桩垂直度允许偏差？
-                </button>
-                <button class="quick press text-left bg-white border border-line rounded-xl px-3 py-3 text-[13px] font-medium text-ink shadow-sm hover:border-deep-100">
-                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5"><svg class="ic"><use href="#i-wind"></use></svg> 防台撤离</span>台风预警后如何撤离？
+                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5"><svg class="ic"><use href="#i-shield"></use></svg> 高处作业（安全）</span>安全带使用有哪些要求？
                 </button>
                 <button class="quick press text-left bg-white border border-line rounded-xl px-3 py-3 text-[13px] font-medium text-ink shadow-sm hover:border-deep-100">
                   <span class="block text-deep-600 text-[11px] font-semibold mb-0.5"><svg class="ic"><use href="#i-clipboard"></use></svg> 报验资料</span>监理报验要哪些资料？
+                </button>
+                <button class="quick press text-left bg-white border border-line rounded-xl px-3 py-3 text-[13px] font-medium text-ink shadow-sm hover:border-deep-100">
+                  <span class="block text-deep-600 text-[11px] font-semibold mb-0.5"><svg class="ic"><use href="#i-wind"></use></svg> 防台撤离</span>台风预警后如何撤离？
                 </button>
               </div>
             </div>
@@ -303,19 +353,19 @@
             </button>
             <div class="text-[11px] font-semibold text-sub tracking-wider mb-2 mt-4">昨天</div>
             <button class="his-item press w-full text-left bg-white border border-line rounded-xl px-4 py-3 mb-2 shadow-sm" data-his="1">
-              <div class="text-[14px] font-semibold text-ink">海上升压站交接试验有哪些项目？</div>
-              <div class="text-[12px] text-sub truncate mt-0.5">绝缘电阻测量、耐压试验、保护装置调试…</div>
+              <div class="text-[14px] font-semibold text-ink">变电房接地电阻测试有哪些要求？</div>
+              <div class="text-[12px] text-sub truncate mt-0.5">接地电阻值必须符合设计要求，测试记录应完整…</div>
               <div class="text-[11px] text-sub/70 mt-1">16:40 · 4 条消息</div>
             </button>
             <div class="text-[11px] font-semibold text-sub tracking-wider mb-2 mt-4">更早</div>
             <button class="his-item press w-full text-left bg-white border border-line rounded-xl px-4 py-3 mb-2 shadow-sm" data-his="2">
-              <div class="text-[14px] font-semibold text-ink">叶片吊装为什么必须用专用吊带？</div>
-              <div class="text-[12px] text-sub truncate mt-0.5">专用吊带与叶片曲率贴合，避免应力集中…</div>
+              <div class="text-[14px] font-semibold text-ink">高强螺栓终拧后怎么检查？</div>
+              <div class="text-[12px] text-sub truncate mt-0.5">按节点数抽查 10% 且不少于 2 个节点做扭矩检查…</div>
               <div class="text-[11px] text-sub/70 mt-1">07-15 · 2 条消息</div>
             </button>
             <button class="his-item press w-full text-left bg-white border border-line rounded-xl px-4 py-3 mb-2 shadow-sm" data-his="3">
-              <div class="text-[14px] font-semibold text-ink">台风预警后施工船舶如何撤离？</div>
-              <div class="text-[12px] text-sub truncate mt-0.5">橙色预警：施工船舶撤离至避风锚地…</div>
+              <div class="text-[14px] font-semibold text-ink">污水管道闭水试验怎么做？</div>
+              <div class="text-[12px] text-sub truncate mt-0.5">必须经严密性试验合格后方可投入运行…</div>
               <div class="text-[11px] text-sub/70 mt-1">07-02 · 4 条消息</div>
             </button>
           </div>
@@ -348,24 +398,52 @@
           <button id="btn-editor-back" class="press w-9 h-9 rounded-xl bg-white border border-line flex items-center justify-center text-ink shadow-sm">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           </button>
-          <div class="text-[15px] font-bold text-ink flex-1">编辑笔记</div>
+          <div id="ed-head-nb" class="text-[15px] font-bold text-ink flex-1 truncate">编辑笔记</div>
+          <button id="btn-note-export" class="press h-9 px-3 rounded-xl btn-s text-[12px] font-semibold flex items-center gap-1"><svg class="ic"><use href="#i-save"></use></svg> 导出</button>
           <button id="btn-ai-assist" class="press h-9 px-3 rounded-xl btn-s text-[12px] font-semibold"><svg class="ic"><use href="#i-spark"></use></svg> AI 助手</button>
         </div>
         <div id="ed-toolbar" class="flex flex-wrap items-center gap-1.5 px-3 pb-2 shrink-0">
-          <button class="tb-btn press h-8 px-2.5 rounded-md text-[12px] text-sub bg-white border border-line font-mono" data-block="H1">H1</button>
-          <button class="tb-btn press h-8 px-2.5 rounded-md text-[12px] text-sub bg-white border border-line font-mono" data-block="H2">H2</button>
-          <button class="tb-btn press h-8 px-2.5 rounded-md text-[12px] text-sub bg-white border border-line" data-block="P">正文</button>
           <button class="tb-btn press w-8 h-8 rounded-md text-[13px] font-bold text-sub bg-white border border-line" data-cmd="bold">B</button>
           <button class="tb-btn press w-8 h-8 rounded-md text-[13px] italic text-sub bg-white border border-line" data-cmd="italic">I</button>
           <button class="tb-btn press w-8 h-8 rounded-md text-[13px] underline text-sub bg-white border border-line" data-cmd="underline">U</button>
           <button class="tb-btn press h-8 px-2 rounded-md text-[12px] text-sub bg-white border border-line" data-cmd="insertUnorderedList">• 列表</button>
-          <button class="tb-btn press h-8 px-2 rounded-md text-[12px] text-sub bg-white border border-line flex items-center gap-1" data-block="BLOCKQUOTE"><svg class="ic"><use href="#i-quote"></use></svg> 引用</button>
+          <button class="tb-btn press h-8 px-2 rounded-md text-[12px] text-sub bg-white border border-line" data-cmd="insertOrderedList">1. 列表</button>
           <button id="btn-insert-clause" class="press h-8 px-2.5 rounded-md text-[12px] font-semibold btn-s shrink-0 flex items-center gap-1"><svg class="ic"><use href="#i-book"></use></svg> 插入规范引用</button>
+          <button id="btn-rec-toggle" class="tb-toggle press h-8 px-2.5 rounded-md text-[12px] font-semibold bg-white border border-line text-deep-700 shrink-0 flex items-center gap-1"><svg class="ic"><use href="#i-search"></use></svg> 条文推荐</button>
+          <button id="btn-read-view" class="press h-8 px-2.5 rounded-md text-[12px] font-semibold btn-s shrink-0">阅读视图</button>
+        </div>
+        <!-- v2.2 条文推荐条带：位于滚动容器之外、编辑器工具条下方，固定高度 56px（未命中显示浅灰占位） -->
+        <div id="ed-strip" class="px-3 pb-2 shrink-0">
+          <div class="rc-strip border border-line rounded-xl bg-white">
+            <div id="ed-strip-idle" class="strip-layer text-[12px] text-sub/80 select-none">输入关键词，自动推荐条文</div>
+            <div id="ed-strip-loading" class="strip-layer hidden">
+              <div class="skeleton-line h-3 flex-1"></div><div class="skeleton-line h-3 w-20"></div>
+            </div>
+            <div id="ed-strip-empty" class="strip-layer hidden text-[12px] text-sub/80 select-none">未关联条文，可手动从规范库引用</div>
+            <div id="ed-strip-hit" class="strip-layer hidden">
+              <span id="ed-strip-code" class="font-mono text-[11px] font-bold text-deep-700 shrink-0"></span>
+              <span id="ed-strip-snap" class="text-[11px] text-sub truncate flex-1 min-w-0"></span>
+              <button id="ed-strip-more" class="press h-9 px-2 rounded-lg btn-s text-[11px] font-semibold shrink-0 whitespace-nowrap">共 0 条</button>
+              <button id="ed-strip-insert" class="press h-9 px-2.5 rounded-lg btn-p text-[11px] font-semibold shrink-0">插入</button>
+              <button id="ed-strip-close" class="press w-8 h-8 shrink-0 rounded-full bg-paper text-sub text-[14px] leading-none" title="关闭本次推荐">×</button>
+            </div>
+            <div id="ed-strip-pop" class="strip-pop hidden"></div>
+          </div>
         </div>
         <div class="flex-1 overflow-y-auto">
           <div class="px-5 py-4">
             <div id="ed-title" contenteditable="true" spellcheck="false" class="select-text text-[20px] font-bold text-ink outline-none border-b-2 border-transparent focus:border-line pb-2 mb-3"></div>
             <div id="ed-body" contenteditable="true" spellcheck="false" class="select-text text-[14px]"></div>
+            <!-- v2.3 附件区（轻量）：与整改照片同构（缩略图+图注+≤6 张+时间角标+全屏查看） -->
+            <div id="ed-photos-wrap" class="mt-6 border-t border-line pt-3">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-[12px] font-bold text-ink">现场照片</span>
+                <span id="ed-photo-count" class="text-[10px] text-sub font-mono">0/6</span>
+              </div>
+              <div id="ed-photo-grid" class="grid grid-cols-3 gap-2"></div>
+              <p class="text-[10px] text-sub/80 mt-2 leading-relaxed">照片经压缩处理（长边 ≤1600px · 单张 ≤300KB），仅作现场留痕参考</p>
+              <input id="ed-photo-input" type="file" accept="image/jpeg,image/png,image/webp" multiple class="hidden">
+            </div>
           </div>
         </div>
         <div class="flex items-center gap-3 px-5 h-9 border-t border-line text-[11px] text-sub shrink-0">
@@ -404,15 +482,7 @@
               <button class="ai-ins press mt-2 text-[11px] font-semibold text-deep-700 bg-white border border-line rounded-md px-2.5 py-1" data-insert="window">插入到笔记</button>
             </div>
 
-            <!-- 提示卡 ② 规范关联 -->
-            <div class="ai-card press bg-mist border border-line rounded-lg p-3 mb-2.5">
-              <div class="flex items-center gap-1.5 text-[12px] font-bold text-ink"><svg class="ic"><use href="#i-book"></use></svg> 规范关联</div>
-              <p class="text-[12px] text-sub leading-relaxed mt-1.5">检测到正文提及「<b class="text-ink">力矩紧固</b>」，已关联：</p>
-              <div class="title-block rounded-sm bg-white mt-1.5" data-label="关联条文" style="--tc:#1F9D6B">
-                <div class="tb-cell font-mono text-[11px] text-ok font-bold">GB/T 19568-2025 · 风能发电系统 风力发电机组装配和安装规范 · 8 机组安装</div>
-              </div>
-              <button class="ai-ins press mt-2 text-[11px] font-semibold text-deep-700 bg-white border border-line rounded-md px-2.5 py-1" data-insert="clause">插入引用</button>
-            </div>
+            <!-- 提示卡 ②（原「规范关联」）已并入编辑器「条文推荐」条带：v2.2 起条文推荐仅此一处入口，不另设第二套推荐 UI -->
 
             <!-- 提示卡 ③ 资料补全 -->
             <div class="ai-card press bg-mist border border-line rounded-lg p-3 mb-2.5">
@@ -421,15 +491,8 @@
               <button class="ai-ins press mt-2 text-[11px] font-semibold text-deep-700 bg-white border border-line rounded-md px-2.5 py-1" data-insert="report">插入报验清单</button>
             </div>
 
-            <!-- AI 写作工具 -->
-            <div class="bg-paper border border-line rounded-lg p-3">
-              <div class="text-[12px] font-bold mb-2 flex items-center gap-1.5"><svg class="ic"><use href="#i-spark"></use></svg> AI 写作工具</div>
-              <div class="flex flex-col gap-1.5">
-                <button id="btn-outline" class="press text-left text-[12px] bg-white border border-line hover:bg-[#F0F0F0] rounded-md px-3 py-2"><svg class="ic"><use href="#i-compass"></use></svg> 生成日志大纲</button>
-                <button id="btn-continue" class="press text-left text-[12px] bg-white border border-line hover:bg-[#F0F0F0] rounded-md px-3 py-2"><svg class="ic"><use href="#i-pen"></use></svg> 续写「明日计划」</button>
-                <button id="btn-polish" class="press text-left text-[12px] bg-white border border-line hover:bg-[#F0F0F0] rounded-md px-3 py-2"><svg class="ic"><use href="#i-wand"></use></svg> 润色「问题记录」</button>
-              </div>
-            </div>
+            <!-- 注：v2.3 起移除三个泛化「AI 写作工具」入口（09 报告 A8：润色失真风险，能力集外）；
+                 保留窗口期回顾与资料补全（PRD 5.5 P1 能力集内），插入内容恒带（示例）标注 -->
 
             <!-- 内嵌问答 → 存为笔记 -->
             <div class="mt-3">
@@ -444,6 +507,110 @@
                 <button id="ai-qa-save" class="press mt-2 w-full h-8 rounded-md btn-p text-[12px] font-semibold"><svg class="ic"><use href="#i-save"></use></svg> 存为笔记</button>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= v2.3 新建笔记：模板一级选择（选模板即选定所属笔记本，不做模板库页） ================= -->
+      <div id="tpl-sheet-bg" class="absolute inset-0 bg-black/45 z-[55] hidden"></div>
+      <div id="tpl-sheet" class="absolute inset-x-0 bottom-0 z-[60] bg-white rounded-t-3xl translate-y-full transition-transform duration-300">
+        <div class="flex justify-center pt-2.5 pb-1"><div class="w-10 h-1 rounded-full bg-line"></div></div>
+        <div class="px-4 pb-5">
+          <div class="text-[15px] font-bold text-ink">新建笔记</div>
+          <div class="text-[11px] text-sub mt-0.5">选模板即存入对应笔记本；模板只提供空骨架，不预填内容</div>
+          <div class="mt-3 space-y-1.5">
+            <button data-tpl="空白" class="tpl-row press w-full text-left bg-white border border-line rounded-xl px-3.5 py-2.5">
+              <div class="text-[13px] font-semibold text-ink">空白笔记</div>
+              <div id="tpl-blank-desc" class="text-[11px] text-sub mt-0.5">不套用模板，存入当前笔记本</div>
+            </button>
+            <button data-tpl="施工日志" class="tpl-row press w-full text-left bg-white border border-line rounded-xl px-3.5 py-2.5">
+              <div class="text-[13px] font-semibold text-ink">施工日志</div>
+              <div class="text-[11px] text-sub mt-0.5">气象 / 部位 / 班组交底 / 当日工序 / 问题记录 / 明日计划</div>
+            </button>
+            <button data-tpl="施工记录" class="tpl-row press w-full text-left bg-white border border-line rounded-xl px-3.5 py-2.5">
+              <div class="text-[13px] font-semibold text-ink">施工记录</div>
+              <div class="text-[11px] text-sub mt-0.5">事由 / 部位时间 / 涉及条文位 / 处理情况</div>
+            </button>
+            <button data-tpl="规范摘录" class="tpl-row press w-full text-left bg-white border border-line rounded-xl px-3.5 py-2.5">
+              <div class="text-[13px] font-semibold text-ink">规范摘录</div>
+              <div class="text-[11px] text-sub mt-0.5">条文位 / 摘录要点</div>
+            </button>
+            <button data-tpl="会议纪要" class="tpl-row press w-full text-left bg-white border border-line rounded-xl px-3.5 py-2.5">
+              <div class="text-[13px] font-semibold text-ink">会议纪要</div>
+              <div class="text-[11px] text-sub mt-0.5">期数 / 时间地点 / 参会范围 / 决议事项 / 待办责任人</div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 长按操作菜单（移动端：列表项长按唤起；置顶 / 多选 / 删除） -->
+      <div id="act-sheet-bg" class="absolute inset-0 bg-black/45 z-[55] hidden"></div>
+      <div id="act-sheet" class="absolute inset-x-0 bottom-0 z-[60] bg-white rounded-t-3xl translate-y-full transition-transform duration-300">
+        <div class="flex justify-center pt-2.5 pb-1"><div class="w-10 h-1 rounded-full bg-line"></div></div>
+        <div class="px-4 pb-4">
+          <div id="act-sheet-title" class="text-[12px] text-sub px-1.5 pb-2 truncate">—</div>
+          <button id="act-pin" class="press w-full flex items-center gap-2.5 px-3.5 py-3 rounded-xl bg-white border border-line text-[14px] font-semibold text-ink">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" class="text-org shrink-0"><path d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z"/></svg>
+            <span id="act-pin-label">置顶笔记</span>
+          </button>
+          <button id="act-ms" class="press w-full flex items-center gap-2.5 px-3.5 py-3 rounded-xl bg-white border border-line text-[14px] font-semibold text-ink mt-1.5">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sub shrink-0"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>
+            多选笔记
+          </button>
+          <button id="act-del" class="press w-full flex items-center gap-2.5 px-3.5 py-3 rounded-xl bg-white border border-line text-[14px] font-semibold mt-1.5" style="color:#C0504E">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            删除笔记
+          </button>
+          <button id="act-cancel" class="press w-full h-11 mt-2 rounded-xl bg-paper text-[13px] font-semibold text-sub">取消</button>
+        </div>
+      </div>
+
+      <!-- 删除确认（长按菜单/多选进入；单篇与批量共用，标题动态切换） -->
+      <div id="del-sheet-bg" class="absolute inset-0 bg-black/45 z-[55] hidden"></div>
+      <div id="del-sheet" class="absolute inset-x-0 bottom-0 z-[60] bg-white rounded-t-3xl translate-y-full transition-transform duration-300">
+        <div class="flex justify-center pt-2.5 pb-1"><div class="w-10 h-1 rounded-full bg-line"></div></div>
+        <div class="px-5 pb-5">
+          <div id="del-sheet-head" class="text-[14px] font-bold text-ink">删除这篇笔记？</div>
+          <div id="del-sheet-title" class="text-[12px] text-sub mt-1 leading-snug">—</div>
+          <div class="text-[11px] text-sub/80 mt-1.5">删除后 5 秒内可撤销；若含未导出的现场记录，建议先导出留档。</div>
+          <div class="flex gap-2 mt-3.5">
+            <button id="del-cancel" class="press flex-1 h-10 rounded-xl bg-white border border-line text-[13px] font-semibold text-ink">取消</button>
+            <button id="del-confirm" class="press flex-1 h-10 rounded-xl text-[13px] font-semibold text-white" style="background:#C0504E">删除</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 照片全屏查看（笔记附件与整改照片共用；角标 = 压缩时保留的拍摄/文件时间） -->
+      <div id="pv-overlay" class="absolute inset-0 z-[65] hidden" style="background:rgba(0,0,0,.92)">
+        <div class="absolute top-0 inset-x-0 flex items-center gap-2 px-3 pt-3 pb-2 z-10">
+          <div id="pv-time" class="text-[11px] text-white/80 font-mono flex-1 truncate"></div>
+          <button id="pv-close" class="press w-9 h-9 rounded-full bg-white/15 text-white text-[16px] leading-none">✕</button>
+        </div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+          <img id="pv-img" class="max-w-full max-h-full rounded-lg" src="" alt="">
+        </div>
+        <div id="pv-cap" class="absolute bottom-0 inset-x-0 px-5 pb-6 pt-3 text-[12px] text-white/90"></div>
+      </div>
+
+      <!-- ================= v2.2 手动插入规范引用：规范库选择器（8 组 42 本 · 跨分类搜索） ================= -->
+      <div id="picker-overlay" class="absolute inset-0 z-[45] bg-mist flex flex-col transition-transform duration-300" style="transform:translateX(100%)">
+        <div class="flex items-center gap-2 px-3 pt-3 pb-2 shrink-0">
+          <button id="btn-picker-back" class="press w-11 h-11 rounded-xl bg-white border border-line flex items-center justify-center text-ink shadow-sm">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <div class="flex-1 min-w-0">
+            <div class="text-[15px] font-bold text-ink leading-tight">插入规范引用</div>
+            <div id="picker-sub" class="text-[11px] text-sub truncate">从规范库选择条文 · 插入到光标位置</div>
+          </div>
+        </div>
+        <div class="px-4 pb-2 shrink-0">
+          <input id="picker-search" class="w-full h-11 bg-white border border-line rounded-xl px-3 text-[13px] text-ink outline-none focus:border-deep-600" placeholder="搜索规范名称、编号或关键词（跨分类）">
+        </div>
+        <div id="picker-list" class="flex-1 overflow-y-auto px-4 pb-4"></div>
+        <div id="picker-empty" class="hidden flex-1 items-center justify-center px-8 pb-16">
+          <div class="text-center">
+            <div class="w-12 h-12 mx-auto rounded-2xl bg-white border border-line flex items-center justify-center text-sub mb-3"><svg class="ic"><use href="#i-search"></use></svg></div>
+            <div class="text-[13px] text-sub">未找到相关规范，试试换个关键词</div>
           </div>
         </div>
       </div>
@@ -474,6 +641,8 @@
           </div>
           <button id="sheet-copy" class="press mt-4 w-full btn-p rounded-xl py-3 text-[14px] font-semibold">复制条文</button>
           <p class="text-center text-[10px] text-sub/80 mt-2.5">原型演示数据 · 正式条文以规范原文为准</p>
+          <p class="text-center text-[10px] text-sub/80 mt-1">条文版权归发布机构所有，仅供个人工作参考</p>
+          <p id="sheet-rec-hint" class="hidden text-center text-[10px] text-warn mt-1">由正文编号自动识别，仅作定位，非产品推荐或核验</p>
         </div>
       </div>
 
@@ -516,18 +685,36 @@
               <input id="rc-source-other" maxlength="20" placeholder="请补充来源说明（20 字内）" class="w-full bg-mist border border-line rounded-xl px-3 py-2.5 text-[12px] text-ink outline-none">
             </div>
             <div class="text-[11px] font-semibold text-sub mt-3 mb-1.5">问题部位 <span class="text-danger">*</span></div>
-            <div id="rc-loc-chips" class="flex flex-wrap gap-2"></div>
-            <input id="rc-location" maxlength="60" placeholder="如：2# 机位塔筒吊装区（chip 快选或手动输入）" class="mt-2 w-full bg-mist border border-line rounded-xl px-3 py-2.5 text-[12px] text-ink outline-none">
+            <div class="flex items-start gap-2">
+              <div id="rc-loc-spec" class="flex flex-wrap gap-2 flex-1 min-w-0"></div>
+              <button id="rc-chip-reset" class="chip-touch press px-3 rounded-xl border border-line bg-white text-[11px] font-semibold text-sub shrink-0">重置</button>
+            </div>
+            <div id="rc-loc-level" class="flex flex-wrap gap-2 mt-2"></div>
+            <input id="rc-location" maxlength="60" placeholder="如：2# 机位塔筒吊装区（chip 快选或手动输入）" class="mt-2 w-full h-14 bg-mist border border-line rounded-xl px-3 text-[12px] text-ink outline-none">
             <div class="flex items-center justify-between mt-3 mb-1.5">
               <span class="text-[11px] font-semibold text-sub">问题描述 <span class="text-danger">*</span></span>
               <span id="rc-desc-count" class="text-[10px] text-sub font-mono">0/500</span>
             </div>
             <textarea id="rc-desc" rows="3" maxlength="500" placeholder="描述发现的问题（≤500 字）" class="w-full bg-mist border border-line rounded-xl px-3 py-2.5 text-[12px] text-ink outline-none resize-none"></textarea>
             <div class="flex items-center justify-between mt-2">
-              <button id="rc-rec-btn" class="press h-8 px-3 rounded-lg btn-s text-[11px] font-semibold"><svg class="ic"><use href="#i-search"></use></svg> 找依据</button>
+              <button id="rc-rec-btn" class="press h-14 px-4 rounded-xl btn-s text-[12px] font-semibold"><svg class="ic"><use href="#i-search"></use></svg> 找依据</button>
               <span class="text-[10px] text-sub/80">输入描述后自动推荐</span>
             </div>
-            <div id="rc-rec-zone" class="mt-2 min-h-[64px]"></div>
+            <!-- v2.2 条文推荐条带：定高常驻 56px，推荐出现/消失不引起表单位移；空推荐与未输入为两种固定语境 -->
+            <div id="rc-rec-zone" class="rc-strip mt-2 border border-line rounded-xl bg-white">
+              <div id="rc-strip-idle" class="strip-layer text-[12px] text-sub/80 select-none">输入问题描述，自动推荐处置依据</div>
+              <div id="rc-strip-loading" class="strip-layer hidden">
+                <div class="skeleton-line h-3 flex-1"></div><div class="skeleton-line h-3 w-20"></div>
+              </div>
+              <div id="rc-strip-empty" class="strip-layer hidden text-[12px] text-sub/80 select-none">未关联条文，可手动从规范库引用</div>
+              <div id="rc-strip-hit" class="strip-layer hidden">
+                <span id="rc-strip-code" class="font-mono text-[11px] font-bold text-deep-700 shrink-0"></span>
+                <span id="rc-strip-snap" class="text-[11px] text-sub truncate flex-1 min-w-0"></span>
+                <button id="rc-strip-more" class="press h-9 px-2 rounded-lg btn-s text-[11px] font-semibold shrink-0 whitespace-nowrap">共 0 条</button>
+                <button id="rc-strip-adopt" class="press h-9 px-2.5 rounded-lg btn-p text-[11px] font-semibold shrink-0">引用</button>
+              </div>
+              <div id="rc-strip-pop" class="strip-pop hidden"></div>
+            </div>
             <div class="mt-2.5">
               <div class="text-[11px] font-semibold text-sub mb-1.5">处置依据（条文）</div>
               <div id="rc-clauses" class="space-y-2"></div>
@@ -536,9 +723,9 @@
             <div id="rc-sev-chips" class="flex flex-wrap gap-2"></div>
             <div class="text-[11px] font-semibold text-sub mt-3 mb-1.5">整改期限</div>
             <div class="flex items-center gap-2">
-              <input id="rc-deadline" type="date" class="flex-1 bg-mist border border-line rounded-xl px-3 py-2.5 text-[12px] text-ink outline-none">
-              <button class="rc-deadline-quick press px-2.5 h-10 rounded-xl bg-white border border-line text-[11px] font-semibold text-deep-700" data-days="3">+3 天</button>
-              <button class="rc-deadline-quick press px-2.5 h-10 rounded-xl bg-white border border-line text-[11px] font-semibold text-deep-700" data-days="7">+7 天</button>
+              <input id="rc-deadline" type="date" class="flex-1 h-14 bg-mist border border-line rounded-xl px-3 text-[12px] text-ink outline-none">
+              <button class="rc-deadline-quick press chip-touch px-3 rounded-xl bg-white border border-line text-[11px] font-semibold text-deep-700" data-days="3">+3 天</button>
+              <button class="rc-deadline-quick press chip-touch px-3 rounded-xl bg-white border border-line text-[11px] font-semibold text-deep-700" data-days="7">+7 天</button>
             </div>
             <div class="text-[11px] font-semibold text-sub mt-3 mb-1.5">责任人</div>
             <input id="rc-owner" maxlength="20" placeholder="责任人姓名（≤20 字）" class="w-full bg-mist border border-line rounded-xl px-3 py-2.5 text-[12px] text-ink outline-none">
@@ -609,7 +796,10 @@
       </div>
 
       <!-- Toast -->
-      <div id="toast" class="absolute bottom-28 left-1/2 -translate-x-1/2 bg-ink text-white text-[12px] px-4 py-2 rounded-full opacity-0 transition-opacity duration-300 z-[70] pointer-events-none">已复制</div>
+      <div id="toast" class="absolute bottom-28 left-1/2 -translate-x-1/2 bg-ink text-white text-[12px] px-4 py-2 rounded-full opacity-0 transition-opacity duration-300 z-[70] pointer-events-none flex items-center gap-3 max-w-[88%]">
+        <span id="toast-msg" class="truncate">已复制</span>
+        <button id="toast-undo" class="hidden shrink-0 font-bold text-[12px]" style="color:#9CC7FF">撤销</button>
+      </div>
     </div>
   </div>
 
@@ -645,8 +835,7 @@
     header.innerHTML = "";
     if (name === "notes") {
       header.appendChild(hdrNotesTpl.cloneNode(true));
-      document.getElementById("btn-new-note").addEventListener("click", newNote);
-      document.getElementById("btn-new-rectify-top").addEventListener("click", function () { openRectify(null); });
+      document.getElementById("btn-new-note").addEventListener("click", openTplSheet);
     } else if (name === "qa") {
       header.appendChild(hdrQaTpl.cloneNode(true));
       document.getElementById("hdr-lib").addEventListener("click", function () { goTo("library"); });
@@ -670,43 +859,147 @@
     t.addEventListener("click", function () { goTo(t.dataset.tab); });
   });
 
-  /* ---------- 笔记数据（与桌面端一致，教学示例） ---------- */
+  /* ================= v2.2 本地持久化层 =================
+     单库单表（kv）；双端隔离（移动端 zhunsheng-kb-mobile / 桌面端 zhunsheng-kb-desktop）。
+     每次操作独立 open→tx→close，并挂 versionchange 关闭——保证测试 deleteDatabase 不被阻塞。
+     读取失败或不可用时降级内存模式（仍可全流程演示，刷新不保留）+ toast 提示。 */
+  var KB_DB = "zhunsheng-kb-mobile";
+  var KB_KEYS = ["notes", "rectify", "chips", "events", "note_photos", "op_log"];
+  var kbOK = true;
+  var kbQuotaHit = false;   /* 一旦命中配额上限即停止后续持久化写入，避免 quota 提示循环 */
+  var kbMem = {};
+  var kbTimers = {};
+
+  function kbOpen() {
+    return new Promise(function (resolve, reject) {
+      var rq, settled = false;
+      var fail = function (e) { if (!settled) { settled = true; reject(e || new Error("idb error")); } };
+      try { rq = indexedDB.open(KB_DB, 1); } catch (e) { fail(e); return; }
+      rq.onupgradeneeded = function () { rq.result.createObjectStore("kv"); };
+      rq.onsuccess = function () {
+        if (settled) { rq.result.close(); return; }
+        settled = true;
+        var db = rq.result;
+        db.onversionchange = function () { db.close(); };
+        resolve(db);
+      };
+      rq.onerror = function () { fail(rq.error); };
+      rq.onblocked = function () { fail(new Error("idb blocked")); };
+      setTimeout(function () { fail(new Error("idb timeout")); }, 3000);
+    });
+  }
+  function kbGetAll(keys) {
+    return kbOpen().then(function (db) {
+      return new Promise(function (resolve) {
+        var out = {}, tx = db.transaction("kv", "readonly"), st = tx.objectStore("kv");
+        keys.forEach(function (k) {
+          var g = st.get(k);
+          g.onsuccess = function () { out[k] = g.result; };
+        });
+        tx.oncomplete = function () { db.close(); resolve(out); };
+        tx.onabort = tx.onerror = function () { db.close(); resolve(null); };
+      });
+    });
+  }
+  function kbSet(key, val) {
+    if (!kbOK) { kbMem[key] = val; return Promise.resolve(false); }
+    return kbOpen().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction("kv", "readwrite");
+        tx.objectStore("kv").put(val, key);
+        tx.oncomplete = function () { db.close(); resolve(true); };
+        tx.onabort = tx.onerror = function () { db.close(); reject(tx.error || new Error("idb tx")); };
+      });
+    }).catch(function (e) {
+      if (e && /quota/i.test(String(e.name || ""))) {
+        if (!kbQuotaHit) { kbQuotaHit = true; showToast("本地存储空间不足，请删除部分记录的照片或先导出后清理"); track("db_quota", {}); }
+      }
+      throw e;
+    });
+  }
+  function persist(key, val, delay) {   /* 防抖合并写入（高频输入不致打爆事务） */
+    kbMem[key] = val;
+    if (kbQuotaHit) return;
+    clearTimeout(kbTimers[key]);
+    kbTimers[key] = setTimeout(function () { kbSet(key, val).catch(function () {}); }, delay == null ? 250 : delay);
+  }
+
+  /* 操作审计日志（v2.3 列表整理）：删除/置顶（含批量与撤销）写持久日志，刷新不灭失——
+     呼应「留痕产品不销毁历史」与 PRD 第 8 章导出承诺（评审 13 号报告 🔴-5）。 */
+  var opLog = [];
+  function appendOpLog(op, ids, extra) {
+    /* 删除场景笔记已不在：允许调用方通过 extra.titles 传入删除前标题快照 */
+    var titles = (extra && Array.isArray(extra.titles)) ? extra.titles : ids.map(function (id) {
+      var n = findNote(id);
+      return n ? noteDisplayTitle(n) : id;
+    });
+    var ev = { ts: Date.now(), op: op, ids: ids.slice(), titles: titles.slice(), platform: "mobile" };
+    if (extra) Object.keys(extra).forEach(function (k) { if (k !== "titles") ev[k] = extra[k]; });
+    opLog.push(ev);
+    if (opLog.length > 800) opLog.shift();   /* 上限保护；不随会话或短上限丢弃 */
+    persist("op_log", opLog);
+  }
+
+  /* ---------- 笔记数据（v2.2：覆盖房建/市政/机电/钢结构/风电五专业；全部虚构，单位/项目/人名均为代称） ---------- */
   var NOTES = {
     "施工日志": [
-      { id: "n1", title: "2026-08-25 某海上风电项目施工日志", time: "今天 19:02", tag: "日志",
-        body: '<h1>2026-08-25 施工日志 · 2# 机位</h1>' +
-              '<p><b>【气象】</b>东南风 3–4 级，上午风速 6–8m/s，午后阵风 11m/s；气温 29–33℃。</p>' +
+      { id: "n1", title: "2026-08-25 施工日志 · 3# 楼二层（房建·示例）", time: "今天 19:02", tag: "日志", cites: [], pinned: true,
+        body: '<p><b>【气象】</b>晴，东南风 2–3 级，气温 29–33℃。</p>' +
               '<p><b>【今日内容】</b></p><ol>' +
-              '<li>08:00 班前安全交底，2# 机位塔筒吊装准备；</li>' +
-              '<li>09:10–11:40 完成第 2 段塔筒吊装，连接螺栓力矩紧固至设计值；</li>' +
-              '<li>14:00 因风速超限暂停吊装，转室内整理报验资料。</li></ol>' +
+              '<li>08:00 班前安全交底，二层梁板混凝土浇筑准备；</li>' +
+              '<li>09:30–12:00 完成二层梁板混凝土浇筑（C30），留置试块 3 组；</li>' +
+              '<li>15:00 巡检发现混凝土浇筑后未及时保湿养护，安排作业队覆盖土工布并洒水，当日闭环。</li></ol>' +
               '<p><b>【问题记录】</b></p><ul>' +
-              '<li>2# 机位基础法兰面局部锈斑，已除锈处理，待复验。</li></ul>' +
-              '<p><b>【明日计划】</b>完成第 3 段塔筒吊装 + 检验批报验。</p>' },
-      { id: "n2", title: "2026-08-24 施工日志", time: "昨天 18:47", tag: "日志",
-        body: '<h1>2026-08-24 施工日志 · 2# 机位</h1><p><b>【今日内容】</b></p><ol><li>完成塔筒第 1 段吊装与法兰面密封涂胶；</li><li>高压电缆提升至塔筒顶部。</li></ol><p><b>【问题记录】</b>无。</p>' },
-      { id: "n3", title: "2026-08-23 施工日志", time: "08-23 18:30", tag: "日志",
-        body: '<h1>2026-08-23 施工日志 · 2# 机位</h1><p><b>【今日内容】</b></p><ol><li>基础法兰复测，标高与平整度合格；</li><li>吊装设备进场布置。</li></ol>' }
+              '<li>梁板混凝土养护不到位（未保湿），已现场整改，次日复查覆盖情况。</li></ul>' +
+              '<p><b>【明日计划】</b>养护巡查 + 二层墙柱钢筋隐蔽验收。</p>' },
+      { id: "n2", title: "2026-08-24 施工日志 · 滨湾路 K1+200（市政·示例）", time: "昨天 18:47", tag: "日志", cites: [],
+        body: '<p><b>【今日内容】</b></p><ol><li>雨水管道 D800 段安装 42m，检查井砌筑 1 座；</li>' +
+              '<li>管道闭水试验未做（上游检查井养护未到期），已报监理顺延至 8-26；</li>' +
+              '<li>道路基层摊铺 300m²，压实度自检合格。</li></ol>' +
+              '<p><b>【问题记录】</b>闭水试验顺延需同步调整验收计划，已更新台账。</p>' },
+      { id: "n3", title: "2026-08-23 施工日志 · 变电房（机电·示例）", time: "08-23 18:30", tag: "日志", cites: [],
+        body: '<p><b>【今日内容】</b></p><ol><li>变电房接地装置安装完成，扁钢搭接焊接 18 处；</li>' +
+              '<li>接地电阻测试未做（测试仪未到位），待仪器校准后补测并记录；</li>' +
+              '<li>电缆桥架安装完成 60%。</li></ol>' }
     ],
     "施工记录": [
-      { id: "n4", title: "首桩典型施工总结（示例）", time: "08-20", tag: "记录",
-        body: '<h1>首桩典型施工总结（示例）</h1><p>沉桩垂直度偏差 ≤ 1%，桩顶标高与贯入度双控，首桩施工全过程记录完整，形成典型施工样板。</p>' },
-      { id: "n5", title: "主机吊装关键控制点", time: "08-18", tag: "记录",
-        body: '<h1>主机吊装关键控制点</h1><p>吊装前完成齿轮箱补油、发电机止转工装拆卸；主机与塔筒法兰对接后螺栓按规定力矩紧固；风速超限立即停止作业。</p>' }
+      { id: "n4", title: "门式刚架螺栓紧固记录（钢结构·示例）", time: "08-20", tag: "记录", cites: [],
+        body: '<p>门式刚架主梁安装完成，连接节点高强螺栓未终拧（初拧已完成）；计划次日完成终拧并做扭矩检查，按节点数 10% 抽查并留记录。</p>' },
+      { id: "n5", title: "塔筒吊装关键控制点（风电·示例）", time: "08-18", tag: "记录", cites: [],
+        body: '<p>吊装前确认气象窗口；塔筒吊装作业风速超限时立即停吊——今日 10:30 实测阵风 11m/s，现场已停吊并撤出吊装区。连接螺栓按规定力矩分次紧固。</p>' }
     ],
     "规范摘录": [
-      { id: "n6", title: "吊装作业风速限值速查", time: "08-15", tag: "摘录",
-        body: '<h1>吊装作业风速限值速查</h1><p>GB/T 50571-2010 7.2.3：吊装作业应在风速不大于 10m/s 时进行，六级以上大风、雷雨天气禁止吊装。</p>' },
-      { id: "n7", title: "海缆埋深与路由复测要点", time: "08-12", tag: "摘录",
-        body: '<h1>海缆埋深与路由复测要点</h1><p>敷设前完成路由复测与扫海；埋深一般不小于 1.5m（软质海床）；完工后复测路由并记录。</p>' }
+      { id: "n6", title: "混凝土养护与试块留置速查（房建）", time: "08-15", tag: "摘录", cites: [],
+        body: '<p>GB 50666-2011 8.1.3：混凝土浇筑完毕后应在 12h 内加以覆盖并保湿养护，养护时间应符合规范要求。</p><p>试块留置按 GB 50204-2015 执行，在浇筑地点随机抽取。</p>' },
+      { id: "n7", title: "闭水试验条款摘录（市政）", time: "08-12", tag: "摘录", cites: [],
+        body: '<p>GB 50268-2008 9.3.1：污水、雨污水合流管道及湿陷土、膨胀土地区的雨水管道，必须经严密性试验合格后方可投入运行。</p>' }
     ],
     "会议纪要": [
-      { id: "n8", title: "第 15 期工程例会（示例）", time: "07-23", tag: "纪要",
-        body: '<h1>第 15 期工程例会纪要（示例）</h1><p>会议明确：台风季节吊装窗口期管理升级，船舶撤离演练按预案执行；报验资料与施工进度同步。</p>' }
+      { id: "n8", title: "第 15 期工程例会（综合·示例）", time: "07-23", tag: "纪要", cites: [],
+        body: '<p>会议明确：雨季加强混凝土养护巡查与市政管道闭水试验计划管理；报检资料与施工进度同步。</p>' }
     ]
   };
   var NB_ICONS = { "施工日志": '<svg class="ic"><use href="#i-note"></use></svg>', "施工记录": '<svg class="ic"><use href="#i-folder"></use></svg>', "规范摘录": '<svg class="ic"><use href="#i-book"></use></svg>', "会议纪要": '<svg class="ic"><use href="#i-memo"></use></svg>' };
+  var NB_TAG = { "施工日志": "日志", "施工记录": "记录", "规范摘录": "摘录", "会议纪要": "纪要" };
   var currentNb = "施工日志";
+  var NOTE_PHOTOS = {};   /* note_id → [{data, caption, taken_at, order}]，独立 store 键，避免整库笔记单键重写 */
+  function two(n) { return (n < 10 ? "0" : "") + n; }
+  function fmtTime(d) { return two(d.getMonth() + 1) + "-" + two(d.getDate()) + " " + two(d.getHours()) + ":" + two(d.getMinutes()); }
+  function uidNote() { return "n" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  function noteDisplayTitle(n) { return (n.title && n.title.trim()) || "未命名笔记"; }
+  function noteExcerpt(n) {
+    var t = stripHtml(n.body || "");
+    if (t) return t.slice(0, 42) + "…";
+    if (NOTE_PHOTOS[n.id] && NOTE_PHOTOS[n.id].length) return "（含 " + NOTE_PHOTOS[n.id].length + " 张现场照片）";
+    return "暂无正文";
+  }
+  function isEmptyNote(n) {   /* 空笔记判定：无标题、无正文、无引用、无照片 → 返回列表时自动丢弃 */
+    if ((n.title || "").trim()) return false;
+    if (stripHtml(n.body || "").length) return false;
+    if (n.cites && n.cites.length) return false;
+    if (NOTE_PHOTOS[n.id] && NOTE_PHOTOS[n.id].length) return false;
+    return true;
+  }
 
   /* ---------- 笔记 Tab：笔记本 chips + 列表 ---------- */
   var chipsEl = document.getElementById("nb-chips");
@@ -722,7 +1015,12 @@
         (nb === currentNb ? "bg-white border-ink text-ink font-bold" : "bg-transparent border-line text-sub");
       b.innerHTML = "<span>" + (NB_ICONS[nb] || '<svg class="ic"><use href="#i-note"></use></svg>') + "</span>" + nb +
         "<span class='text-[10px] " + (nb === currentNb ? "text-sub" : "text-sub/70") + " font-mono'>" + count + "</span>";
-      b.addEventListener("click", function () { currentNb = nb; renderChips(); renderList(); });
+      b.addEventListener("click", function () {
+        if (nb === currentNb) { renderChips(); renderList(); return; }
+        currentNb = nb;
+        if (msMode) { exitMultiselect("switch_nb"); } else { renderList(); }   /* v2.3：切本清空多选，防跨本误删 */
+        renderChips();
+      });
       chipsEl.appendChild(b);
     });
   }
@@ -733,23 +1031,84 @@
     return t.textContent.replace(/\s+/g, " ").trim();
   }
 
+  var flashId = null;   /* v2.3：置顶后短暂高亮的行 id */
   function renderList() {
+    var keepTop = noteList.scrollTop;   /* v2.3：重排/勾选后保持滚动位置 */
     noteList.innerHTML = "";
-    if (currentNb === "整改记录") { renderRectifyList(); return; }
-    NOTES[currentNb].forEach(function (n) {
+    byId("nb-hint").classList.toggle("hidden", currentNb === "整改记录");   /* 整理提示仅笔记本有效 */
+    if (currentNb === "整改记录") {
+      if (msMode) { msMode = false; msSel = {}; }   /* 防御：整改记录本无多选（与桌面端同构） */
+      syncMsBar(); renderRectifyList(); noteList.scrollTop = keepTop; return;
+    }
+    syncMsBar();
+    /* 置顶笔记排前（稳定排序，其余保持原有先后） */
+    var arr = NOTES[currentNb].slice().sort(function (a, b) { return (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0); });
+    if (!arr.length) {   /* v2.3 空态：删空后的占位与新建入口（评审 13 号报告 🟡-4） */
+      noteList.innerHTML =
+        "<div class='flex flex-col items-center justify-center py-16 text-center'>" +
+          "<div class='text-[13px] text-sub'>这个本子还没有笔记</div>" +
+          "<button id='empty-new' class='press mt-3 h-10 px-4 rounded-xl btn-p text-[12px] font-bold'>＋ 新建笔记</button>" +
+        "</div>";
+      var en = byId("empty-new");
+      if (en) en.addEventListener("click", function () { byId("btn-new-note").click(); });
+      noteList.scrollTop = keepTop;
+      return;
+    }
+    arr.forEach(function (n) {
       var div = document.createElement("button");
-      div.className = "note-item press w-full text-left bg-white border border-line rounded-xl px-3.5 py-3 mb-2 shadow-sm";
+      div.className = "note-item press w-full text-left bg-white border rounded-xl px-3.5 py-3 mb-2 shadow-sm " +
+        (msMode && msSel[n.id] ? "border-ink" : "border-line") + (n.id === flashId ? " note-flash" : "");
       div.setAttribute("data-id", n.id);
+      var cb = msMode
+        ? "<span class='shrink-0 w-[18px] h-[18px] rounded-full border flex items-center justify-center text-[11px] leading-none " +
+            (msSel[n.id] ? "bg-ink border-ink text-white" : "border-sub/40 text-transparent") + "'>✓</span>"
+        : "";
+      var pin = n.pinned
+        ? "<svg width='11' height='11' viewBox='0 0 24 24' fill='currentColor' class='text-org shrink-0'><path d='M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z'/></svg>"
+        : "";
       div.innerHTML =
-        "<div class='flex items-center gap-1.5'>" +
+        "<div class='flex items-center gap-1.5'>" + cb + pin +
           "<span class='text-[9px] font-bold text-org border border-org/40 rounded px-1 py-px'>" + n.tag + "</span>" +
           "<span class='ml-auto text-[10px] text-sub font-mono'>" + n.time + "</span>" +
+          (msMode ? "" : "<span class='note-more shrink-0 w-10 h-10 -my-2 -mr-1.5 flex items-center justify-center text-sub text-[16px] leading-none rounded-lg'>⋯</span>") +
         "</div>" +
-        "<div class='text-[13px] font-semibold text-ink mt-1 leading-snug'>" + n.title + "</div>" +
-        "<div class='text-[11px] text-sub truncate mt-0.5'>" + stripHtml(n.body).slice(0, 42) + "…</div>";
-      div.addEventListener("click", function () { openEditor(n.id); });
+        "<div class='text-[13px] font-semibold text-ink mt-1 leading-snug'>" + noteDisplayTitle(n) + "</div>" +
+        "<div class='text-[11px] text-sub truncate mt-0.5'>" + noteExcerpt(n) + "</div>";
+      /* v2.3：长按 → 操作菜单（置顶/多选/删除）；位移 >10px 视为滚动意图不触发；
+         点「⋯」为等价入口；多选模式下点按即勾选，长按停用（不做左滑，避免与滚动冲突） */
+      div.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+      var lpTimer = null, lpFired = false, lpX = 0, lpY = 0;
+      div.addEventListener("pointerdown", function (e) {
+        if (msMode) return;
+        lpFired = false;
+        lpX = e.clientX || 0; lpY = e.clientY || 0;
+        clearTimeout(lpTimer);
+        lpTimer = setTimeout(function () {
+          lpFired = true;
+          if (navigator.vibrate) { try { navigator.vibrate(10); } catch (err) {} }
+          openActSheet(n.id);
+        }, 550);
+      });
+      div.addEventListener("pointermove", function (e) {
+        if (Math.abs((e.clientX || 0) - lpX) > 10 || Math.abs((e.clientY || 0) - lpY) > 10) clearTimeout(lpTimer);
+      });
+      ["pointerup", "pointercancel", "pointerleave"].forEach(function (ev) {
+        div.addEventListener(ev, function () { clearTimeout(lpTimer); });
+      });
+      div.addEventListener("click", function (e) {
+        if (e.target && e.target.closest && e.target.closest(".note-more")) { openActSheet(n.id); return; }
+        if (msMode) { msSel[n.id] = !msSel[n.id]; renderList(); return; }
+        if (lpFired) { lpFired = false; return; }
+        openEditor(n.id);
+      });
       noteList.appendChild(div);
     });
+    noteList.scrollTop = keepTop;
+    if (flashId) {   /* 置顶位置反馈：1.5s 高亮后淡出 */
+      var fe = noteList.querySelector("[data-id='" + flashId + "']");
+      flashId = null;
+      if (fe) setTimeout(function () { fe.classList.remove("note-flash"); }, 1500);
+    }
   }
 
   /* ---------- 笔记编辑器 ---------- */
@@ -763,28 +1122,43 @@
   }
   edBody.addEventListener("input", function () {
     updateEdCount();
-    document.getElementById("ed-save").innerHTML = "<span class='w-1.5 h-1.5 rounded-full bg-warn'></span>正在保存…";
-    clearTimeout(edBody._st);
-    edBody._st = setTimeout(function () {
-      document.getElementById("ed-save").innerHTML = "<span class='w-1.5 h-1.5 rounded-full bg-ok'></span>已自动保存";
-    }, 700);
+    setSaveChip("saving");   /* 真实状态机：输入→saving；落库成功→saved / 失败→failed（可点重试） */
+  });
+
+  /* ---------- 保存状态机（R&D ①：废除 700ms 假定时器，展示真实落库结果） ---------- */
+  function setSaveChip(state) {
+    var el = document.getElementById("ed-save");
+    if (state === "saving") { el.innerHTML = "<span class='w-1.5 h-1.5 rounded-full bg-warn'></span>正在保存…"; }
+    else if (state === "saved") { el.innerHTML = "<span class='w-1.5 h-1.5 rounded-full bg-ok'></span>已保存到本机"; }
+    else if (state === "memory") { el.innerHTML = "<span class='w-1.5 h-1.5 rounded-full bg-warn'></span>仅存内存（刷新不保留）"; }
+    else if (state === "failed") { el.innerHTML = "<span class='w-1.5 h-1.5 rounded-full' style='background:#C0504E'></span>保存失败，点此重试"; }
+    el.dataset.state = state;
+  }
+  document.getElementById("ed-save").addEventListener("click", function () {
+    if (this.dataset.state !== "failed") return;
+    kbQuotaHit = false;           /* 用户手动重试：解除配额熔断，再写一次 */
+    saveNoteNow(true);
   });
 
   function openEditor(id) {
-    var note = null;
+    var note = null, nbOf = null;
     Object.keys(NOTES).forEach(function (nb) {
-      NOTES[nb].forEach(function (n) { if (n.id === id) note = n; });
+      NOTES[nb].forEach(function (n) { if (n.id === id) { note = n; nbOf = nb; } });
     });
     if (!note) return;
     editingId = id;
     edTitle.textContent = note.title;
     edBody.innerHTML = note.body;
+    document.getElementById("ed-head-nb").textContent = nbOf || "笔记";
+    renderNotePhotos();
+    noteInit(note);   /* v2.2：引用标记重编号 + 引用规范表重建 + 条带推荐 */
     updateEdCount();
-    document.getElementById("ed-save").innerHTML = "<span class='w-1.5 h-1.5 rounded-full bg-ok'></span>已自动保存";
+    setSaveChip("saved");
     closeAiSheet();
     overlay.style.transform = "translateX(0)";
   }
   function closeEditor() {
+    noteTeardown();   /* v2.2：回写正文与引用快照、退出阅读视图、关闭选择器 */
     overlay.style.transform = "translateX(100%)";
     closeAiSheet();
     renderList();
@@ -792,15 +1166,302 @@
   }
   document.getElementById("btn-editor-back").addEventListener("click", closeEditor);
 
-  function newNote() {
-    if (currentNb === "整改记录") { currentNb = "施工日志"; renderChips(); }
-    var n = { id: "n" + Date.now(), title: "未命名笔记", time: "刚刚", tag: "草稿",
-      body: "<h1>未命名笔记</h1><p>从这里开始记录…（示例）</p>" };
-    NOTES[currentNb].unshift(n);
-    renderChips(); renderList();
-    openEditor(n.id);
-    focusNewTitle();
+  /* ---------- v2.3 新建：模板一级选择（选模板=选所属笔记本；空白=留当前本；不预填任何内容） ---------- */
+  var TPL_DEFS = {
+    "空白": { nb: null, title: null, body: "" },
+    "施工日志": { nb: "施工日志", title: function (d) { return "施工日志 · " + two(d.getMonth() + 1) + "-" + two(d.getDate()); },
+      body: "<p><b>【气象】</b></p><p><b>【施工部位】</b></p><p><b>【班组交底】</b></p><p><b>【当日工序】</b></p><ol><li></li></ol><p><b>【问题记录】</b></p><p><b>【明日计划】</b></p>" },
+    "施工记录": { nb: "施工记录", title: function (d) { return "施工记录 · " + two(d.getMonth() + 1) + "-" + two(d.getDate()); },
+      body: "<p><b>【事由】</b></p><p><b>【部位 / 时间】</b></p><p><b>【涉及条文位】</b>（可用工具条「插入规范引用」，或输入关键词从推荐条带插入）</p><p><b>【处理情况】</b></p>" },
+    "规范摘录": { nb: "规范摘录", title: function (d) { return "规范摘录 · " + two(d.getMonth() + 1) + "-" + two(d.getDate()); },
+      body: "<p><b>【条文位】</b></p><p><b>【摘录要点】</b></p>" },
+    "会议纪要": { nb: "会议纪要", title: function (d) { return "会议纪要 · " + two(d.getMonth() + 1) + "-" + two(d.getDate()); },
+      body: "<p><b>【会议期数 / 名称】</b></p><p><b>【时间 / 地点】</b></p><p><b>【参会范围】</b></p><p><b>【决议事项】</b></p><ol><li></li></ol><p><b>【待办与责任人】</b></p>" }
+  };
+  var tplSheet = byId("tpl-sheet"), tplSheetBg = byId("tpl-sheet-bg");
+  function openTplSheet() {
+    var fallback = currentNb === "整改记录" ? "施工日志" : currentNb;
+    byId("tpl-blank-desc").textContent = "不套用模板，存入「" + fallback + "」";
+    closeAiSheet();
+    tplSheet.style.transform = "translateY(0)";
+    tplSheetBg.classList.remove("hidden");
   }
+  function closeTplSheet() { tplSheet.style.transform = "translateY(100%)"; tplSheetBg.classList.add("hidden"); }
+  tplSheetBg.addEventListener("click", closeTplSheet);
+  var tplBusy = false;
+  function createNote(tplName) {
+    if (tplBusy || tplSheetBg.classList.contains("hidden")) return;   /* 防连点（🟢） */
+    tplBusy = true; setTimeout(function () { tplBusy = false; }, 500);
+    var tpl = TPL_DEFS[tplName];
+    if (!tpl) return;
+    var d = new Date();
+    var nb = tpl.nb || (currentNb === "整改记录" ? "施工日志" : currentNb);
+    var note = { id: uidNote(), title: tpl.title ? tpl.title(d) : "", time: fmtTime(d), tag: NB_TAG[nb] || "草稿", cites: [], body: tpl.body };
+    NOTES[nb].unshift(note);
+    currentNb = nb;
+    persist("notes", NOTES);   /* 创作即落库：新建后刷新不丢 */
+    renderChips(); renderList();
+    closeTplSheet();
+    openEditor(note.id);
+    focusNewTitle();
+    track("note_created", { note_id: note.id, via_template: tplName, source: "header" });
+  }
+  document.querySelectorAll("#tpl-sheet [data-tpl]").forEach(function (btn) {
+    btn.addEventListener("click", function () { createNote(btn.dataset.tpl); });
+  });
+
+  /* ---------- 列表整理：长按操作菜单（置顶 / 多选 / 删除）+ 多选批量操作 ---------- */
+  function findNote(id) {
+    var hit = null;
+    Object.keys(NOTES).forEach(function (nb) { NOTES[nb].forEach(function (n) { if (n.id === id) hit = n; }); });
+    return hit;
+  }
+  var actSheet = byId("act-sheet"), actSheetBg = byId("act-sheet-bg"), actTargetId = null;
+  var actOpen = false;   /* v2.3：菜单开合埋点，背景/取消/动作统一走 closeActSheet */
+  function openActSheet(noteId) {
+    var note = findNote(noteId);
+    if (!note) return;
+    actTargetId = noteId;
+    actOpen = true;
+    byId("act-sheet-title").textContent = noteDisplayTitle(note) + " · " + note.time;
+    byId("act-pin-label").textContent = note.pinned ? "取消置顶" : "置顶笔记";
+    actSheet.style.transform = "translateY(0)";
+    actSheetBg.classList.remove("hidden");
+    track("note_action_menu_opened", { note_id: noteId });
+  }
+  function closeActSheet(action) {
+    actSheet.style.transform = "translateY(100%)";
+    actSheetBg.classList.add("hidden");
+    if (actOpen) { actOpen = false; track("note_action_menu_closed", { action: action || "none" }); }
+  }
+  actSheetBg.addEventListener("click", function () { closeActSheet("none"); });
+  byId("act-cancel").addEventListener("click", function () { closeActSheet("none"); });
+  byId("act-del").addEventListener("click", function () { var id = actTargetId; closeActSheet("delete"); if (id) openDelSheet(id); });
+  byId("act-pin").addEventListener("click", function () { var id = actTargetId; closeActSheet("pin"); if (id) togglePin(id); });
+  byId("act-ms").addEventListener("click", function () { var id = actTargetId; closeActSheet("multiselect"); enterMultiselect(id); });
+
+  function togglePin(noteId) {
+    var note = findNote(noteId);
+    if (!note) return;
+    note.pinned = !note.pinned;
+    persist("notes", NOTES);
+    flashId = noteId;   /* 重排后高亮目标行，缓解“行跳走”的迷失感 */
+    renderList();
+    showToast(note.pinned ? "已置顶" : "已取消置顶");
+    appendOpLog(note.pinned ? "pin" : "unpin", [noteId]);
+    track("note_pinned", { note_id: noteId, pinned: !!note.pinned, source_nb: currentNb, entry: "menu" });
+  }
+
+  /* ---------- 多选模式（长按菜单「多选笔记」进入；批量置顶 / 批量删除） ---------- */
+  var msMode = false, msSel = {};
+  function msSelectedIds() { return Object.keys(msSel).filter(function (k) { return msSel[k]; }); }
+  function syncMsBar() {
+    byId("ms-bar").classList.toggle("hidden", !msMode);
+    if (!msMode) return;
+    var ids = msSelectedIds();
+    byId("ms-count").textContent = ids.length;
+    var notes = ids.map(findNote).filter(function (n) { return !!n; });
+    var allPinned = notes.length > 0 && notes.every(function (n) { return n.pinned; });
+    byId("ms-pin").textContent = allPinned ? "取消置顶" : "置顶";   /* v2.3：语义随选中集实时切换 */
+    var total = currentNb === "整改记录" ? 0 : NOTES[currentNb].length;
+    byId("ms-all").textContent = (total && ids.length >= total) ? "取消全选" : "全选";
+  }
+  function enterMultiselect(seedId) {
+    msMode = true; msSel = {};
+    if (seedId) msSel[seedId] = true;
+    renderList();
+    track("note_multiselect_entered", { entry_ui: "list_longpress" });   /* 端口径：移动端唯一入口=长按 */
+  }
+  function exitMultiselect(reason) {
+    var cnt = msSelectedIds().length, wasOn = msMode;
+    msMode = false; msSel = {}; renderList();
+    if (wasOn && reason) track("note_multiselect_exited", { selected_count: cnt, reason: reason });
+  }
+  byId("ms-cancel").addEventListener("click", function () { exitMultiselect("cancel_btn"); });
+  byId("ms-all").addEventListener("click", function () {
+    var all = NOTES[currentNb] || [];
+    var ids = msSelectedIds();
+    if (all.length && ids.length >= all.length) { msSel = {}; }
+    else { all.forEach(function (n) { msSel[n.id] = true; }); }
+    renderList();
+  });
+  byId("ms-pin").addEventListener("click", function () {
+    var ids = msSelectedIds();
+    if (!ids.length) { showToast("先选择要置顶的笔记"); track("note_bulk_action", { action: "none", count: 0 }); return; }
+    var notes = ids.map(findNote).filter(function (n) { return !!n; });
+    var allPinned = notes.every(function (n) { return n.pinned; });
+    notes.forEach(function (n) { n.pinned = !allPinned; });
+    persist("notes", NOTES);
+    var cnt = notes.length, unpin = allPinned;
+    appendOpLog(unpin ? "bulk_unpin" : "bulk_pin", ids, { count: cnt });
+    exitMultiselect("done");
+    showToast((unpin ? "已取消置顶 " : "已置顶 ") + cnt + " 篇");
+    track("note_bulk_action", { action: unpin ? "unpin" : "pin", count: cnt });
+  });
+  byId("ms-del").addEventListener("click", function () {
+    var ids = msSelectedIds();
+    if (!ids.length) { showToast("先选择要删除的笔记"); track("note_bulk_action", { action: "none", count: 0 }); return; }
+    openBatchDelSheet(ids);
+  });
+
+  /* ---------- 删除（长按菜单/多选进入；二次确认；单篇与批量共用；删除后 5 秒可撤销） ---------- */
+  var delSheet = byId("del-sheet"), delSheetBg = byId("del-sheet-bg"), delIds = [], delBatch = false;
+  var delBusy = false;   /* v2.3：确认后短暂锁，防连点重复 toast / 重复埋点 */
+  function noteNbOf(id) {
+    var hit = "";
+    Object.keys(NOTES).forEach(function (nb) { if (NOTES[nb].some(function (n) { return n.id === id; })) hit = nb; });
+    return hit;
+  }
+  function delItemLine(id) {   /* v2.3：确认层列条目（标题+所属本+照片数），跨本删除不再隐形 */
+    var note = findNote(id);
+    if (!note) return "";
+    var pc = (NOTE_PHOTOS[id] || []).length;
+    return noteDisplayTitle(note) + "（" + noteNbOf(id) + (pc ? " · 照片 " + pc + " 张" : "") + "）";
+  }
+  function openDelSheet(noteId) {
+    var note = findNote(noteId);
+    if (!note) return;
+    delIds = [noteId]; delBatch = false;
+    byId("del-sheet-head").textContent = "删除这篇笔记？";
+    byId("del-sheet-title").textContent = delItemLine(noteId) + " · " + note.time;
+    delSheet.style.transform = "translateY(0)";
+    delSheetBg.classList.remove("hidden");
+  }
+  function openBatchDelSheet(ids) {
+    delIds = ids.slice(); delBatch = true;
+    byId("del-sheet-head").textContent = "删除选中的 " + ids.length + " 篇笔记？";
+    var lines = ids.slice(0, 3).map(delItemLine).filter(function (s) { return !!s; });
+    byId("del-sheet-title").textContent = lines.join("；") + (ids.length > 3 ? " 等 " + ids.length + " 篇" : "");
+    delSheet.style.transform = "translateY(0)";
+    delSheetBg.classList.remove("hidden");
+  }
+  function closeDelSheet() { delSheet.style.transform = "translateY(100%)"; delSheetBg.classList.add("hidden"); }
+  function cancelDelFlow() {   /* 取消路径埋点（运营：删除取消率，评审 13 号报告 🔴-5B） */
+    if (delIds.length) track("note_delete_confirm", { action: "cancel", batch: delBatch, count: delIds.length });
+    closeDelSheet();
+  }
+  delSheetBg.addEventListener("click", cancelDelFlow);
+  byId("del-cancel").addEventListener("click", cancelDelFlow);
+  function undoDelete(snap, ids, batch) {   /* v2.3 撤销：数据与照片按原位回插 */
+    snap.forEach(function (s) {
+      if (!NOTES[s.nb]) NOTES[s.nb] = [];
+      NOTES[s.nb].splice(Math.min(s.index, NOTES[s.nb].length), 0, s.note);
+      if (s.photo) NOTE_PHOTOS[s.note.id] = s.photo;
+    });
+    persist("notes", NOTES);
+    persist("note_photos", NOTE_PHOTOS);
+    appendOpLog("delete_undo", ids, { batch: batch });
+    renderChips();
+    renderList();
+    showToast("已撤销删除");
+    track("note_delete_undo", { batch: batch, count: ids.length });
+  }
+  byId("del-confirm").addEventListener("click", function () {
+    if (delBusy) return;
+    delBusy = true; setTimeout(function () { delBusy = false; }, 600);
+    var ids = delIds.slice(), batch = delBatch;
+    delIds = [];
+    closeDelSheet();
+    if (!ids.length) return;
+    var snap = [];   /* 撤销快照：删除前的位置 / 内容 / 照片 */
+    ids.forEach(function (id) {
+      Object.keys(NOTES).forEach(function (nb) {
+        NOTES[nb].forEach(function (n, i) { if (n.id === id) snap.push({ nb: nb, index: i, note: n, photo: NOTE_PHOTOS[id] || null }); });
+        NOTES[nb] = NOTES[nb].filter(function (n) { return n.id !== id; });
+      });
+      if (NOTE_PHOTOS[id]) delete NOTE_PHOTOS[id];
+    });
+    persist("notes", NOTES);
+    persist("note_photos", NOTE_PHOTOS);
+    appendOpLog(batch ? "bulk_delete" : "delete", ids, {
+      batch: batch,
+      titles: snap.map(function (s) { return noteDisplayTitle(s.note); }),   /* 删除前标题快照 */
+      photo_counts: snap.map(function (s) { return (s.photo || []).length; })
+    });
+    track("note_delete_confirm", { action: "confirm", batch: batch, count: ids.length });
+    if (editingNote && ids.indexOf(editingNote.id) >= 0) {   /* 编辑态交接（防御，与桌面 10 号同构） */
+      if (overlay.style.transform !== "translateX(100%)") closeEditor();
+      editingNote = null; noteDirty = false; clearTimeout(noteSaveTimer);
+    }
+    renderChips();
+    if (batch) {
+      exitMultiselect("done");   /* 内部重渲染列表 */
+      track("note_bulk_action", { action: "delete", count: ids.length });
+    } else {
+      renderList();
+      track("note_deleted", { note_id: ids[0], was_pinned: !!(snap[0] && snap[0].note.pinned) });
+    }
+    showToast(batch ? "已删除 " + ids.length + " 篇" : "已删除", { ms: 5000, onUndo: function () { undoDelete(snap, ids, batch); } });
+  });
+
+  /* ---------- 附件照片（与整改照片同构：≤6 张 · 压至 ≤300KB · 图注 ≤50 字 · 时间角标） ---------- */
+  function renderNotePhotos() {
+    var grid = byId("ed-photo-grid");
+    var list = (editingNote && NOTE_PHOTOS[editingNote.id]) || [];
+    grid.innerHTML = "";
+    list.forEach(function (p, i) {
+      var cell = document.createElement("div");
+      cell.className = "rounded-xl overflow-hidden border border-line bg-mist";
+      var badge = p.taken_at ? '<span class="absolute left-1 bottom-1 text-[8px] text-white bg-black/55 rounded px-1 py-px font-mono">' + fmtTime(new Date(p.taken_at)) + "</span>" : "";
+      cell.innerHTML =
+        '<div class="relative"><img src="' + p.data + '" class="w-full h-[74px] object-cover">' + badge +
+        '<button class="ed-photo-del press absolute top-1 right-1 w-6 h-6 rounded-full bg-white/95 border border-ink text-ink text-[11px] leading-none">✕</button></div>' +
+        '<input class="ed-photo-cap w-full bg-white text-[9px] text-ink px-1.5 py-1 outline-none border-t border-line" maxlength="50" placeholder="图注（≤50 字）" value="' + (p.caption || "").replace(/"/g, "&quot;") + '">';
+      cell.querySelector("img").addEventListener("click", function () {
+        openPhotoViewer(list, i);
+        track("attachment_viewed", { note_id: editingNote ? editingNote.id : null, index: i });
+      });
+      cell.querySelector(".ed-photo-del").addEventListener("click", function () {
+        list.splice(i, 1);
+        persist("note_photos", NOTE_PHOTOS);
+        renderNotePhotos();
+      });
+      cell.querySelector(".ed-photo-cap").addEventListener("input", function (e) { p.caption = e.target.value; persist("note_photos", NOTE_PHOTOS, 600); });
+      grid.appendChild(cell);
+    });
+    var add = document.createElement("button");
+    if (list.length >= 6) {
+      add.disabled = true;
+      add.className = "rounded-xl border-2 border-dashed border-line bg-mist h-[98px] flex flex-col items-center justify-center text-sub/40 cursor-not-allowed";
+      add.innerHTML = '<span class="text-[20px] leading-none">＋</span><span class="text-[9px] mt-1">最多 6 张</span>';
+    } else {
+      add.className = "press rounded-xl border-2 border-dashed border-line bg-white h-[98px] flex flex-col items-center justify-center text-sub";
+      add.innerHTML = '<span class="text-[20px] leading-none">＋</span><span class="text-[9px] mt-1">添加照片</span>';
+      add.addEventListener("click", function () { byId("ed-photo-input").click(); });
+    }
+    grid.appendChild(add);
+    byId("ed-photo-count").textContent = list.length + "/6";
+  }
+  function addNotePhotos(files) {
+    if (!editingNote) return;
+    var id = editingNote.id;
+    if (!NOTE_PHOTOS[id]) NOTE_PHOTOS[id] = [];
+    var list = NOTE_PHOTOS[id];
+    Array.prototype.slice.call(files).forEach(function (f) {
+      if (!/^image\/(jpeg|png|webp)$/.test(f.type)) { showToast("格式不支持（支持 JPG/PNG/WebP）"); return; }
+      if (list.length >= 6) { showToast("照片最多 6 张，单张不超过 300KB"); return; }
+      compressImage(f, function (dataUrl, ok) {
+        if (!ok) { showToast("照片压缩后仍超过 300KB，请更换照片"); return; }
+        list.push({ data: dataUrl, caption: "", taken_at: f.lastModified || Date.now(), order: list.length });
+        persist("note_photos", NOTE_PHOTOS);
+        renderNotePhotos();
+        track("note_photo_added", { note_id: id, count: list.length, orig_kb: Math.round(f.size / 1024), compressed_kb: Math.round(dataUrl.length * 0.75 / 1024) });
+      });
+    });
+  }
+  byId("ed-photo-input").addEventListener("change", function (e) { addNotePhotos(e.target.files); e.target.value = ""; });
+
+  /* ---------- 照片全屏查看（笔记附件与整改照片共用；角标=拍摄/文件时间） ---------- */
+  function openPhotoViewer(list, idx) {
+    var p = list[idx];
+    if (!p) return;
+    byId("pv-img").src = p.data;
+    byId("pv-time").textContent = p.taken_at ? "拍摄时间 " + fmtTime(new Date(p.taken_at)) : "未记录拍摄时间";
+    byId("pv-cap").textContent = p.caption || "";
+    byId("pv-overlay").classList.remove("hidden");
+  }
+  function closePhotoViewer() { byId("pv-overlay").classList.add("hidden"); byId("pv-img").src = ""; }
+  byId("pv-close").addEventListener("click", closePhotoViewer);
 
   /* 新建后聚焦标题（修复「漏边」）：
      ① 等滑入动画结束再聚焦——滑入期间容器带 transform，浏览器会为“把焦点滚进视野”
@@ -839,11 +1500,8 @@
       }
     });
   });
-  document.getElementById("btn-insert-clause").addEventListener("click", function () {
-    edBody.innerHTML += '<p><span class="cite-inline">GB/T 50571-2010 · 7.2.3</span> 吊装作业应在风速不大于 10m/s 时进行（示例条文）。</p>';
-    showToast("已插入规范引用");
-    updateEdCount();
-  });
+  /* 手动插入路径（5.7 路径②）：打开规范库选择器（8 组 42 本 · 跨分类搜索），选中后插入到光标位置；无光标时插入文末 */
+  document.getElementById("btn-insert-clause").addEventListener("click", function () { openNotePicker(); });
 
   /* ---------- AI 辅助抽屉 ---------- */
   var aiSheet = document.getElementById("ai-sheet");
@@ -861,7 +1519,6 @@
 
   var INSERTS = {
     window: '<blockquote><svg class="ic"><use href="#i-clock"></use></svg> 窗口期复核（示例）：吊装时段 09:10–11:40 与今日可吊装窗口 06:00–10:30 部分重叠，11:30 后作业超出窗口期，需核实现场实测风速并补记。</blockquote>',
-    clause: '<p>引用条文 <span class="cite-inline">GB/T 19568-2025 · 8.3 安装</span>：机组安装前应完成规定的进机前检查，连接螺栓应按设计力矩分次紧固并做标记（示例）。</p>',
     report: '<blockquote><svg class="ic"><use href="#i-clipboard"></use></svg> 报验资料清单（示例），GB 50300-2013 5.0.6）：① 检验批质量验收记录；② 隐蔽工程验收记录（附影像）；③ 材料/构配件进场复验报告。</blockquote>'
   };
   document.querySelectorAll(".ai-ins").forEach(function (btn) {
@@ -875,22 +1532,14 @@
         showToast("报验清单已插入正文末尾");
       } else {
         edBody.innerHTML += INSERTS[key];
-        showToast(key === "window" ? "窗口期提示已插入" : "规范引用已插入");
+        showToast("窗口期提示已插入");
       }
+      noteDirty = true;   /* 插入即视为内容变更 → 走真实保存链 */
+      clearTimeout(noteSaveTimer);
+      noteSaveTimer = setTimeout(function () { saveNoteNow(true); }, 600);
       updateEdCount();
+      track("ai_insert_used", { note_id: editingNote ? editingNote.id : null, insert_type: key });
     });
-  });
-  document.getElementById("btn-outline").addEventListener("click", function () {
-    edBody.innerHTML += '<h2>今日施工日志大纲（AI 生成 · 示例）</h2><ol><li>气象与海况摘要</li><li>作业内容与起止时间</li><li>安全交底与人员情况</li><li>问题记录与整改闭环</li><li>明日计划</li></ol>';
-    showToast("日志大纲已生成"); updateEdCount();
-  });
-  document.getElementById("btn-continue").addEventListener("click", function () {
-    edBody.innerHTML += '<p><b>【明日计划】</b>（示例）07:00 班前交底；08:00 前确认风速 ≤ 8m/s 后开始第 3 段塔筒吊装；16:00 前完成检验批报验资料。</p>';
-    showToast("「明日计划」已续写"); updateEdCount();
-  });
-  document.getElementById("btn-polish").addEventListener("click", function () {
-    edBody.innerHTML += '<p>（示例）「问题记录」润色建议：法兰面锈斑处理宜写明除锈方法（动力除锈 St3）、处理范围与复验结论，便于监理闭合。</p>';
-    showToast("润色建议已写入"); updateEdCount();
   });
 
   /* ---------- 消息渲染（问答 Tab） ---------- */
@@ -969,12 +1618,14 @@
     var text = bodyEl.textContent.trim();
     var citeEl = bodyEl.querySelector(".cite");
     var citeText = citeEl ? citeEl.textContent.replace(/\s+/g, " ").trim() : "";
-    var body = "<h1>" + q + "</h1><p>" + text + "</p>";
+    var body = "<p>" + text + "</p>";   /* v2.3：去重头 h1（标题已在 title 字段，正文不再重复） */
     if (citeText) body += '<p><span class="cite-inline">' + citeText + "</span></p>";
-    var note = { id: "qm" + Date.now(), title: q, time: "刚刚", tag: "问答", body: body };
+    var note = { id: uidNote(), title: q, time: fmtTime(new Date()), tag: "问答", cites: [], body: body };
     NOTES["规范摘录"].unshift(note);
+    persist("notes", NOTES);   /* 补落库：此前只改内存，刷新即丢 */
     renderChips(); renderList();
     showToast("已存入「规范摘录」笔记本");
+    track("note_saved_from_qa", { note_id: note.id });
   }
 
   /* ---------- 问答知识库（13 类高频问题，与桌面端一致） ---------- */
@@ -1037,7 +1688,7 @@
       html:
         '<p>吊装作业警戒区设置：</p>' +
         '<p>① 按<b>吊臂回转半径外扩 ≥ 5m</b>设置警戒区<br>② 专人警戒，无关人员、车辆禁止进入<br>③ 夜间作业设置警示灯与反光标志<br>④ 吊物下方严禁人员停留或通过</p>',
-      cite: citeCard("Q/XX-JZ 示例", "海上风电项目施工安全专项方案编制指南（示例）", "3.4", "内部文件", "text-warn border-warn/40")
+      cite: citeCard("Q/QY-JZ 示例", "海上风电项目施工安全专项方案编制指南（示例）", "3.4", "内部文件", "text-warn border-warn/40")
     },
     typhoon: {
       html:
@@ -1056,17 +1707,38 @@
         '<p>主机 / 轮毂安装控制要点：</p>' +
         '<p>① 安装前按产品技术文件完成<b>进机前检查</b>（齿轮箱油位、止转工装拆除等）<br>② 主机与塔筒法兰对接后，连接螺栓按规定<b>力矩分次紧固</b>并做标记<br>③ 吊装全程专人指挥，<b>实测风速超限立即停止</b>作业<br>④ 安装记录随工序同步填写，隐蔽项留存影像</p>',
       cite: citeCard("GB/T 19568-2025", "风能发电系统 风力发电机组装配和安装规范", "8.3", "现行有效", "text-ok border-ok/40")
+    },
+    bolt: {
+      html:
+        '<p>钢结构高强螺栓紧固与检查要求：</p>' +
+        '<p>① 连接副应按设计力矩<b>初拧、终拧</b>分次紧固，终拧后做标记<br>② 终拧完成后按节点数<b>抽查 10% 且不少于 2 个节点</b>做扭矩检查<br>③ 检查记录随工序同步形成，缺项不得进入下道工序<br>④ 雨天或潮湿环境作业应有防护措施</p>',
+      cite: citeCard("GB 50205-2020", "钢结构工程施工质量验收标准", "6.3.3", "现行有效", "text-ok border-ok/40")
+    },
+    pipe: {
+      html:
+        '<p>市政排水管道闭水（严密性）试验要求：</p>' +
+        '<p>① 污水、雨污水合流管道<b>必须经严密性试验合格</b>后方可投入运行<br>② 试验按井段分段进行，试验水头按规范确定<br>③ 实测渗水量应满足规范允许值<br>④ 试验记录随工序同步填写归档</p>',
+      cite: citeCard("GB 50268-2008", "给水排水管道工程施工及验收规范", "9.3.1", "现行有效", "text-ok border-ok/40")
+    },
+    ground: {
+      html:
+        '<p>接地装置安装与测试要求：</p>' +
+        '<p>① 接地装置的<b>接地电阻值必须符合设计要求</b><br>② 安装完成后应进行接地电阻测试并留存记录<br>③ 等电位联结干线应与接地装置可靠连接<br>④ 测试记录归档后方可进入下道工序</p>',
+      cite: citeCard("GB 50303-2015", "建筑电气工程施工质量验收规范", "12.1.1", "现行有效", "text-ok border-ok/40")
     }
   };
 
   /* ---------- 关键词匹配规则（顺序即优先级） ---------- */
   function matchAnswer(text) {
     if (/焊接|焊条|焊工/.test(text)) return "weld";
+    if (/高强螺栓|终拧|扭矩检查|螺栓/.test(text)) return "bolt";
     if (/主机|机舱|轮毂|对中|箱变/.test(text)) return "turbine";
     if (/风速|大风|六级/.test(text)) return "tower";
     if (/塔筒|吊装/.test(text)) return "tower";
     if (/叶片/.test(text)) return "blade";
     if (/升压站|交接试验|电气试验|耐压/.test(text)) return "substation";
+    if (/闭水|灌水试验|严密性|给排水管道|管道试验/.test(text)) return "pipe";
+    if (/接地|防雷|等电位/.test(text)) return "ground";
     if (/防腐|涂层|油漆|喷砂|除锈/.test(text)) return "anticorr";
     if (/海缆|电缆|埋深|敷设/.test(text)) return "cable";
     if (/桩|沉桩|垂直度/.test(text)) return "pile";
@@ -1095,7 +1767,7 @@
         cite = ANSWERS[key].cite;
       } else {
         html = "<p>未找到相关规范条文，试试换个问法，或到「规范库」按目录查找。</p>" +
-               "<p class='text-sub text-[12px] mt-1'>可覆盖主题：吊装 / 主机吊装 / 叶片 / 海缆敷设 / 沉桩 / 混凝土养护 / 焊接 / 防台撤离 / 防腐 / 报验资料</p>";
+               "<p class='text-sub text-[12px] mt-1'>可覆盖主题：吊装 / 叶片 / 海缆敷设 / 沉桩 / 混凝土养护 / 焊接 / 高强螺栓 / 闭水试验 / 接地测试 / 防台撤离 / 防腐 / 报验资料</p>";
         cite = "";
       }
       aiBubble(html + cite, text);
@@ -1126,24 +1798,24 @@
     },
     {
       msgs: [
-        { u: "海上升压站交接试验有哪些项目？" },
-        { a: ANSWERS.substation.html + ANSWERS.substation.cite },
-        { u: "试验报告谁出？" },
-        { a: "<p>交接试验应由具备资质的试验单位实施并出具报告，作为验收资料归档。</p>" }
+        { u: "变电房接地电阻测试有哪些要求？" },
+        { a: ANSWERS.ground.html + ANSWERS.ground.cite },
+        { u: "测试记录丢了怎么办？" },
+        { a: "<p>应重新测试并补记记录，注明补测日期与原因；记录归档后方可进入下道工序。</p>" }
       ]
     },
     {
       msgs: [
-        { u: "叶片吊装为什么必须用专用吊带？" },
-        { a: "<p>叶片表面曲率大、局部受力敏感，专用吊带与叶片曲率贴合，<b>避免应力集中损伤结构</b>；普通钢丝绳吊具禁止直接接触叶片表面。</p>" + citeCard("GB/T 19568-2025", "风能发电系统 风力发电机组装配和安装规范", "8.3", "现行有效", "text-ok border-ok/40") }
+        { u: "高强螺栓终拧后怎么检查？" },
+        { a: ANSWERS.bolt.html + ANSWERS.bolt.cite }
       ]
     },
     {
       msgs: [
-        { u: "台风预警后施工船舶如何撤离？" },
-        { a: ANSWERS.typhoon.html + ANSWERS.typhoon.cite },
-        { u: "避风锚地在哪里？" },
-        { a: "<p>按防台预案指定锚地停泊，远离风机基础与海缆路由区域；锚泊期间安排值守并保持通讯畅通。</p>" }
+        { u: "污水管道闭水试验怎么做？" },
+        { a: ANSWERS.pipe.html + ANSWERS.pipe.cite },
+        { u: "试验不合格怎么处理？" },
+        { a: "<p>查明渗漏部位，修补后重新试验直至合格；不合格管段不得回填或投入运行，处理过程留存影像记录。</p>" }
       ]
     }
   ];
@@ -1265,7 +1937,7 @@
     },
     {
       group: "项目文件 · 内部示例", items: [
-        { code: "Q/XX-JZ 示例", name: "海上风电项目施工安全专项方案编制指南（示例）", status: "内部文件", st: "text-warn border-warn/40",
+        { code: "Q/QY-JZ 示例", name: "海上风电项目施工安全专项方案编制指南（示例）", status: "内部文件", st: "text-warn border-warn/40",
           toc: ["1 编制依据", "2 危险性分析", "3 专项措施", "4 应急响应"], clause: "示例数据：专项方案应在危大工程施工前完成审批；3.4 吊装作业按吊臂回转半径外扩 5m 设置警戒区。" },
         { code: "FJ-示例", name: "某海上风电项目风机安装专项施工方案（示例）", status: "内部文件", st: "text-warn border-warn/40",
           toc: ["1 工程概况（120 万千瓦）", "2 吊装设备选型", "3 吊装工艺与流程", "4 安全保证措施", "5 应急预案"], clause: "示例数据：吊装作业窗口期按气象预报提前 48h 锁定，现场风速仪实测超限立即停工。" },
@@ -1304,6 +1976,7 @@
   LIB.forEach(function (g) { g.items.forEach(function (it) { ALL_DOCS[it.code] = it; }); });
 
   function openSheet(doc) {
+    byId("sheet-rec-hint").classList.add("hidden");   /* 默认隐藏；仅「编号识别」入口打开时再显示 */
     document.getElementById("sheet-title").textContent = doc.name;
     document.getElementById("sheet-meta").textContent = doc.code;
     document.getElementById("sheet-status").textContent = doc.status;
@@ -1360,13 +2033,32 @@
     saveAnswerToNote(aiQaInput.value.trim(), document.getElementById("ai-qa-body"));
   });
 
-  /* ---------- 复制与 Toast ---------- */
+  /* ---------- 复制与 Toast（v2.3：支持 5 秒撤销动作，评审 13 号报告 🔴-3A） ---------- */
   var toast = document.getElementById("toast");
-  function showToast(msg) {
-    toast.textContent = msg;
+  var toastTimer = null, toastCleanup = null, toastUndo = null;
+  function showToast(msg, opts) {
+    opts = opts || {};
+    toastUndo = typeof opts.onUndo === "function" ? opts.onUndo : null;
+    document.getElementById("toast-msg").textContent = msg;
+    document.getElementById("toast-undo").classList.toggle("hidden", !toastUndo);
+    toast.style.pointerEvents = toastUndo ? "auto" : "none";
     toast.style.opacity = "1";
-    setTimeout(function () { toast.style.opacity = "0"; }, 1600);
+    clearTimeout(toastTimer); clearTimeout(toastCleanup);
+    toastTimer = setTimeout(function () {
+      toast.style.opacity = "0";
+      toastCleanup = setTimeout(function () {   /* 淡出后收起撤销按钮，避免残留可点 */
+        toastUndo = null;
+        document.getElementById("toast-undo").classList.add("hidden");
+        toast.style.pointerEvents = "none";
+      }, 320);
+    }, opts.ms || 1600);
   }
+  document.getElementById("toast-undo").addEventListener("click", function () {
+    var f = toastUndo; toastUndo = null;
+    if (!f) return;
+    toast.style.opacity = "0";
+    f();
+  });
   document.getElementById("sheet-copy").addEventListener("click", function () {
     var t = document.getElementById("sheet-clause").textContent;
     if (navigator.clipboard) navigator.clipboard.writeText(t).then(function () { showToast("条文已复制"); });
@@ -1400,70 +2092,70 @@
     return '<span class="rc-status ' + m.cls + '">' + m.glyph + " " + status + "</span>";
   }
 
-  /* ---------- 演示记录（4 条，覆盖四状态；demo=true 显示「示例」角标） ---------- */
+  /* ---------- 演示记录（4 条，覆盖四状态 × 四专业；全部虚构代称；demo=true 显示「示例」角标） ---------- */
   var RECTIFY = [
-    { id: "R-2609-001", demo: true, source: "项目自查", source_other: "",
-      location: "3# 机位承台区", severity: "一般",
-      description: "3# 机位基础环法兰面局部锈斑，未处理（待除锈复验）。",
+    { id: "R-2610-001", demo: true, source: "项目自查", source_other: "",
+      location: "主体结构 · 3# 楼二层梁板", severity: "一般",
+      description: "3# 楼二层梁板混凝土浇筑完成后未及时覆盖保湿养护，表面出现干缩裂缝。",
       deadline: "", owner: "李工",
       clauses: [], photos_before: [], action_note: "", photos_after: [],
       status: "草稿", review_person: "", review_date: "", review_note: "",
       created_at: "2026-10-05 09:12", updated_at: "2026-10-05 09:12",
       timeline: ["2026-10-05 09:12 创建记录（草稿）"] },
-    { id: "R-2610-002", demo: true, source: "监理通知单", source_other: "",
-      location: "2# 机位塔筒吊装区", severity: "较重",
-      description: "吊装作业警戒区隔离范围不足，警戒带缺失约 15 米，非作业人员可进入吊装回转半径。",
+    { id: "R-2609-002", demo: true, source: "监理通知单", source_other: "",
+      location: "高强螺栓 · 主厂房钢梁拼接节点", severity: "较重",
+      description: "钢梁拼接节点高强螺栓初拧完成后未进行终拧，终拧扭矩检查记录缺失。",
       deadline: "2026-10-03", owner: "张班长",
-      clauses: [{ clause_id: "Q/XX-JZ 示例 · 3.4",
-        snapshot: "吊装作业按吊臂回转半径外扩 5m 设置警戒区，专人警戒，无关人员、车辆禁止进入。",
+      clauses: [{ clause_id: "GB 50205-2020 · 6.3.3",
+        snapshot: "高强度螺栓连接副终拧完成后，应按节点数抽查 10% 且不少于 2 个节点进行终拧扭矩检查。",
         adopted_at: "2026-10-01 15:40", adopted_via: "ai" }],
       photos_before: [
-        { data: demoPhoto("整改前 · 隔离带缺口", "#5E7183", "#2C3E50"), caption: "西侧警戒带缺口", order: 0 },
-        { data: demoPhoto("整改前 · 吊装区全景", "#546E7A", "#263238"), caption: "回转半径内人员通行", order: 1 }],
+        { data: demoPhoto("整改前 · 节点未终拧", "#5E7183", "#2C3E50"), caption: "拼接节点螺栓未做终拧标记", order: 0 },
+        { data: demoPhoto("整改前 · 记录缺失", "#546E7A", "#263238"), caption: "扭矩检查记录空白", order: 1 }],
       action_note: "", photos_after: [], status: "待整改",
       review_person: "", review_date: "", review_note: "",
-      created_at: "2026-10-01 15:32", updated_at: "2026-10-01 15:40",
-      timeline: ["2026-10-01 15:32 创建记录（草稿）", "2026-10-01 15:35 状态：草稿 → 待整改",
-        "2026-10-01 15:40 引用条文 Q/XX-JZ 示例 · 3.4（AI 推荐采纳）"] },
-    { id: "R-2610-003", demo: true, source: "项目自查", source_other: "",
-      location: "2# 机位塔筒焊缝区", severity: "紧急",
-      description: "塔筒环缝焊接作业未搭设防风棚，当日阵风 9m/s 仍进行露天焊接。",
+      created_at: "2026-09-30 15:32", updated_at: "2026-10-01 15:40",
+      timeline: ["2026-09-30 15:32 创建记录（草稿）", "2026-09-30 15:35 状态：草稿 → 待整改",
+        "2026-10-01 15:40 引用条文 GB 50205-2020 · 6.3.3（AI 推荐采纳）"] },
+    { id: "R-2610-003", demo: true, source: "上级检查", source_other: "",
+      location: "电气 · 配电房接地装置区", severity: "紧急",
+      description: "配电房接地装置安装完成后未进行接地电阻测试，测试记录缺失。",
       deadline: "2026-10-04", owner: "王工",
-      clauses: [{ clause_id: "GB 50661-2011 · 7.1",
-        snapshot: "露天焊接作业风速超过 8m/s 或相对湿度大于 90% 时，应采取防护措施或停止焊接。",
+      clauses: [{ clause_id: "GB 50303-2015 · 12.1.1",
+        snapshot: "接地装置的接地电阻值必须符合设计要求，测试记录应完整。",
         adopted_at: "2026-10-03 10:05", adopted_via: "ai" }],
       photos_before: [
-        { data: demoPhoto("整改前 · 露天焊接", "#6B5E4E", "#3E352A"), caption: "无防风棚", order: 0 },
-        { data: demoPhoto("整改前 · 风速仪读数", "#5E5A4E", "#2E2B24"), caption: "风速仪 9.2m/s", order: 1 }],
-      action_note: "已停止焊接作业；搭设防风棚后恢复，对已焊焊缝安排 UT 复检，复检合格。",
+        { data: demoPhoto("整改前 · 接地装置", "#6B5E4E", "#3E352A"), caption: "接地装置已安装", order: 0 },
+        { data: demoPhoto("整改前 · 记录缺失", "#5E5A4E", "#2E2B24"), caption: "无电阻测试记录", order: 1 }],
+      action_note: "已补做接地电阻测试，实测值满足设计要求；测试记录归档，班组重新交底。",
       photos_after: [
-        { data: demoPhoto("整改后 · 防风棚", "#2E7D5B", "#1B4D38"), caption: "防风棚搭设完成", order: 0 },
-        { data: demoPhoto("整改后 · 复检记录", "#2F6E52", "#173F2F"), caption: "UT 复检合格单", order: 1 }],
+        { data: demoPhoto("整改后 · 测试完成", "#2E7D5B", "#1B4D38"), caption: "接地电阻测试完成", order: 0 },
+        { data: demoPhoto("整改后 · 记录归档", "#2F6E52", "#173F2F"), caption: "测试记录归档", order: 1 }],
       status: "已整改", review_person: "", review_date: "", review_note: "",
       created_at: "2026-10-03 09:50", updated_at: "2026-10-04 16:20",
       timeline: ["2026-10-03 09:50 创建记录（草稿）", "2026-10-03 09:55 状态：草稿 → 待整改",
-        "2026-10-03 10:05 引用条文 GB 50661-2011 · 7.1（AI 推荐采纳）",
+        "2026-10-03 10:05 引用条文 GB 50303-2015 · 12.1.1（AI 推荐采纳）",
         "2026-10-04 16:20 状态：待整改 → 已整改"] },
     { id: "R-2609-004", demo: true, source: "监理通知单", source_other: "",
-      location: "4# 机位叶片吊装区", severity: "较重",
-      description: "叶片吊装未使用专用吊带（现场混用钢丝绳吊具）。",
+      location: "管道 · 污水管道 W1–W5 井段", severity: "较重",
+      description: "污水管道闭水试验未做即回填，严密性试验记录缺失。",
       deadline: "2026-09-28", owner: "赵班长",
-      clauses: [{ clause_id: "GB/T 19568-2025 · 8.3",
-        snapshot: "叶片吊装应使用专用吊带，吊装前逐件检查吊带磨损与标识。",
+      clauses: [{ clause_id: "GB 50268-2008 · 9.3.1",
+        snapshot: "污水、雨污水合流管道及湿陷土、膨胀土地区的雨水管道，必须经严密性试验合格后方可投入运行。",
         adopted_at: "2026-09-26 11:02", adopted_via: "ai" }],
       photos_before: [
-        { data: demoPhoto("整改前 · 钢丝绳吊具", "#7A6A56", "#453A2C"), caption: "混用钢丝绳", order: 0 },
-        { data: demoPhoto("整改前 · 吊具特写", "#6E6152", "#3B332A"), caption: "无专用吊带", order: 1 }],
-      action_note: "已换用叶片专用吊带，吊装前逐件检查并拍照留档；班组重新交底。",
+        { data: demoPhoto("整改前 · 管道回填", "#7A6A56", "#453A2C"), caption: "未做闭水试验即回填", order: 0 },
+        { data: demoPhoto("整改前 · 检查井", "#6E6152", "#3B332A"), caption: "井段无试验记录", order: 1 }],
+      action_note: "已开挖复验并分段补做闭水试验，试验合格后重新回填；试验记录完善归档。",
       photos_after: [
-        { data: demoPhoto("整改后 · 专用吊带", "#2E7D5B", "#1B4D38"), caption: "专用吊带更换完成", order: 0 },
-        { data: demoPhoto("整改后 · 班前交底", "#33694F", "#1E4634"), caption: "班组重新交底", order: 1 }],
+        { data: demoPhoto("整改后 · 闭水试验", "#2E7D5B", "#1B4D38"), caption: "分段闭水试验完成", order: 0 },
+        { data: demoPhoto("整改后 · 记录归档", "#33694F", "#1E4634"), caption: "试验记录归档", order: 1 }],
       status: "复查合格",
       review_person: "质检员王工", review_date: "2026-09-30",
-      review_note: "现场复核已换用专用吊带，作业规范，验收通过。",
+      review_note: "现场复核试验记录与回填质量，均满足要求，验收通过。",
       created_at: "2026-09-25 14:10", updated_at: "2026-09-30 10:30",
       timeline: ["2026-09-25 14:10 创建记录（草稿）", "2026-09-25 14:15 状态：草稿 → 待整改",
-        "2026-09-26 11:02 引用条文 GB/T 19568-2025 · 8.3（AI 推荐采纳）",
+        "2026-09-26 11:02 引用条文 GB 50268-2008 · 9.3.1（AI 推荐采纳）",
         "2026-09-27 17:40 状态：待整改 → 已整改",
         "2026-09-28 09:10 状态：已整改 → 待整改（复查不通过：整改照片与说明不完整）",
         "2026-09-28 15:30 状态：待整改 → 已整改",
@@ -1476,12 +2168,15 @@
     var ev = { name: name, ts: Date.now(), user_id: "u-demo-01", device_id: "mobile-demo", platform: "mobile" };
     if (props) { Object.keys(props).forEach(function (k) { ev[k] = props[k]; }); }
     _events.push(ev);
+    if (_events.length > 500) _events.splice(0, _events.length - 500);
+    persist("events", _events, 1000);   /* v2.2：埋点事件落 IndexedDB（防抖合并写入） */
   }
   window.__events = _events;
+  window.__exportEvents = function () { return JSON.stringify({ events: _events, op_log: opLog }); };   /* v2.3：埋点+审计日志导出（核验用） */
 
-  /* ---------- 条文推荐：演示映射表（约 20~30 条；条文号只来自映射表，不生成） ---------- */
+  /* ---------- 条文推荐：演示映射表（v2.2 共 69 条，覆盖 8 组；条文号只来自映射表，不由模型生成） ---------- */
   var REC_MAP = [
-    { re: /警戒|隔离|隔离带|回转半径/, code: "Q/XX-JZ 示例", no: "3.4", name: "海上风电项目施工安全专项方案编制指南（示例）",
+    { re: /警戒|隔离|隔离带|回转半径/, code: "Q/QY-JZ 示例", no: "3.4", name: "海上风电项目施工安全专项方案编制指南（示例）",
       snap: "吊装作业按吊臂回转半径外扩 5m 设置警戒区，专人警戒，无关人员、车辆禁止进入。" },
     { re: /风速|吊装|塔筒|大风|阵风/, code: "GB/T 50571-2010", no: "7.2.3", name: "海上风力发电工程施工规范",
       snap: "吊装作业应在风速不大于 10m/s 时进行，六级以上大风、雷雨天气禁止吊装作业。" },
@@ -1493,7 +2188,7 @@
       snap: "叶片吊装应使用专用吊带，吊装前逐件检查吊带磨损与标识。" },
     { re: /安全带|高处|坠落|临边/, code: "GB 6095-2021", no: "4.2", name: "坠落防护 安全带",
       snap: "高处作业应系挂安全带，做到高挂低用，挂点应牢固可靠。" },
-    { re: /混凝土|养护|温差|测温|裂缝/, code: "GB 50496-2018", no: "5.2", name: "大体积混凝土施工标准",
+    { re: /大体积|温差|测温|温控|裂缝/, code: "GB 50496-2018", no: "5.2", name: "大体积混凝土施工标准",
       snap: "大体积混凝土养护期间应控制内外温差不超过 25℃，并做好测温记录。" },
     { re: /海缆|埋深|敷设|路由|复测/, code: "GB/T 51121-2015", no: "6.4", name: "风力发电工程施工与验收规范",
       snap: "海缆埋深一般不小于 1.5m（软质海床），敷设前后均应完成路由复测并记录。" },
@@ -1505,7 +2200,7 @@
       snap: "检验批、隐蔽工程等验收记录应随施工进度同步形成，内容真实完整。" },
     { re: /主机|齿轮箱|法兰|对中|箱变/, code: "GB/T 19568-2025", no: "8.3", name: "风能发电系统 风力发电机组装配和安装规范",
       snap: "主机与塔筒法兰对接后螺栓按设计力矩分次紧固，完成后按比例抽查复紧。" },
-    { re: /高强螺栓|螺栓|紧固|力矩/, code: "GB 50205-2020", no: "6.3.1", name: "钢结构工程施工质量验收标准",
+    { re: /穿入|扩孔|孔径|强行敲打/, code: "GB 50205-2020", no: "6.3.1", name: "钢结构工程施工质量验收标准",
       snap: "高强度螺栓连接副应自由穿入螺栓孔，不得强行敲打，扩孔后的孔径不应超过 1.2d。" },
     { re: /升压站|交接试验|耐压|电气/, code: "GB 50150-2016", no: "3.0.1", name: "电气装置安装工程 电气设备交接试验标准",
       snap: "电气设备交接试验应在设备安装完毕、试验合格后方可投入运行。" },
@@ -1513,7 +2208,7 @@
       snap: "电缆敷设后应及时封堵孔洞，防火封堵应完整、密实。" },
     { re: /索具|卸扣|钢丝绳|起重/, code: "GB/T 3811-2008", no: "4.3", name: "起重机设计规范（索具检查）",
       snap: "吊装索具使用前应逐件检查，存在磨损、变形、断丝的索具禁止使用。" },
-    { re: /气象|窗口期|停工/, code: "Q/XX-JZ 示例", no: "3.1", name: "海上施工气象窗口期管理（示例）",
+    { re: /气象|窗口期|停工/, code: "Q/QY-JZ 示例", no: "3.1", name: "海上施工气象窗口期管理（示例）",
       snap: "海上作业实行气象窗口期管理，超限天气立即停止作业并转入安全区域。" },
     { re: /脚手架|跳板|防护栏/, code: "JGJ 130-2011", no: "8.2.4", name: "建筑施工扣件式钢管脚手架安全技术规范",
       snap: "脚手架作业层应满铺脚手板，设置防护栏杆与挡脚板，验收合格后使用。" },
@@ -1553,67 +2248,186 @@
       snap: "建筑施工安全检查评定等级分为合格、不合格两个等级，不合格项应整改后复检。" },
     { re: /道路|路基|路面|面层|沥青/, code: "CJJ 1-2008", no: "9.1.1", name: "城镇道路工程施工与质量验收规范",
       snap: "面层施工前应对基层进行验收，基层质量合格后方可铺筑面层。" },
-    { re: /水压试验|管道|给排水管道|功能性试验/, code: "GB 50268-2008", no: "9.1.1", name: "给水排水管道工程施工及验收规范",
+    { re: /水压试验|给水管道|功能性试验/, code: "GB 50268-2008", no: "9.1.1", name: "给水排水管道工程施工及验收规范",
       snap: "给水管道安装完成后应进行水压试验，试验压力应符合设计要求，试验记录应完整。" },
     { re: /水池|构筑物|沉淀池|泵房/, code: "GB 50141-2008", no: "6.2.1", name: "给水排水构筑物工程施工及验收规范",
       snap: "现浇钢筋混凝土构筑物的模板及支架应具有足够的承载能力、刚度和稳定性。" },
     { re: /风机基础|箱变基础|风电工程|风机吊装/, code: "GB/T 51121-2015", no: "6.1.1", name: "风力发电工程施工与验收规范",
       snap: "风力发电机组安装前应编制专项施工方案，并经审批后实施。" },
+    /* ===== v2.2 扩充（39 → 69 条，覆盖 8 组；推荐质量锚点：房建·养护 / 市政·闭水 / 机电·接地 / 钢结构·终拧 / 风电·吊装风速） ===== */
+    /* 房建国标 */
+    { re: /保湿|养护|洒水|覆盖|土工布/, code: "GB 50666-2011", no: "8.1.3", name: "混凝土结构工程施工规范",
+      snap: "混凝土浇筑完毕后应在 12h 内加以覆盖并保湿养护，养护时间应符合规范要求。" },
+    { re: /现浇结构|外观质量|严重缺陷|蜂窝|麻面/, code: "GB 50204-2015", no: "8.2.1", name: "混凝土结构工程施工质量验收规范",
+      snap: "现浇结构的外观质量不应有严重缺陷；已出现的严重缺陷应由施工单位提出技术处理方案。" },
+    { re: /回填|压实系数|土料|分层夯实/, code: "GB 50202-2018", no: "5.2.1", name: "建筑地基基础工程施工质量验收标准",
+      snap: "基坑（槽）回填应在基础验收合格后进行，回填土料与压实系数应符合设计要求。" },
+    { re: /涂饰|涂料饰面|漏涂|透底|起皮/, code: "GB 50210-2018", no: "12.1.1", name: "建筑装饰装修工程质量验收标准",
+      snap: "涂饰工程涂层应均匀、粘结牢固，不得漏涂、透底、起皮和掉粉。" },
+    /* 市政·管道 */
+    { re: /闭水|严密性试验|灌水试验|无压管道/, code: "GB 50268-2008", no: "9.3.1", name: "给水排水管道工程施工及验收规范",
+      snap: "污水、雨污水合流管道及湿陷土、膨胀土地区的雨水管道，必须经严密性试验合格后方可投入运行。" },
+    { re: /满水试验|水池试验|构筑物试验/, code: "GB 50141-2008", no: "10.1.1", name: "给水排水构筑物工程施工及验收规范",
+      snap: "给水排水构筑物完工后应进行满水试验，试验合格后方可进行下一工序。" },
+    { re: /基层|压实度|平整度|摊铺/, code: "CJJ 1-2008", no: "7.2.1", name: "城镇道路工程施工与质量验收规范",
+      snap: "道路基层施工应控制压实度与平整度，验收合格后方可铺筑面层。" },
+    /* 机电安装 */
+    { re: /采暖|水压试验|散热器/, code: "GB 50242-2002", no: "8.2.1", name: "建筑给水排水及采暖工程施工质量验收规范",
+      snap: "室内采暖系统安装完成后应进行水压试验，试验压力应符合设计要求。" },
+    { re: /系统调试|调试记录|通风系统/, code: "GB 50243-2016", no: "11.1.1", name: "通风与空调工程施工质量验收规范",
+      snap: "通风与空调工程安装完毕应进行系统调试，调试记录应完整。" },
+    { re: /找正|找平|垫铁|设备安装/, code: "GB 50231-2009", no: "6.1.1", name: "机械设备安装工程施工及验收通用规范",
+      snap: "设备就位后应进行找正找平，其允许偏差应符合产品技术文件的规定。" },
+    { re: /等电位联结|防雷|接地体/, code: "GB 50303-2015", no: "12.3.1", name: "建筑电气工程施工质量验收规范",
+      snap: "等电位联结干线应与接地装置可靠连接，连接导体规格应符合设计要求。" },
+    /* 钢结构 */
+    { re: /高强螺栓|螺栓|终拧|扭矩|紧固/, code: "GB 50205-2020", no: "6.3.3", name: "钢结构工程施工质量验收标准",
+      snap: "高强度螺栓连接副终拧完成后，应按节点数抽查 10% 且不少于 2 个节点进行终拧扭矩检查。" },
+    { re: /构件吊装|吊点|校正|临时固定/, code: "GB 50755-2012", no: "10.2.3", name: "钢结构工程施工规范",
+      snap: "构件吊装前应清除表面杂物并校核吊点，就位后及时校正并临时固定。" },
+    { re: /检测等级|超声检测|母材厚度/, code: "GB/T 11345-2023", no: "4.1", name: "焊缝无损检测 超声检测",
+      snap: "超声检测技术应按母材厚度、焊缝型式与检测等级选择，并在检测方案中明确。" },
+    /* 施工安全 */
+    { re: /悬空作业|攀登|安全带/, code: "JGJ 80-2016", no: "6.1.1", name: "建筑施工高处作业安全技术规范",
+      snap: "悬空作业处应设置防护栏杆或安全网，作业人员应按规定系挂安全带。" },
+    { re: /脚手架验收|搭设完毕|挂牌使用/, code: "JGJ 130-2011", no: "9.1.1", name: "建筑施工扣件式钢管脚手架安全技术规范",
+      snap: "脚手架搭设完毕应经检查验收合格并挂牌后方可使用。" },
+    { re: /防火巡查|防火标志|重点部位/, code: "GB/T 50720-2011", no: "6.1.1", name: "建设工程施工现场消防安全技术标准",
+      snap: "施工现场应建立防火巡查制度，重点部位应设置明显的防火标志。" },
+    { re: /土石方|机械作业|作业区/, code: "JGJ 33-2012", no: "5.1.1", name: "建筑机械使用安全技术规程",
+      snap: "土石方机械作业时，作业区内不得有无关人员停留。" },
+    { re: /安全网|防护栏杆|洞口防护/, code: "JGJ 80-2016", no: "4.2.1", name: "建筑施工高处作业安全技术规范",
+      snap: "洞口作业应采取防护措施，短边尺寸大于 500mm 的洞口应设置防护栏杆并挂设安全平网。" },
+    /* 起重吊装 */
+    { re: /钢丝绳|断丝|磨损报废/, code: "GB/T 5972-2016", no: "5.1", name: "起重机 钢丝绳 保养、维护、检验和报废",
+      snap: "钢丝绳出现断丝、锈蚀、磨损超过报废标准时应立即报废，不得继续使用。" },
+    { re: /塔机|塔式起重机|限位|力矩限制器/, code: "GB 5144-2006", no: "6.3", name: "塔式起重机安全规程",
+      snap: "塔式起重机各安全限位装置应齐全可靠，作业前逐项检查确认。" },
+    { re: /起重机械|作业前检查|制动/, code: "GB 6067.1-2010", no: "5.1", name: "起重机械安全规程 第 1 部分：总则",
+      snap: "起重机械作业前应进行检查，确认各机构、制动器与安全装置正常后方可作业。" },
+    { re: /吊装方案|专项方案|起重吊装/, code: "GB/T 3811-2008", no: "9.1", name: "起重机设计规范（安全装置）",
+      snap: "起重机各安全装置应齐全可靠，作业前应逐项检查并记录。" },
+    /* 风电·海洋工程 */
+    { re: /作业窗口|窗口期计划|气象窗口/, code: "NB/T 31033-2019", no: "6.2", name: "海上风电场工程施工组织设计规范",
+      snap: "海上作业应编制窗口期作业计划，气象条件超限时不得组织出海作业。" },
+    { re: /竣工测量|测量成果|归档/, code: "NB/T 10106-2018", no: "8.1.1", name: "海上风电场工程测量规程",
+      snap: "海上风电场工程竣工后应进行竣工测量，测量成果应归档保存。" },
+    { re: /风力发电工程|工程验收|验收资料/, code: "GB/T 51121-2015", no: "9.1.1", name: "风力发电工程施工与验收规范",
+      snap: "风力发电工程验收应按规定程序组织，验收资料应完整齐全。" },
+    /* 项目文件·内部示例 */
+    { re: /吊装交底|班前交底|交底记录/, code: "Q/QY-JZ 示例", no: "5.1", name: "施工安全专项方案编制指南（示例）",
+      snap: "吊装作业前应完成班前安全交底并留存记录，交底内容应覆盖作业风险与应急措施。" },
+    { re: /混凝土台账|养护记录|浇筑记录/, code: "FJ-CL 示例", no: "4.1", name: "混凝土施工台账管理办法（示例）",
+      snap: "混凝土浇筑与养护应建立台账，记录浇筑时间、方量、试块留置与养护情况。" },
+    { re: /占道|交通导改|围挡/, code: "SZ-GD 示例", no: "3.2", name: "市政占道施工管理办法（示例）",
+      snap: "占道施工应办理审批手续，按批准的交通导改方案设置围挡与警示标志。" },
+    { re: /电气调试|调试记录表|送电/, code: "JD-DB 示例", no: "2.3", name: "电气调试记录管理规定（示例）",
+      snap: "电气系统送电前应完成相关调试并填写调试记录，记录应经专业工程师确认。" },
   ];
 
   var recSeq = 0, recDebounceTimer = null, REC_LATENCY = 300;
-  function matchClauses(text) {
-    var hits = [];
-    for (var i = 0; i < REC_MAP.length && hits.length < 3; i++) {
-      if (REC_MAP[i].re.test(text)) hits.push(REC_MAP[i]);
+
+  /* 排序链（v2.2）：①命中权重（关键词命中数）→ ②光标所在段落优先 → ③数组序兜底（同场景复跑结果一致）；候选 ≤3 条 */
+  function matchClauses(text, paraText) {
+    var out = [];
+    for (var i = 0; i < REC_MAP.length; i++) {
+      var m = REC_MAP[i];
+      var weight = 0;
+      m.re.source.split("|").forEach(function (kw) {
+        try { if (new RegExp(kw).test(text)) weight++; } catch (e) { /* 关键词异常忽略 */ }
+      });
+      if (!weight) continue;
+      out.push({ code: m.code, no: m.no, name: m.name, snap: m.snap, weight: weight,
+        inPara: (paraText && m.re.test(paraText)) ? 1 : 0, idx: i });
     }
-    return hits;
+    out.sort(function (a, b) { return (b.weight - a.weight) || (b.inPara - a.inPara) || (a.idx - b.idx); });
+    return out.slice(0, 3);
   }
-  function recommendFor(text) {
+
+  /* ---------- v2.2 条带控制器（整改 + 笔记共用：定高 56px，Top 1 + 「共 n 条」展开） ---------- */
+  function stripCtl(prefix) {
+    var ctl = { hits: [], opt: {} };
+    ["idle", "loading", "empty", "hit", "pop", "code", "snap", "more"].forEach(function (k) {
+      ctl[k] = byId(prefix + "-strip-" + k);
+    });
+    ctl.show = function (state) {
+      ["idle", "loading", "empty", "hit"].forEach(function (k) { ctl[k].classList.toggle("hidden", k !== state); });
+      ctl.pop.classList.add("hidden");
+    };
+    ctl.render = function (hits) {
+      ctl.hits = hits || [];
+      if (!hits || !hits.length) { ctl.show("empty"); return; }
+      ctl.show("hit");
+      var top = hits[0];
+      ctl.code.textContent = top.code + " · " + top.no;
+      ctl.snap.textContent = top.snap;
+      ctl.more.textContent = "共 " + hits.length + " 条";
+    };
+    ctl.togglePop = function () {
+      if (ctl.pop.classList.contains("hidden")) {
+        var html = '<div class="text-[10px] text-sub mb-1.5">AI 推荐仅供参考，请核实后采用</div>';
+        ctl.hits.forEach(function (h, i) {
+          html += '<div class="border border-deep-100 bg-deep-100/30 rounded-xl px-3 py-2.5 mb-1.5">' +
+            '<div class="text-[11px] font-bold text-deep-700">' + h.code + " · " + h.no + "</div>" +
+            '<div class="text-[11px] text-ink mt-1 leading-relaxed">' + h.snap + "</div>" +
+            '<div class="flex items-center gap-2 mt-1.5">' +
+              '<span class="text-[10px] text-sub truncate flex-1">' + h.name + "</span>" +
+              '<button class="strip-use press h-9 px-2.5 rounded-lg btn-p text-[11px] font-semibold shrink-0" data-idx="' + i + '">' + ctl.opt.action + "</button>" +
+            "</div></div>";
+        });
+        ctl.pop.innerHTML = html;
+        ctl.pop.classList.remove("hidden");
+      } else {
+        ctl.pop.classList.add("hidden");
+      }
+    };
+    ctl.more.addEventListener("click", function () { if (ctl.hits.length) ctl.togglePop(); });
+    ctl.pop.addEventListener("click", function (e) {
+      var btn = e.target.closest(".strip-use");
+      if (btn && ctl.opt.onUse) ctl.opt.onUse(ctl.hits[parseInt(btn.dataset.idx, 10)]);
+    });
+    return ctl;
+  }
+
+  /* ---------- 整改侧条带接入（自动推荐防抖 800ms 与「找依据」显式触发并存） ---------- */
+  var rcStrip = stripCtl("rc");
+  rcStrip.opt = { action: "引用", onUse: function (h) { adoptClause(h); } };
+  byId("rc-strip-adopt").addEventListener("click", function () { if (rcStrip.hits[0]) adoptClause(rcStrip.hits[0]); });
+
+  function textareaPara(el) {  /* 文本域中光标所在行（整改侧 = 光标所在段落） */
+    if (!el || document.activeElement !== el) return "";
+    var caret = el.selectionStart || 0, v = el.value;
+    var s = v.lastIndexOf("\n", caret - 1) + 1;
+    var e2 = v.indexOf("\n", caret); if (e2 < 0) e2 = v.length;
+    return v.slice(s, e2);
+  }
+  function recommendFor(text, paraText) {
     recSeq += 1;
     var seq = recSeq;
-    renderRecSkeleton();
+    if (!text) { rcStrip.show("idle"); return; }
+    rcStrip.show("loading");
     setTimeout(function () {
       if (seq !== recSeq) return; /* 仅渲染最新序号的返回（防陈旧结果覆盖） */
-      var hits = matchClauses(text);
-      renderRec(hits);
+      var hits = matchClauses(text, paraText);
+      rcStrip.render(hits);
       track("rectify_clause_recommended", { recommend_count: hits.length });
     }, REC_LATENCY);
   }
-  function renderRecSkeleton() {
-    var z = byId("rc-rec-zone");
-    z.innerHTML = '<div class="skeleton-line h-3 w-2/3"></div><div class="skeleton-line h-3 w-1/2 mt-2"></div><div class="skeleton-line h-3 w-3/5 mt-2"></div>';
-  }
-  function renderRec(hits) {
-    var z = byId("rc-rec-zone");
-    if (!hits.length) {
-      z.innerHTML = '<div class="text-[11px] text-sub bg-paper rounded-xl px-3 py-2.5">未关联条文，可手动从规范库引用</div>';
-      return;
-    }
-    var html = '<div class="text-[10px] text-sub mb-1.5">AI 推荐仅供参考，请核实后采用</div>';
-    hits.forEach(function (h, i) {
-      html += '<div class="rc-rec-item border border-deep-100 bg-deep-100/30 rounded-xl px-3 py-2.5 mb-2">' +
-        '<div class="text-[11px] font-bold text-deep-700">' + h.code + " · " + h.no + "</div>" +
-        '<div class="text-[11px] text-ink mt-1 leading-relaxed">' + h.snap + "</div>" +
-        '<div class="flex items-center gap-2 mt-1.5">' +
-          '<span class="text-[10px] text-sub truncate flex-1">' + h.name + "</span>" +
-          '<button class="rc-rec-use press h-7 px-2.5 rounded-lg btn-p text-[11px] font-semibold" data-idx="' + i + '">引用</button>' +
-        "</div></div>";
-    });
-    z.innerHTML = html;
-    z.querySelectorAll(".rc-rec-use").forEach(function (btn) {
-      btn.addEventListener("click", function () { adoptClause(hits[parseInt(btn.dataset.idx, 10)]); });
-    });
-  }
   function scheduleRecommend() {
     clearTimeout(recDebounceTimer);
-    recDebounceTimer = setTimeout(function () { if (rcCur) recommendFor(rcDesc.value.trim()); }, 800);
+    recDebounceTimer = setTimeout(function () {
+      if (rcCur) recommendFor(rcDesc.value.trim(), textareaPara(rcDesc));
+    }, 800);
   }
   function adoptClause(hit) {
+    var cid = hit.code + " · " + hit.no;
+    if (rcCur.clauses.some(function (c) { return c.clause_id === cid; })) { showToast("该条文已关联"); return; }
     if (rcCur.clauses.length >= 5) { showToast("条文最多关联 5 条"); return; }
-    rcCur.clauses.push({ clause_id: hit.code + " · " + hit.no, snapshot: hit.snap, adopted_at: rNow(), adopted_via: "ai" });
+    rcCur.clauses.push({ clause_id: cid, snapshot: hit.snap, adopted_at: rNow(), adopted_via: "ai" });
     pushTimeline("引用条文 " + hit.code + " · " + hit.no + "（AI 推荐采纳）");
     renderClauses();
+    rcStrip.pop.classList.add("hidden");
+    persist("rectify", RECTIFY);
     track("rectify_clause_linked", { record_id: rcCur.id, clause_id: hit.code + " · " + hit.no, adopted_via: "ai" });
     showToast("已引用为处置依据");
   }
@@ -1636,12 +2450,16 @@
       RECTIFY.forEach(function (r) { if (r.id === id) rec = r; });
       if (!rec) return;
       rcCur = rec; rcIsNew = false;
+      rcSpec = "";   /* 打开已有记录：不预选专业，尊重记录本身的部位文本 */
     } else {
       rcCur = { id: "", demo: false, source: "", source_other: "", location: "", severity: "一般",
         description: "", deadline: "", owner: "", clauses: [], photos_before: [], action_note: "",
         photos_after: [], status: "草稿", review_person: "", review_date: "", review_note: "",
         created_at: rNow(), updated_at: rNow(), timeline: [] };
       rcIsNew = true;
+      /* 规则⑤：新建记录自动预选记忆的「专业+部位」配对 */
+      rcSpec = chipsMemory.spec || "";
+      if (chipsMemory.spec && chipsMemory.loc) rcCur.location = chipsMemory.loc;
     }
     renderRectifyForm();
     rcOverlay.style.transform = "translateX(0)";
@@ -1679,9 +2497,12 @@
     byId("rc-source-other-wrap").classList.toggle("hidden", r.source !== "其他");
     byId("rc-deadline").value = r.deadline;
     rcRPerson.value = r.review_person; rcRDate.value = r.review_date; rcRNote.value = r.review_note;
-    renderSourceChips(); renderSevChips(); renderPhotos("before"); renderPhotos("after");
+    renderSourceChips(); renderSevChips(); renderLocChips(); renderPhotos("before"); renderPhotos("after");
     renderClauses(); renderTimeline(); renderActions();
-    byId("rc-rec-zone").innerHTML = "";
+    /* v2.2 条带复位：已有描述 → 立即推荐（打开记录即可见 Top 1）；无描述 → 固定未输入占位 */
+    rcStrip.hits = [];
+    if (r.description && r.description.trim()) recommendFor(r.description.trim(), "");
+    else rcStrip.show("idle");
     byId("rc-desc-count").textContent = rcDesc.value.length + "/500";
     byId("rc-action-count").textContent = rcAction.value.length + "/500";
     clearInvalidAll();
@@ -1693,7 +2514,7 @@
     ["监理通知单", "项目自查", "上级检查", "其他"].forEach(function (v) {
       var on = rcCur.source === v;
       var b = document.createElement("button");
-      b.className = "rc-chip press h-9 px-3 rounded-xl border text-[12px] font-semibold " + (on ? "rc-chip-on" : "bg-mist border-line text-ink");
+      b.className = "rc-chip press chip-touch px-4 rounded-xl border text-[12px] font-semibold " + (on ? "rc-chip-on" : "bg-mist border-line text-ink");
       b.textContent = v;
       b.addEventListener("click", function () {
         rcCur.source = v;
@@ -1710,24 +2531,68 @@
     ["一般", "较重", "紧急"].forEach(function (v) {
       var on = rcCur.severity === v;
       var b = document.createElement("button");
-      b.className = "rc-chip press h-9 px-3 rounded-xl border text-[12px] font-semibold " + (on ? "rc-chip-on" : "bg-mist border-line text-ink");
+      b.className = "rc-chip press chip-touch px-4 rounded-xl border text-[12px] font-semibold " + (on ? "rc-chip-on" : "bg-mist border-line text-ink");
       b.textContent = v;
       b.addEventListener("click", function () { rcCur.severity = v; renderSevChips(); });
       wrap.appendChild(b);
     });
   }
-  ["塔筒", "机位", "升压站", "集电线路", "其他"].forEach(function (v) {
-    var b = document.createElement("button");
-    b.className = "rc-loc-chip press h-8 px-2.5 rounded-lg border border-line bg-mist text-[11px] font-semibold text-ink";
-    b.textContent = v;
-    b.addEventListener("click", function () {
-      if (!rcCur) return;
-      rcLocation.value = v === "其他" ? "" : v;
-      rcCur.location = rcLocation.value;
-      rcLocation.classList.remove("rc-invalid");
-      if (v === "其他") rcLocation.focus();
+  /* ---------- v2.2 问题部位两级 chips：一级（专业）只决定二级集合、不写入 location；写入 location 的始终是二级部位文本且保持可编辑 ---------- */
+  var SPEC_LEVELS = {
+    "房建": ["基础", "主体结构", "砌体", "装饰装修"],
+    "市政": ["道路", "管道", "构筑物"],
+    "机电": ["设备安装", "管道", "电气", "通风空调"],
+    "钢结构": ["焊接", "高强螺栓", "吊装", "涂装"],
+    "风电": ["塔筒", "机位", "升压站", "海缆"],
+    "其他": []   /* 一级「其他」：隐藏二级行，直接手输 */
+  };
+  var chipsMemory = { spec: "", loc: "" };  /* 记忆最近一次「专业+部位」配对，随 IndexedDB 跨刷新保留 */
+  var rcSpec = "";                          /* 当前表单一级专业选择（仅决定二级集合） */
+
+  function renderLocChips() {
+    var wrap = byId("rc-loc-spec"), lv = byId("rc-loc-level");
+    wrap.innerHTML = "";
+    Object.keys(SPEC_LEVELS).forEach(function (spec) {
+      var b = document.createElement("button");
+      b.className = "rc-chip press chip-touch px-4 rounded-xl border text-[12px] font-semibold " + (rcSpec === spec ? "rc-chip-on" : "bg-mist border-line text-ink");
+      b.textContent = spec;
+      b.addEventListener("click", function () { pickSpec(spec); });
+      wrap.appendChild(b);
     });
-    byId("rc-loc-chips").appendChild(b);
+    lv.innerHTML = "";
+    var levels = SPEC_LEVELS[rcSpec] || [];
+    if (!levels.length) { lv.classList.add("hidden"); return; }
+    lv.classList.remove("hidden");
+    levels.concat(["其他"]).forEach(function (v) {
+      var b = document.createElement("button");
+      b.className = "rc-chip press chip-touch px-4 rounded-xl border border-line bg-mist text-[12px] font-semibold text-ink";
+      b.textContent = v === "其他" ? "其他（手输）" : v;
+      b.addEventListener("click", function () { pickLevel(v); });
+      lv.appendChild(b);
+    });
+  }
+  function pickSpec(spec) {   /* 规则①：选专业只改变二级集合、保留已填 location 文本；规则④：一级「其他」隐藏二级行仅手输 */
+    if (!rcCur) return;
+    rcSpec = spec;
+    renderLocChips();
+    if (spec === "其他") { rcLocation.classList.remove("rc-invalid"); rcLocation.focus(); }
+  }
+  function pickLevel(v) {     /* 规则②：选部位=覆盖式写入 location；规则③：二级「其他」聚焦输入框手输 */
+    if (!rcCur) return;
+    if (v === "其他") { rcLocation.classList.remove("rc-invalid"); rcLocation.focus(); return; }
+    rcLocation.value = v;
+    rcCur.location = v;
+    rcLocation.classList.remove("rc-invalid");
+    chipsMemory = { spec: rcSpec, loc: v };   /* 规则⑤：记忆最近一次配对 */
+    persist("chips", chipsMemory, 80);
+    renderLocChips();
+  }
+  byId("rc-chip-reset").addEventListener("click", function () {  /* 规则⑤：行尾「重置」清除记忆（含当前选择），不动已填文本 */
+    chipsMemory = { spec: "", loc: "" };
+    persist("chips", chipsMemory, 80);
+    rcSpec = "";
+    renderLocChips();
+    track("rectify_chips_reset", {});
   });
   document.querySelectorAll(".rc-deadline-quick").forEach(function (b) {
     b.addEventListener("click", function () {
@@ -1754,6 +2619,10 @@
         '<input class="rc-cap w-full bg-white text-[9px] text-ink px-1.5 py-1 outline-none border-t border-line" maxlength="50" placeholder="图注（≤50 字）" value="' + (p.caption || "").replace(/"/g, "&quot;") + '">';
       cell.querySelector(".rc-del").addEventListener("click", function () {
         list.splice(i, 1); renderPhotos(group);
+      });
+      cell.querySelector("img").addEventListener("click", function () {
+        openPhotoViewer(list, i);
+        track("rectify_photo_viewed", { record_id: rcCur.id, group: group, index: i });
       });
       cell.querySelector(".rc-cap").addEventListener("input", function (e) { p.caption = e.target.value; });
       grid.appendChild(cell);
@@ -1785,7 +2654,7 @@
       if (list.length >= 6) { showToast("照片最多 6 张，单张不超过 300KB"); return; }
       compressImage(f, function (dataUrl, ok) {
         if (!ok) { showToast("照片压缩后仍超过 300KB，请更换照片"); return; }
-        list.push({ data: dataUrl, caption: "", order: list.length });
+        list.push({ data: dataUrl, caption: "", taken_at: f.lastModified || Date.now(), order: list.length });
         renderPhotos(group);
         track("rectify_photo_added", { record_id: rcCur.id, group: group, count: list.length });
       });
@@ -1904,7 +2773,10 @@
   }
   function ensureInList() {
     if (rcIsNew) {
-      rcCur.id = "R-" + String(Date.now()).slice(-6);
+      /* R-YYMM-NNN（与演示数据同构；随机段防同毫秒/同分钟撞 id） */
+      var d = new Date(), ym = String(d.getFullYear()).slice(-2) + two(d.getMonth() + 1);
+      do { rcCur.id = "R-" + ym + "-" + (Math.floor(Math.random() * 900) + 100); }
+      while (RECTIFY.some(function (r) { return r.id === rcCur.id; }));
       rcCur.timeline.push(rNow() + " 创建记录（草稿）");
       RECTIFY.unshift(rcCur);
       rcIsNew = false;
@@ -2040,7 +2912,7 @@
     rcCur.deadline = this.value;
     this.classList.remove("rc-invalid");
   });
-  byId("rc-rec-btn").addEventListener("click", function () { if (rcCur) recommendFor(rcDesc.value.trim()); });
+  byId("rc-rec-btn").addEventListener("click", function () { if (rcCur) recommendFor(rcDesc.value.trim(), textareaPara(rcDesc)); });
 
   /* ---------- 整改列表 ---------- */
   function overdueDays(dl) {
@@ -2077,8 +2949,13 @@
   /* ---------- 导出预览（页脚五要素逐页固定；分页 ≤1600px） ---------- */
   /* 页脚五要素唯一来源：①产品名 ②版本 ③生成时间 ④自录未核验声明 ⑤条文以官方发布文本为准 */
   var EXP_FOOTER = {
-    l1: function () { return "准绳 v2.1 · 生成于 " + rNow(); },
-    l2: "内容由用户自行录入、未经第三方核验，不构成验收或责任认定依据；条文以官方发布文本为准。"
+    l1: function () { return "准绳 v2.2 · 生成于 " + rNow() + " · 演示数据（全部虚构）"; },
+    /* 常置⑤：自录未核验声明 + 官方文本为准；含条文时追加第⑥要素「条文版权」（整改 clauses 非空 / 笔记 cites 非空或正文含库内编号）；含照片时追加压缩声明 */
+    l2: function (withClause, withPhoto) {
+      return "内容由用户自行录入、未经第三方核验，不构成验收或责任认定依据；条文以官方发布文本为准。" +
+        (withClause ? "；条文版权归发布机构所有，仅供个人工作参考。" : "") +
+        (withPhoto ? "；现场照片经压缩处理，仅作留痕参考。" : "");
+    }
   };
   function expSection(html, cls) {
     var s = document.createElement("div");
@@ -2130,7 +3007,10 @@
       (rec.timeline.length ? rec.timeline.map(function (t) {
         return '<div class="text-[10.5px] text-ink py-0.5 leading-relaxed">' + t + "</div>";
       }).join("") : '<div class="text-[11px] text-sub">尚无记录</div>')));
-    /* 分页：每页内容高度 ≤1500px（上限 1600，预留页脚） */
+    return finishExport(holder, sections, rec.clauses.length > 0, ((rec.photos_before && rec.photos_before.length) || (rec.photos_after && rec.photos_after.length)) > 0);
+  }
+  /* 分页（每页内容高度 ≤1500px，上限 1600 预留页脚）+ 逐页固定页脚（常置五要素；含条文追加⑥；含照片追加压缩声明） */
+  function finishExport(holder, sections, withClause, withPhoto) {
     var page = null;
     function newPage() {
       page = document.createElement("div");
@@ -2154,7 +3034,7 @@
       f.className = "exp-footer border-t border-line mt-3 pt-2";
       f.innerHTML =
         '<div class="text-[9px] text-sub font-mono">' + EXP_FOOTER.l1() + "</div>" +
-        '<div class="text-[9px] text-sub mt-0.5 leading-relaxed">' + EXP_FOOTER.l2 + "</div>";
+        '<div class="text-[9px] text-sub mt-0.5 leading-relaxed">' + EXP_FOOTER.l2(withClause, withPhoto) + "</div>";
       pg.appendChild(f);
       var mark = document.createElement("div");
       mark.className = "exp-split";
@@ -2163,10 +3043,27 @@
     });
     return total;
   }
+  var expNote = null;   /* 导出对象：null = 整改记录，非空 = 笔记（v2.2） */
   function openExport() {
     if (!rcCur || rcIsNew) { showToast("请先保存记录"); return; }
+    expNote = null;
     buildExportPreview(rcCur);
     byId("export-overlay").style.transform = "translateX(0)";
+  }
+  function openNoteExport() {
+    if (!editingNote) return;
+    saveNoteNow(false);   /* 不脏不改 time（修复：仅点导出即改写「刚刚」） */
+    var txt = stripHtml(editingNote.body || "");
+    var photos = NOTE_PHOTOS[editingNote.id] || [];
+    if (!txt && !(editingNote.cites && editingNote.cites.length) && !photos.length) {
+      showToast("空白笔记暂无可导出内容");
+      track("note_export_blocked", { note_id: editingNote.id });
+      return;
+    }
+    expNote = editingNote;
+    buildNoteExportPreview(editingNote);
+    byId("export-overlay").style.transform = "translateX(0)";
+    track("note_export_opened", { note_id: editingNote.id, has_clause: noteHasClause(editingNote) });
   }
   byId("btn-rectify-export").addEventListener("click", openExport);
   byId("btn-export-back").addEventListener("click", function () {
@@ -2195,7 +3092,7 @@
         c.fillStyle = "#6A6A6A"; c.font = "12px " + FONT;
         c.fillText(EXP_FOOTER.l1(), PAD, MAXH - FOOTER_H + 38);
         c.font = "11.5px " + FONT;
-        c.fillText(EXP_FOOTER.l2, PAD, MAXH - FOOTER_H + 60);
+        c.fillText(EXP_FOOTER.l2(rec.clauses.length > 0, ((rec.photos_before && rec.photos_before.length) || (rec.photos_after && rec.photos_after.length)) > 0), PAD, MAXH - FOOTER_H + 60);
       }
       function newPage(cont) {
         if (ctx) drawFooterOn(ctx);
@@ -2292,21 +3189,640 @@
     }
   }
   byId("btn-export-save").addEventListener("click", function () {
-    if (!rcCur || rcIsNew) return;
+    if (!expNote && (!rcCur || rcIsNew)) return;
     var btn = byId("btn-export-save");
     btn.textContent = "正在生成…";
     btn.disabled = true;
-    exportImages(rcCur, function () {
-      btn.textContent = "保存长图";
-      btn.disabled = false;
+    var done = function () { btn.textContent = "保存长图"; btn.disabled = false; };
+    if (expNote) { exportNoteImages(expNote, done); } else { exportImages(rcCur, done); }
+  });
+
+  /* ==================== v2.2 笔记侧引擎：引用规范（顺序编码制）· 条文条带 · 手动插入 · 编号识别 ==================== */
+
+  /* ---------- 条文索引：clause_id（"CODE · NO"）→ 名称 / 快照 / 状态 ---------- */
+  var CLAUSE_DOC = {}, CLAUSE_SNAP = {};
+  REC_MAP.forEach(function (m) {
+    var id = m.code + " · " + m.no;
+    CLAUSE_DOC[id] = { code: m.code, no: m.no, name: m.name };
+    CLAUSE_SNAP[id] = m.snap;
+  });
+  LIB.forEach(function (g) {
+    g.items.forEach(function (it) {
+      var no = (it.clause.match(/^([\d.]+)/) || [])[1] || "";
+      if (!no) return;
+      var id = it.code + " · " + no;
+      if (!CLAUSE_DOC[id]) CLAUSE_DOC[id] = { code: it.code, no: no, name: it.name };
+      if (!CLAUSE_SNAP[id]) CLAUSE_SNAP[id] = it.clause.replace(/^[\d.]+\s*/, "");
     });
   });
+  function citeDocOf(clauseId) {
+    var p = String(clauseId).split(" · "), code = p[0], no = p[1] || "";
+    var doc = ALL_DOCS[code];
+    return { code: code, no: no,
+      name: (doc && doc.name) || (CLAUSE_DOC[clauseId] && CLAUSE_DOC[clauseId].name) || code,
+      status: doc ? doc.status : (/示例/.test(code) ? "内部文件" : "") };
+  }
+  /* 参考文献条目（GB/T 7714 顺序编码制衍生）：[n] 编号—年份 名称[S] · 第 x.y 条；[S]=标准 [Z]=内部示例 */
+  function refLine(n, d) {
+    var code = d.code.replace(/-(\d{4})$/, "—$1");
+    var type = (/内部文件/.test(d.status) || /示例/.test(d.code)) ? "Z" : "S";
+    return "[" + n + "] " + code + " " + d.name + "[" + type + "] · 第 " + d.no + " 条";
+  }
+
+  /* ---------- 条带接入（笔记侧）：定高 56px，位于滚动容器之外 ---------- */
+  var edStrip = stripCtl("ed");
+  edStrip.opt = { action: "插入", onUse: function (h) { insertCiteRef(h, "ai"); } };
+  byId("ed-strip-insert").addEventListener("click", function () { if (edStrip.hits[0]) insertCiteRef(edStrip.hits[0], "ai"); });
+
+  var editingNote = null, noteDirty = false, noteSaveTimer = null;
+  var edSeq = 0, edDebounce = null, recIdSeq = 0;
+  var edStripOff = false;          /* 关闭三要素②：本页面生命周期内不再出现（刷新/重进恢复；工具条开关可恢复） */
+  var readMode = false;
+
+  function noteText() {            /* 正文文本（排除引用标记与「引用规范」表） */
+    var c = edBody.cloneNode(true);
+    Array.prototype.slice.call(c.querySelectorAll(".cite-ref, .ref-sec")).forEach(function (el) { el.parentNode.removeChild(el); });
+    return (c.textContent || "").replace(/\s+/g, " ").trim();
+  }
+  function caretParaText() {       /* 光标所在段落文本（同排除规则） */
+    var sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return "";
+    var n = sel.anchorNode;
+    if (!n || !edBody.contains(n)) return "";
+    var el = n.nodeType === 1 ? n : n.parentElement;
+    while (el && el !== edBody && el.parentElement !== edBody) el = el.parentElement;
+    if (!el || el === edBody) return "";
+    var c = el.cloneNode(true);
+    Array.prototype.slice.call(c.querySelectorAll(".cite-ref, .ref-sec")).forEach(function (x) { x.parentNode.removeChild(x); });
+    return (c.textContent || "").trim();
+  }
+  function showStripClosed() {
+    edStrip.hits = [];
+    ["idle", "loading", "empty", "hit", "pop"].forEach(function (k) { edStrip[k].classList.add("hidden"); });
+    edStrip.idle.textContent = "条文推荐已关闭 · 点工具条「条文推荐」可恢复";
+    edStrip.idle.classList.remove("hidden");
+  }
+  function setStripOff(via) {
+    edStripOff = true;
+    showStripClosed();
+    byId("btn-rec-toggle").classList.add("tb-toggle-off");
+    track("note_strip_dismissed", { note_id: editingNote && editingNote.id, dismiss_via: via });
+  }
+  function setStripOn() {
+    edStripOff = false;
+    edStrip.idle.textContent = "输入关键词，自动推荐条文";
+    byId("btn-rec-toggle").classList.remove("tb-toggle-off");
+    noteRecommendNow("toggle");
+  }
+  byId("ed-strip-close").addEventListener("click", function () { setStripOff("close"); });
+  byId("btn-rec-toggle").addEventListener("click", function () { if (edStripOff) { setStripOn(); } else { setStripOff("toggle"); } });
+
+  /* 推荐引擎（防抖 800ms；序号防陈旧，仅渲染最新返回） */
+  function noteRecommendNow(trigger) {
+    if (!editingNote) return;
+    var text = noteText();
+    var nid = editingNote.id, qlen = text.length;
+    edSeq += 1;
+    var seq = edSeq;
+    if (edStripOff) { showStripClosed(); return; }
+    if (!text) { edStrip.show("idle"); return; }
+    edStrip.show("loading");
+    setTimeout(function () {
+      if (seq !== edSeq || edStripOff || !editingNote) return;
+      var hits = matchClauses(text, caretParaText());
+      recIdSeq += 1;
+      edStrip.render(hits);
+      track("note_clause_recommended", { note_id: nid, recommend_id: "rec-" + recIdSeq, count: hits.length, query_len: qlen, trigger: trigger || "typing" });
+    }, REC_LATENCY);
+  }
+  function scheduleNoteRecommend() {
+    clearTimeout(edDebounce);
+    edDebounce = setTimeout(function () { noteRecommendNow("typing"); }, 800);
+  }
+
+  /* ---------- 引用核心：插入上标标记 → 正文为准同步 cites → 文末「引用规范」表 ---------- */
+  function flashEl(el) {
+    el.classList.add("ref-flash");
+    setTimeout(function () { el.classList.remove("ref-flash"); }, 1200);
+    try { el.scrollIntoView({ block: "center" }); } catch (e) { /* 忽略 */ }
+  }
+  function insertCiteRef(hit, via) {
+    if (!editingNote) { showToast("插入失败，请重试"); return; }
+    if (readMode) { showToast("请先退出阅读视图"); return; }
+    var clauseId = hit.code + " · " + hit.no;
+    var exist = edBody.querySelector('.cite-ref[data-clause-id="' + clauseId + '"]');
+    if (exist) { flashEl(exist); showToast("该条文已在引用中"); return; }
+    var uniq = {};
+    Array.prototype.slice.call(edBody.querySelectorAll(".cite-ref")).forEach(function (m) { uniq[m.dataset.clauseId] = 1; });
+    if (Object.keys(uniq).length >= 10) { showToast("单篇笔记最多引用 10 条条文"); return; }
+    var marker = '<sup class="cite-ref" contenteditable="false" data-clause-id="' + clauseId + '">[1]</sup>';
+    var sel = window.getSelection();
+    var anchorEl = sel && sel.rangeCount && sel.anchorNode ? (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement) : null;
+    var hasCaret = !!(sel && sel.rangeCount && anchorEl && edBody.contains(anchorEl) && !anchorEl.closest(".ref-sec") && !anchorEl.closest(".cite-ref"));
+    if (hasCaret) {
+      var rng = sel.getRangeAt(0);
+      edBody.focus();
+      sel.removeAllRanges(); sel.addRange(rng);
+      document.execCommand("insertHTML", false, marker);
+    }
+    var refSec = edBody.querySelector(".ref-sec");
+    if (!hasCaret) {
+      if (refSec) { refSec.insertAdjacentHTML("beforebegin", marker); }
+      else { edBody.insertAdjacentHTML("beforeend", marker); }
+      edBody.focus();
+    }
+    /* 元数据先入 cites（syncCites 按正文首次出现顺序重排并重编号） */
+    var snap = hit.snap || CLAUSE_SNAP[clauseId] || "";
+    if (snap.length > 1000) snap = snap.slice(0, 1000);
+    editingNote.cites = (editingNote.cites || []).filter(function (c) { return c.clause_id !== clauseId; });
+    editingNote.cites.push({ clause_id: clauseId, snapshot: snap, inserted_at: rNow(), inserted_via: via });
+    syncCites(editingNote);
+    noteDirty = true;
+    saveNoteNow(true);   /* 插入即持久化，计入 note_saved */
+    updateEdCount();
+    track("note_clause_inserted", { note_id: editingNote.id, clause_id: clauseId, inserted_via: via });
+    showToast(hasCaret ? "已插入" : "已插入到笔记末尾");
+  }
+  function syncCites(note) {
+    var marks = Array.prototype.slice.call(edBody.querySelectorAll(".cite-ref"));
+    var order = [], seen = {};
+    marks.forEach(function (m) {
+      var id = m.dataset.clauseId;
+      if (!seen[id]) { seen[id] = 1; order.push(id); }
+      m.textContent = "[" + (order.indexOf(id) + 1) + "]";
+    });
+    var old = {};
+    (note.cites || []).forEach(function (c) { if (!old[c.clause_id]) old[c.clause_id] = c; });
+    note.cites = order.map(function (id) {   /* 正文为准：删除正文标记即同步移除引用条目 */
+      var b = old[id];
+      var snap = (b && b.snapshot) || CLAUSE_SNAP[id] || "";
+      if (snap.length > 1000) snap = snap.slice(0, 1000);
+      return { clause_id: id, snapshot: snap,
+        inserted_at: b ? b.inserted_at : rNow(),
+        inserted_via: b ? b.inserted_via : "manual" };
+    });
+    renderRefSec(note);
+  }
+  function renderRefSec(note) {
+    var old = edBody.querySelector(".ref-sec");
+    if (old) old.parentNode.removeChild(old);
+    if (!note.cites.length) return;
+    var sec = document.createElement("div");
+    sec.className = "ref-sec";
+    sec.setAttribute("contenteditable", "false");
+    var html = '<div class="ref-sec-title">引用规范</div>';
+    note.cites.forEach(function (c, i) {
+      html += '<div class="ref-item" data-clause-id="' + c.clause_id + '">' + refLine(i + 1, citeDocOf(c.clause_id)) + "</div>";
+    });
+    html += '<div class="ref-sec-note">条文版权归发布机构所有，仅供个人工作参考</div>';
+    sec.innerHTML = html;
+    edBody.appendChild(sec);
+  }
+
+  /* 编辑器内点击委托：正文上标 → 跳到条目并闪烁；条目 → 条文详情；编号识别入口 → 条文详情 + 免责小字 */
+  edBody.addEventListener("click", function (e) {
+    var m = e.target.closest(".cite-ref");
+    if (m) {
+      var id = m.dataset.clauseId;
+      var item = edBody.querySelector('.ref-item[data-clause-id="' + id + '"]');
+      if (item) flashEl(item);
+      track("note_cite_clicked", { note_id: editingNote && editingNote.id, clause_id: id, from: "inline" });
+      return;
+    }
+    var it = e.target.closest(".ref-item");
+    if (it) { openClauseSheet(it.dataset.clauseId, null); return; }
+    var nr = e.target.closest(".num-ref");
+    if (nr) {
+      var cid = nr.dataset.clauseId || "";
+      openClauseSheet(cid, "recognized");
+      track("note_cite_clicked", { note_id: editingNote && editingNote.id, clause_id: cid, from: "recognized" });
+    }
+  });
+
+  function openClauseSheet(clauseId, from) {
+    var d = citeDocOf(clauseId);
+    var doc = ALL_DOCS[d.code];
+    if (doc) { openSheet(doc); }
+    else {
+      openSheet({ name: d.name, code: d.code, status: d.status || "内部文件", toc: [], clause: "" });
+      byId("sheet-toc").innerHTML = '<div class="text-[12px] text-sub">示例条目（原型演示，目录略）</div>';
+    }
+    if (CLAUSE_SNAP[clauseId]) byId("sheet-clause").textContent = CLAUSE_SNAP[clauseId];
+    byId("sheet-rec-hint").classList.toggle("hidden", from !== "recognized");
+  }
+
+  /* ---------- 编号识别（阅读视图渲染层）：库内编号白名单 → 弱色虚线 + 小图标入口 ---------- */
+  var CODE_RES = (function () {
+    var out = [];
+    Object.keys(ALL_DOCS).forEach(function (code) {
+      var alnum = code.replace(/[^A-Za-z0-9]/g, "");
+      var parts = code.split(/[^A-Za-z0-9]+/).filter(Boolean);
+      if (parts.length < 2 && alnum.length < 4) return;   /* 过短编号不建通用入口，防误报 */
+      var body = parts.map(function (p) { return p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }).join("[\\s\\-—–/]*");
+      out.push({ code: code, re: new RegExp(body, "g") });
+    });
+    return out;
+  })();
+  function enterReadView() {
+    readMode = true;
+    edTitle.setAttribute("contenteditable", "false");
+    edBody.setAttribute("contenteditable", "false");
+    /* 阅读态隔离：收起全部编辑类按钮与推荐条带（保留「退出阅读」按钮本身） */
+    Array.prototype.slice.call(byId("ed-toolbar").children).forEach(function (el) {
+      if (el.id !== "btn-read-view") el.classList.add("hidden");
+    });
+    byId("ed-strip").classList.add("hidden");
+    byId("btn-read-view").textContent = "退出阅读";
+    var walker = document.createTreeWalker(edBody, NodeFilter.SHOW_TEXT, null);
+    var nodes = [];
+    while (walker.nextNode()) {
+      var n = walker.currentNode;
+      if (!n.nodeValue || !n.nodeValue.trim()) continue;
+      var p = n.parentElement;
+      if (!p || p.closest(".ref-sec") || p.closest(".num-ref") || p.closest(".cite-ref")) continue;
+      nodes.push(n);
+    }
+    nodes.forEach(function (n) {
+      var text = n.nodeValue, spans = [];
+      CODE_RES.forEach(function (cr) {
+        cr.re.lastIndex = 0;
+        var m;
+        while ((m = cr.re.exec(text))) {
+          if (!m[0].length) { cr.re.lastIndex++; continue; }
+          spans.push({ start: m.index, end: m.index + m[0].length, code: cr.code });
+          if (m.index === cr.re.lastIndex) cr.re.lastIndex++;
+        }
+      });
+      if (!spans.length) return;
+      spans.sort(function (a, b) { return (a.start - b.start) || (b.end - a.end); });   /* 冲突时最长匹配优先 */
+      var kept = [], lastEnd = -1;
+      spans.forEach(function (s) { if (s.start >= lastEnd) { kept.push(s); lastEnd = s.end; } });
+      var frag = document.createDocumentFragment(), pos = 0;
+      kept.forEach(function (s) {
+        if (s.start > pos) frag.appendChild(document.createTextNode(text.slice(pos, s.start)));
+        var span = document.createElement("span");
+        span.className = "num-ref";
+        span.setAttribute("data-clause-id", s.code);
+        span.setAttribute("contenteditable", "false");
+        span.innerHTML = text.slice(s.start, s.end).replace(/&/g, "&amp;").replace(/</g, "&lt;") +
+          '<svg class="ic"><use href="#i-book"></use></svg>';
+        frag.appendChild(span);
+        pos = s.end;
+      });
+      if (pos < text.length) frag.appendChild(document.createTextNode(text.slice(pos)));
+      n.parentNode.replaceChild(frag, n);
+    });
+  }
+  function exitReadView() {
+    readMode = false;
+    edTitle.setAttribute("contenteditable", "true");
+    edBody.setAttribute("contenteditable", "true");
+    Array.prototype.slice.call(byId("ed-toolbar").children).forEach(function (el) { el.classList.remove("hidden"); });
+    byId("ed-strip").classList.remove("hidden");
+    byId("btn-read-view").textContent = "阅读视图";
+    Array.prototype.slice.call(edBody.querySelectorAll(".num-ref")).forEach(function (sp) {
+      sp.parentNode.replaceChild(document.createTextNode(sp.textContent), sp);
+    });
+    edBody.normalize();
+  }
+  byId("btn-read-view").addEventListener("click", function () { if (readMode) { exitReadView(); } else { enterReadView(); } });
+
+  /* ---------- 手动插入路径：规范库选择器（8 组 42 本 · 跨分类搜索） ---------- */
+  var pickerOverlay = byId("picker-overlay");
+  function pickerClose() { pickerOverlay.style.transform = "translateX(100%)"; }
+  function renderPicker(q) {
+    var listEl = byId("picker-list"), emptyEl = byId("picker-empty");
+    var kw = (q || "").trim().toLowerCase();
+    var html = "";
+    LIB.forEach(function (g) {
+      var items = g.items.filter(function (it) {
+        if (!kw) return true;
+        var hay = (it.code + " " + it.name + " " + g.group + " " + it.toc.join(" ") + " " + it.clause).toLowerCase();
+        return hay.indexOf(kw) >= 0;
+      });
+      if (!items.length) return;
+      html += '<div class="text-[11px] font-semibold text-sub tracking-wider mb-2 mt-1">' + g.group + "</div>";
+      items.forEach(function (it) {
+        var no = (it.clause.match(/^([\d.]+)/) || [])[1] || "";
+        html += '<button class="picker-item press w-full text-left bg-white border border-line rounded-xl px-4 py-3 mb-2 shadow-sm" data-code="' + it.code + '" data-no="' + no + '">' +
+          '<div class="flex items-center gap-2">' +
+            '<span class="text-[12px] font-bold text-deep-700 font-mono">' + it.code + "</span>" +
+            '<span class="text-[10px] font-semibold ' + it.st + ' border rounded-full px-1.5 py-px">' + it.status + "</span>" +
+          "</div>" +
+          '<div class="text-[13px] font-medium text-ink mt-1">' + it.name + "</div>" +
+          (no ? '<div class="text-[11px] text-sub mt-0.5">条文 ' + no + "</div>" : "") +
+        "</button>";
+      });
+    });
+    listEl.innerHTML = html;
+    var has = !!listEl.querySelector(".picker-item");
+    listEl.classList.toggle("hidden", !has);
+    emptyEl.classList.toggle("hidden", has);
+    emptyEl.classList.toggle("flex", !has);
+  }
+  function openNotePicker() {
+    if (readMode) exitReadView();
+    byId("picker-search").value = "";
+    renderPicker("");
+    pickerOverlay.style.transform = "translateX(0)";
+  }
+  byId("btn-picker-back").addEventListener("click", pickerClose);
+  byId("picker-search").addEventListener("input", function () { renderPicker(this.value); });
+  byId("picker-list").addEventListener("click", function (e) {
+    var b = e.target.closest(".picker-item");
+    if (!b) return;
+    var doc = ALL_DOCS[b.dataset.code];
+    insertCiteRef({ code: b.dataset.code, no: b.dataset.no, name: doc ? doc.name : "",
+      snap: doc ? doc.clause.replace(/^[\d.]+\s*/, "") : "" }, "manual");
+    pickerClose();
+  });
+
+  /* ---------- 笔记生命周期：打开同步 / 自动保存 / 关闭回写 ---------- */
+  function noteInit(note) {
+    editingNote = note;
+    noteDirty = false;
+    clearTimeout(noteSaveTimer);   /* 清上篇残留防抖（防误写他篇 time / 假 note_saved） */
+    if (readMode) exitReadView();
+    pickerClose();
+    syncCites(note);   /* 标记重编号 + 引用规范表重建（正文为准） */
+    if (edStripOff) { showStripClosed(); }
+    else { edStrip.idle.textContent = "输入关键词，自动推荐条文"; noteRecommendNow("open"); }
+  }
+  /* 自动命名：标题为空且有正文时，取首个非纯标签行 ≤20 字（空标题兜底） */
+  function deriveTitle() {
+    var cands = [];
+    Array.prototype.slice.call(edBody.children).forEach(function (el) {
+      if (el.classList.contains("ref-sec")) return;
+      if (el.tagName === "OL" || el.tagName === "UL") {
+        Array.prototype.slice.call(el.children).forEach(function (li) { cands.push(li); });
+      } else { cands.push(el); }
+    });
+    for (var i = 0; i < cands.length && i < 8; i++) {
+      var t = (cands[i].textContent || "").replace(/\s+/g, " ").trim();
+      if (!t) continue;
+      var stripped = t.replace(/^[【\[][^】\]]{0,20}[】\]]\s*[:：]?\s*/, "").trim();
+      if (stripped) return stripped.slice(0, 20);
+    }
+    return "";
+  }
+  function saveNoteNow(tracked) {
+    if (!editingNote) return;
+    var nid = editingNote.id;
+    var chars = stripHtml(edBody.innerHTML).length;
+    var citeCount = (editingNote.cites || []).length;
+    var t = edTitle.textContent.trim();
+    if (!t) t = deriveTitle();
+    if (t) {
+      editingNote.title = t;
+      if (document.activeElement !== edTitle && !edTitle.textContent.trim()) edTitle.textContent = t;
+    }
+    syncCites(editingNote);
+    editingNote.body = edBody.innerHTML;
+    if (noteDirty) editingNote.time = fmtTime(new Date());   /* 真实时间；仅内容变更时刷新（导出/重开不再改写） */
+    noteDirty = false;
+    setSaveChip("saving");
+    kbSet("notes", NOTES).then(function (ok) {
+      if (editingNote && editingNote.id === nid) setSaveChip(ok === false ? "memory" : "saved");
+      if (tracked) track("note_saved", { note_id: nid, chars: chars, cite_count: citeCount });
+    }).catch(function () {
+      noteDirty = true;   /* 保存失败 → 保持脏标记：退出编辑器时自动重试，也可点保存条手动重试 */
+      if (editingNote && editingNote.id === nid) setSaveChip("failed");
+      track("note_save_failed", { note_id: nid });
+    });
+  }
+  function noteTeardown() {
+    if (!editingNote) return;
+    var note = editingNote;
+    if (readMode) exitReadView();
+    pickerClose();
+    clearTimeout(noteSaveTimer);   /* 清残留防抖：防 teardown 后计时器误写他篇 */
+    if (noteDirty) { saveNoteNow(true); } else { syncCites(note); note.body = edBody.innerHTML; }
+    maybeDiscardEmpty(note);
+    editingNote = null;
+  }
+  function maybeDiscardEmpty(note) {   /* 空白笔记返回即自动丢弃（不落库、不进列表） */
+    if (!isEmptyNote(note)) return;
+    Object.keys(NOTES).forEach(function (k) {
+      NOTES[k] = NOTES[k].filter(function (x) { return x !== note; });
+    });
+    if (NOTE_PHOTOS[note.id]) { delete NOTE_PHOTOS[note.id]; persist("note_photos", NOTE_PHOTOS); }
+    persist("notes", NOTES);
+    showToast("空白笔记已自动丢弃");
+    track("note_discarded", { note_id: note.id });
+  }
+  edBody.addEventListener("input", function () {
+    noteDirty = true;
+    scheduleNoteRecommend();
+    clearTimeout(noteSaveTimer);
+    noteSaveTimer = setTimeout(function () { saveNoteNow(true); }, 1200);   /* 键入自动保存计入 note_saved */
+  });
+  edTitle.addEventListener("input", function () {
+    noteDirty = true;
+    setSaveChip("saving");
+    clearTimeout(noteSaveTimer);
+    noteSaveTimer = setTimeout(function () { saveNoteNow(true); }, 1200);   /* 键入自动保存计入 note_saved */
+  });
+
+  /* ---------- 笔记导出（复用导出弹层与分页规则；含条文时页脚追加第⑥要素） ---------- */
+  function noteHasClause(note) {
+    if (note.cites && note.cites.length) return true;
+    var t = stripHtml(note.body || "");
+    for (var i = 0; i < CODE_RES.length; i++) {
+      CODE_RES[i].re.lastIndex = 0;
+      if (CODE_RES[i].re.test(t)) return true;
+    }
+    return false;
+  }
+  function buildNoteExportPreview(note) {
+    var holder = byId("exp-pages");
+    holder.innerHTML = "";
+    var clone = document.createElement("div");
+    clone.innerHTML = note.body || "";
+    var refSec = clone.querySelector(".ref-sec");
+    if (refSec) refSec.parentNode.removeChild(refSec);
+    Array.prototype.slice.call(clone.querySelectorAll(".cite-ref")).forEach(function (m) {
+      m.parentNode.replaceChild(document.createTextNode(m.textContent), m);
+    });
+    var sections = [];
+    sections.push(expSection(
+      '<div class="text-[17px] font-bold text-ink">' + (note.title || "未命名笔记") + "</div>" +
+      '<div class="text-[11px] text-sub mt-1">笔记导出 · ' + note.time + " · 引用 " + ((note.cites && note.cites.length) || 0) + " 条</div>",
+      "border-b border-line pb-3"));
+    sections.push(expSection('<div class="note-exp-body text-[12px] text-ink leading-relaxed">' + clone.innerHTML + "</div>"));
+    if (note.cites && note.cites.length) {
+      sections.push(expSection(
+        '<div class="text-[12px] font-bold text-deep-700 mb-2">引用规范</div>' +
+        note.cites.map(function (c, i) {
+          return '<div class="text-[11px] text-ink py-0.5 leading-relaxed">' + refLine(i + 1, citeDocOf(c.clause_id)) + "</div>";
+        }).join("")));
+    }
+    var photoCount = (NOTE_PHOTOS[note.id] || []).length;
+    if (photoCount) {
+      sections.push(expSection('<div class="text-[10px] text-sub leading-relaxed">附注：现场照片 ' + photoCount + " 张（已压缩处理）未包含在本长图中，请在应用内查看或另行备份。</div>"));
+    }
+    return finishExport(holder, sections, noteHasClause(note), photoCount > 0);
+  }
+  function exportNoteImages(note, done) {
+    var W = 800, PAD = 44, MAXH = 1600, FOOTER_H = 96;
+    var pages = [], ctx = null, y = 0;
+    var FONT = "'Microsoft YaHei', 'PingFang SC', sans-serif";
+    var hasClause = noteHasClause(note);
+    function drawFooterOn(c) {
+      c.strokeStyle = "#E8E8E8";
+      c.beginPath(); c.moveTo(PAD, MAXH - FOOTER_H + 14); c.lineTo(W - PAD, MAXH - FOOTER_H + 14); c.stroke();
+      c.fillStyle = "#6A6A6A"; c.font = "12px " + FONT;
+      c.fillText(EXP_FOOTER.l1(), PAD, MAXH - FOOTER_H + 38);
+      c.font = "11.5px " + FONT;
+      c.fillText(EXP_FOOTER.l2(hasClause, (NOTE_PHOTOS[note.id] || []).length > 0), PAD, MAXH - FOOTER_H + 60);
+    }
+    function newPage(cont) {
+      if (ctx) drawFooterOn(ctx);
+      var c = document.createElement("canvas");
+      c.width = W; c.height = MAXH;
+      ctx = c.getContext("2d");
+      ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, W, MAXH);
+      ctx.fillStyle = "#111111"; ctx.font = "bold 26px " + FONT;
+      ctx.fillText((note.title || "笔记") + (cont ? "（续）" : ""), PAD, 66);
+      ctx.strokeStyle = "#E8E8E8";
+      ctx.beginPath(); ctx.moveTo(PAD, 84); ctx.lineTo(W - PAD, 84); ctx.stroke();
+      y = 116;
+      pages.push(c);
+    }
+    function ensure(h) { if (y + h > MAXH - FOOTER_H - 10) newPage(true); }
+    function para(text, font, color, gap) {
+      if (!text) return;
+      var lines = [], cur = "";
+      ctx.font = font;
+      for (var i = 0; i < text.length; i++) {
+        if (ctx.measureText(cur + text[i]).width > W - PAD * 2) { lines.push(cur); cur = text[i]; }
+        else { cur += text[i]; }
+      }
+      if (cur) lines.push(cur);
+      ensure(22);
+      ctx.font = font; ctx.fillStyle = color;
+      for (var j = 0; j < lines.length; j++) {
+        if (y + 21 > MAXH - FOOTER_H - 6) { newPage(true); ctx.font = font; ctx.fillStyle = color; }
+        ctx.fillText(lines[j], PAD, y);
+        y += 21;
+      }
+      y += (gap == null ? 8 : gap);
+    }
+    newPage(false);
+    var clone = document.createElement("div");
+    clone.innerHTML = note.body || "";
+    var refSec = clone.querySelector(".ref-sec");
+    if (refSec) refSec.parentNode.removeChild(refSec);
+    var blocks = clone.children.length ? Array.prototype.slice.call(clone.children) : [clone];
+    blocks.forEach(function (b) {
+      var tag = b.tagName;
+      if (tag === "OL" || tag === "UL") {
+        Array.prototype.slice.call(b.querySelectorAll("li")).forEach(function (li) {
+          para("· " + (li.textContent || "").replace(/\s+/g, " ").trim(), "14px " + FONT, "#111111", 2);
+        });
+        y += 4;
+        return;
+      }
+      var t = (b.textContent || "").replace(/\s+/g, " ").trim();
+      if (!t) return;
+      if (tag === "H1") para(t, "bold 20px " + FONT, "#111111", 8);
+      else if (tag === "H2") para(t, "bold 16px " + FONT, "#111111", 6);
+      else para(t, "14px " + FONT, "#111111", 6);
+    });
+    if (hasClause && note.cites && note.cites.length) {
+      para("引用规范", "bold 16px " + FONT, "#111111", 4);
+      note.cites.forEach(function (c, i) { para(refLine(i + 1, citeDocOf(c.clause_id)), "13px " + FONT, "#111111", 2); });
+    }
+    if ((NOTE_PHOTOS[note.id] || []).length) {
+      para("附注：现场照片 " + NOTE_PHOTOS[note.id].length + " 张（已压缩处理）未包含在本长图中，请在应用内查看或另行备份。", "12px " + FONT, "#6A6A6A", 4);
+    }
+    if (ctx) drawFooterOn(ctx);
+    var n = pages.length, emitted = 0;
+    pages.forEach(function (c, i) {
+      c.toBlob(function (b) {
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(b);
+        a.download = "笔记-" + note.id + "-第" + (i + 1) + "页.png";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+        if (++emitted === n && done) done(n);
+      }, "image/png");
+    });
+    showToast("已保存到本地");
+    track("note_exported", { note_id: note.id, pages: pages.length });
+  }
+  byId("btn-note-export").addEventListener("click", openNoteExport);
+
+  /* ---------- 测试钩子（6.3 验证点：快照与防陈旧 / 条带状态 / 编号识别） ---------- */
+  window.__test = {
+    setClauseText: function (t) { rcDesc.value = t; rcDesc.dispatchEvent(new Event("input", { bubbles: true })); },
+    setNoteText: function (t) { edBody.innerText = t; edBody.dispatchEvent(new Event("input", { bubbles: true })); },
+    openEditor: function (id) { openEditor(id); },
+    openRectify: function (id) { openRectify(id); },
+    editingNote: function () { return editingNote; },
+    stripState: function (who) {
+      var s = who === "ed" ? edStrip : rcStrip;
+      var st = "hidden";
+      ["idle", "loading", "empty", "hit"].forEach(function (k) { if (!s[k].classList.contains("hidden")) st = k; });
+      return { state: st, hits: s.hits.slice(), off: who === "ed" ? edStripOff : false };
+    },
+    readMode: function () { return readMode; },
+    citeMarks: function () { return Array.prototype.map.call(edBody.querySelectorAll(".cite-ref"), function (el) { return el.dataset.clauseId + "=" + el.textContent; }); },
+    refItems: function () { return Array.prototype.map.call(edBody.querySelectorAll(".ref-item"), function (el) { return el.textContent; }); },
+    notes: function () { return NOTES; },
+    notePhotos: function () { return NOTE_PHOTOS; },
+    opLog: function () { return opLog.slice(); },
+    events: function () { return _events.slice(); },
+    saveState: function () { var el = byId("ed-save"); return el.dataset.state || ""; },
+    recIds: function () { return RECTIFY.map(function (r) { return r.id; }); },
+    pinnedIds: function () {
+      var r = [];
+      Object.keys(NOTES).forEach(function (nb) { NOTES[nb].forEach(function (n) { if (n.pinned) r.push(n.id); }); });
+      return r;
+    },
+    msState: function () { return { on: msMode, sel: msSelectedIds() }; },
+    listOrder: function (nb) {
+      return NOTES[nb || currentNb].slice().sort(function (a, b) { return (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0); })
+        .map(function (n) { return n.id; });
+    }
+  };
 
   /* ---------- 初始化 ---------- */
   byId("btn-new-rectify").addEventListener("click", function () { openRectify(null); });
   renderChips();
   renderList();
   goTo("notes", { silent: true });
+  /* IndexedDB 本地持久化：首屏先渲染演示数据，随后异步回填（不阻塞首屏；不可用时降级内存模式） */
+  kbGetAll(KB_KEYS).then(function (data) {
+    if (!data) { kbOK = false; return; }
+    var changed = false;
+    if (Array.isArray(data.rectify) && data.rectify.length) {
+      RECTIFY.length = 0;
+      data.rectify.forEach(function (r) { RECTIFY.push(r); });
+      changed = true;
+    }
+    if (data.note_photos && typeof data.note_photos === "object") { NOTE_PHOTOS = data.note_photos; }
+    if (data.notes && typeof data.notes === "object") {
+      Object.keys(NOTES).forEach(function (k) {
+        if (Array.isArray(data.notes[k])) {   /* 空数组=已删空（修复：长度检查导致删空后种子复活） */
+          NOTES[k] = data.notes[k].filter(function (n) {
+            return !isEmptyNote(n) || (NOTE_PHOTOS[n.id] && NOTE_PHOTOS[n.id].length);
+          });
+          changed = true;
+        }
+      });
+    }
+    if (Array.isArray(data.op_log)) {   /* v2.3：审计日志回填（删除/置顶操作留痕） */
+      opLog.length = 0;
+      data.op_log.forEach(function (e) { opLog.push(e); });
+    }
+    if (data.chips && (data.chips.spec || data.chips.loc)) {
+      chipsMemory.spec = data.chips.spec || "";
+      chipsMemory.loc = data.chips.loc || "";
+    }
+    if (changed) { renderChips(); renderList(); }
+  }).catch(function () { kbOK = false; });
 })();
 </script>
 </body>
