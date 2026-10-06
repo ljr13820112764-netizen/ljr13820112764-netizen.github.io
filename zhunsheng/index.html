@@ -52,6 +52,14 @@
   .press { transition: transform .12s ease, opacity .12s ease, background .12s ease; }
   .press:active { transform: scale(.97); }
 
+  /* 编辑器工具栏按钮：不压缩、不换行（窄窗下整条工具栏横向滚动，字始终在框内） */
+  .tb-btn { flex: 0 0 auto; white-space: nowrap; }
+  /* 只裁剪、不可滚动的容器（overflow:clip，hidden 作旧浏览器降级）：
+     防止 focus()/scrollIntoView 把 overflow:hidden 容器滚偏导致界面错位。
+     min-*:0 必须带上：clip 不建立滚动容器，flex 子项的 min-height:auto 不再归零，
+     不补则子项无法收缩、随内容撑高。 */
+  .clip-noscroll { overflow: hidden; overflow: clip; min-width: 0; min-height: 0; }
+
   /* ---------- 中性控件（第 3 轮）：主操作=白底墨线；次操作=透明发丝线 ---------- */
   .btn-p { background: #FFFFFF !important; border: 1px solid #111111 !important; color: #111111 !important; }
   .btn-p:hover { background: #F0F0F0 !important; }
@@ -127,7 +135,7 @@
   <p class="text-[#6A6A6A] text-sm mb-4 tracking-wide">准绳 · 规范驱动的整改留痕助手 <span class="text-[#9A9A9A]">｜ 桌面端高保真原型 v3（笔记 / 问答 / 规范库 / 历史 / 整改留痕）</span></p>
 
   <!-- ================= 应用窗口 ================= -->
-  <div class="w-[1240px] h-[820px] bg-mist rounded-2xl overflow-hidden shadow-2xl shadow-[#111111]/12 flex flex-col border border-[#E8E8E8]">
+  <div class="w-[1240px] h-[820px] bg-mist rounded-2xl clip-noscroll shadow-2xl shadow-[#111111]/12 flex flex-col border border-[#E8E8E8]">
 
     <!-- 标题栏 -->
     <div class="h-12 bg-white/80 backdrop-blur border-b border-line flex items-center px-4 gap-3 shrink-0">
@@ -963,7 +971,13 @@
       body: "<h1>未命名笔记</h1><p>从这里开始记录…（示例）</p>" };
     NOTES[currentNb].unshift(n);
     openNote(n.id);
-    edTitle.focus();
+    /* 聚焦标题：preventScroll 防聚焦滚动；选中占位标题，直接打字即替换 */
+    try { edTitle.focus({ preventScroll: true }); } catch (e) { edTitle.focus(); }
+    var r = document.createRange();
+    r.selectNodeContents(edTitle);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(r);
   }
   document.getElementById("btn-new-note").addEventListener("click", newNote);
 

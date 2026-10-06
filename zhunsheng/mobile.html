@@ -66,6 +66,15 @@
   .press { transition: transform .12s ease, opacity .12s ease; }
   .press:active { transform: scale(.94); opacity: .85; }
 
+  /* 编辑器工具栏按钮：不压缩、不换行（字始终在框内），容器整体折行 */
+  .tb-btn { flex: 0 0 auto; white-space: nowrap; }
+  /* 只裁剪、不可滚动的容器（overflow:clip，hidden 作旧浏览器降级）：
+     防止 focus()/scrollIntoView 把 overflow:hidden 容器滚偏（滑入动画期间聚焦
+     会让浏览器为“把焦点滚进视野”而滚动容器 → 页面漏边、下层露馅）。
+     min-*:0 必须带上：clip 不建立滚动容器，flex 子项的 min-height:auto 不再归零，
+     不补则子项无法收缩、随内容撑高，底部内容被顶出可视区。 */
+  .clip-noscroll { overflow: hidden; overflow: clip; min-width: 0; min-height: 0; }
+
   /* ---------- 中性控件（第 3 轮）：主操作=白底墨线；次操作=透明发丝线 ---------- */
   .btn-p { background: #FFFFFF !important; border: 1px solid #111111 !important; color: #111111 !important; }
   .btn-p:hover { background: #F0F0F0 !important; }
@@ -137,7 +146,7 @@
     <div class="absolute -right-[2px] top-40 w-[3px] h-20 bg-white/10 rounded-r"></div>
 
     <!-- 屏幕 -->
-    <div class="relative w-full h-full rounded-[35px] overflow-hidden bg-mist flex flex-col">
+    <div class="relative w-full h-full rounded-[35px] clip-noscroll bg-mist flex flex-col">
 
       <!-- 状态栏 -->
       <div class="flex items-center justify-between px-7 pt-3.5 pb-1 text-[13px] font-semibold text-ink bg-mist relative z-20">
@@ -189,7 +198,7 @@
       </header>
 
       <!-- ================= 页面容器（4 页） ================= -->
-      <div id="pages" class="pages flex flex-1 overflow-hidden" style="width:400%">
+      <div id="pages" class="pages flex flex-1 clip-noscroll" style="width:400%">
         <!-- 页面1：笔记 -->
         <section class="page w-full flex flex-col overflow-hidden" data-page="notes" style="width:calc(100%/4)">
           <!-- 笔记本切换 chips -->
@@ -342,7 +351,7 @@
           <div class="text-[15px] font-bold text-ink flex-1">编辑笔记</div>
           <button id="btn-ai-assist" class="press h-9 px-3 rounded-xl btn-s text-[12px] font-semibold"><svg class="ic"><use href="#i-spark"></use></svg> AI 助手</button>
         </div>
-        <div id="ed-toolbar" class="flex items-center gap-1 px-3 pb-2 overflow-x-auto shrink-0">
+        <div id="ed-toolbar" class="flex flex-wrap items-center gap-1.5 px-3 pb-2 shrink-0">
           <button class="tb-btn press h-8 px-2.5 rounded-md text-[12px] text-sub bg-white border border-line font-mono" data-block="H1">H1</button>
           <button class="tb-btn press h-8 px-2.5 rounded-md text-[12px] text-sub bg-white border border-line font-mono" data-block="H2">H2</button>
           <button class="tb-btn press h-8 px-2.5 rounded-md text-[12px] text-sub bg-white border border-line" data-block="P">正文</button>
@@ -790,7 +799,31 @@
     NOTES[currentNb].unshift(n);
     renderChips(); renderList();
     openEditor(n.id);
-    edTitle.focus();
+    focusNewTitle();
+  }
+
+  /* 新建后聚焦标题（修复「漏边」）：
+     ① 等滑入动画结束再聚焦——滑入期间容器带 transform，浏览器会为“把焦点滚进视野”
+        而滚动 overflow:hidden 的容器（程序性滚动不受 hidden 限制）→ 界面被滚偏、漏边；
+     ② focus({preventScroll}) 禁止聚焦滚动（Kibana/EUI 同款修法）；
+     ③ 选中占位标题，直接打字即替换；
+     ④ 兜底清零容器滚动（Safari 等已知忽略 preventScroll 的情况）。 */
+  function focusNewTitle() {
+    var done = false;
+    function go() {
+      if (done || /100%/.test(overlay.style.transform || "")) return;
+      done = true;
+      try { edTitle.focus({ preventScroll: true }); } catch (e) { edTitle.focus(); }
+      var r = document.createRange();
+      r.selectNodeContents(edTitle);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(r);
+      overlay.parentElement.scrollLeft = 0;
+      overlay.parentElement.scrollTop = 0;
+    }
+    overlay.addEventListener("transitionend", function (e) { if (e.target === overlay) go(); }, { once: true });
+    setTimeout(go, reduced ? 30 : 380);
   }
 
   /* 编辑器工具栏 */
