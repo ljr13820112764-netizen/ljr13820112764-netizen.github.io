@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>知数 · 双视角权限差异演示</title>
+<style data-tokens-sha256="09c63c0279d6d0eba0a5df502df2d4bfe5e8106b8bdb041027dd05099eef70f4">/* ==========================================================================
+   知数 · 设计 tokens ——「砂墨 C·Sand-Ink v2」
+   唯一维护源。改色只改本文件；组件与页面只引用变量，不写字面色值。
+   契约：PRD §13.13.2（v1.3.18）
+   ========================================================================== */
+
+:root {
+  /* ---- 面与线 ---------------------------------------------------------- */
+  --bg: #F9F9F8;
+  --surface: #FFFFFF;
+  --surface-2: #F1F0EE;
+  --side-bg: #FCFCFB;
+  --border: #E3E1DC;
+  --border-strong: #D3D1C8;
+  --control-border: #96938A;
+
+  /* ---- 文字与墨色 ------------------------------------------------------ */
+  --fg: #21201C;
+  --fg-2: #57554F;
+  --fg-3: #6E6C66;
+
+  /* ---- 主色（结构，不承担数据序列） ------------------------------------ */
+  --primary: #21201C;
+  --primary-hover: #3A3934;
+  --primary-weak: #E9E6DF;
+
+  /* ---- 状态色（仅状态） ------------------------------------------------ */
+  --success: #2B6B47;
+  --warning: #8A5D0F;
+  --danger: #A5342B;
+
+  /* ---- 分类数据序列（仅图形，不作文字色） ------------------------------ */
+  --dv-1: #2B5072;
+  --dv-2: #5C818D;
+  --dv-3: #7E7592;
+  --dv-4: #584751;
+  --dv-5: #837870;
+  --dv-6: #848C59;
+
+  /* ---- 由 token 派生的结构变量（不新增独立色相） ----------------------- */
+  --on-primary: var(--surface);
+  --success-weak: color-mix(in srgb, var(--success) 9%, var(--surface));
+  --warning-weak: color-mix(in srgb, var(--warning) 9%, var(--surface));
+  --danger-weak: color-mix(in srgb, var(--danger) 9%, var(--surface));
+  --info-weak: color-mix(in srgb, var(--dv-1) 8%, var(--surface));
+  --neutral-weak: color-mix(in srgb, var(--fg) 4%, var(--surface));
+  --hover-wash: color-mix(in srgb, var(--primary-weak) 38%, var(--surface));
+  --selected-wash: color-mix(in srgb, var(--primary-weak) 62%, var(--surface));
+  --scrim: color-mix(in srgb, var(--fg) 30%, transparent);
+  --focus-ring: var(--dv-1);
+
+  /* ---- 阴影：仅 1 级，仅弹层 ------------------------------------------- */
+  --shadow-overlay: 0 10px 30px rgba(33, 32, 28, .12);
+
+  /* ---- 间距（4 的倍数） ------------------------------------------------ */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-12: 48px;
+
+  /* ---- 圆角 ------------------------------------------------------------ */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* ---- 字号与行高 ------------------------------------------------------ */
+  --fs-12: 12px;
+  --fs-14: 14px;
+  --fs-16: 16px;
+  --fs-20: 20px;
+  --fs-24: 24px;
+  --fs-32: 32px;
+  --lh: 1.5;
+
+  /* ---- 布局 ------------------------------------------------------------ */
+  --sidebar-w: 248px;
+  --sidebar-w-rail: 72px;
+  --topbar-h: 56px;
+  --content-max: 1440px;
+
+  /* ---- 字体 ------------------------------------------------------------ */
+  --font-sans: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+</style>
+<style>
+  :root {
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", "Noto Sans CJK SC", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; }
+  .app { max-width: 1280px; margin: 0 auto; padding: 22px 22px 40px; }
+
+  /* ---------- 顶栏 ---------- */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    background: var(--primary);
+    color: var(--bg); border-radius: 18px; padding: 16px 22px;
+    box-shadow: 0 16px 40px var(--shadow-overlay);
+  }
+  .brand { display: flex; align-items: center; gap: 13px; min-width: 0; }
+  .brand-mark {
+    width: 46px; height: 46px; border-radius: 13px; flex: none;
+    display: grid; place-items: center;
+    background: color-mix(in srgb, var(--surface) 12%, transparent); border: 1px solid color-mix(in srgb, var(--surface) 28%, transparent);
+    font-size: 22px; font-weight: 700; letter-spacing: 0;
+  }
+  .brand h1 { font-size: 20px; margin: 0; letter-spacing: 1px; }
+  .brand p { margin: 3px 0 0; font-size: 12px; color: var(--border-strong); }
+  .top-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+  .tenant {
+    font-size: 12px; color: color-mix(in srgb, var(--primary-weak) 60%, var(--surface)); background: color-mix(in srgb, var(--surface) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--surface) 18%, transparent); padding: 7px 11px; border-radius: 999px;
+  }
+  .demo-tag {
+    font-size: 12px; color: color-mix(in srgb, var(--warning) 25%, var(--warning-weak)); background: color-mix(in srgb, var(--warning) 16%, transparent);
+    border: 1px solid color-mix(in srgb, var(--warning) 36%, transparent); padding: 7px 11px; border-radius: 999px;
+  }
+  .reset-btn {
+    font-size: 12px; color: var(--surface); background: transparent; border: 1px solid color-mix(in srgb, var(--surface) 30%, transparent);
+    border-radius: 999px; padding: 7px 12px; cursor: pointer;
+  }
+  .reset-btn:hover { background: color-mix(in srgb, var(--surface) 10%, transparent); }
+
+  /* ---------- 工具栏 ---------- */
+  .toolbar {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    margin-top: 16px; padding: 14px 16px; box-shadow: var(--shadow-overlay);
+  }
+  .tool-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .tool-row + .tool-row { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
+  .tool-label { font-size: 12px; color: var(--fg-3); margin-right: 2px; white-space: nowrap; }
+  .q-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .q-chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--fg-2);
+    padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 13px;
+    transition: border-color .15s, background .15s, transform .1s;
+  }
+  .q-chip:hover { border-color: var(--control-border); background: var(--neutral-weak); }
+  .q-chip:active { transform: translateY(1px); }
+  .q-chip.active { border-color: var(--primary); background: var(--primary-weak); color: var(--primary); font-weight: 600; }
+  .q-num {
+    width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center;
+    background: var(--primary-weak); color: var(--primary); font-size: 11px; font-weight: 700; flex: none;
+  }
+  .q-chip.active .q-num { background: var(--primary); color: var(--surface); }
+  .sensitive-tag {
+    font-size: 10px; color: var(--warning); background: var(--warning-weak);
+    border: 1px solid color-mix(in srgb, var(--warning) 20%, var(--surface)); padding: 2px 6px; border-radius: 999px;
+  }
+  .seg {
+    display: inline-flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+    background: var(--neutral-weak);
+  }
+  .seg button {
+    border: 0; background: transparent; padding: 8px 13px; font-size: 12.5px; color: var(--fg-3);
+    cursor: pointer;
+  }
+  .seg button.active { background: var(--surface); color: var(--primary); font-weight: 700; box-shadow: 0 1px 4px color-mix(in srgb, var(--fg) 12%, transparent); }
+  .spacer { flex: 1; }
+  .ghost-btn {
+    border: 1px solid var(--border); background: var(--surface); color: var(--fg-2);
+    padding: 8px 12px; border-radius: 10px; font-size: 12.5px; cursor: pointer;
+  }
+  .ghost-btn:hover { border-color: var(--control-border); color: var(--primary); }
+  .ghost-btn.on { background: var(--primary-weak); border-color: color-mix(in srgb, var(--border-strong) 80%, var(--control-border)); color: var(--primary); font-weight: 600; }
+  .budget-strip {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    font-size: 12px; color: var(--fg-3);
+  }
+  .budget-meter { display: inline-flex; align-items: center; gap: 6px; }
+  .meter-track { width: 86px; height: 7px; border-radius: 99px; background: color-mix(in srgb, var(--border-strong) 55%, var(--surface)); overflow: hidden; }
+  .meter-fill { height: 100%; width: 0; background: var(--fg-3); border-radius: 99px; transition: width .25s; }
+  .meter-fill.warn { background: var(--warning); }
+  .switch { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; user-select: none; color: var(--fg-2); }
+  .switch input { accent-color: var(--primary); }
+
+  /* ---------- 双栏 ---------- */
+  .stage { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; align-items: start; }
+  .stage.single-hrd { grid-template-columns: minmax(0, 760px); }
+  .stage.single-mgr { grid-template-columns: minmax(0, 760px); }
+  .stage.single-hrd #col-mgr, .stage.single-mgr #col-hrd { display: none; }
+  .role-col { min-width: 0; }
+  .role-head {
+    display: flex; align-items: center; gap: 11px; padding: 11px 14px;
+    background: color-mix(in srgb, var(--surface) 80%, transparent); border: 1px solid var(--border); border-radius: var(--radius);
+    border-bottom-left-radius: 0; border-bottom-right-radius: 0; backdrop-filter: blur(4px);
+  }
+  .avatar {
+    width: 38px; height: 38px; border-radius: 50%; flex: none; display: grid; place-items: center;
+    font-weight: 700; font-size: 15px;
+  }
+  .role-hrd .avatar { background: var(--primary-weak); color: var(--primary); }
+  .role-mgr .avatar { background: color-mix(in srgb, var(--primary-weak) 55%, var(--border-strong)); color: var(--primary-hover); }
+  .role-meta { min-width: 0; }
+  .role-name { font-size: 14.5px; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .role-title { font-size: 12px; color: var(--fg-3); margin-top: 2px; }
+  .role-scope {
+    margin-left: auto; font-size: 11px; color: var(--primary); background: var(--primary-weak);
+    border: 1px solid var(--border-strong); padding: 5px 9px; border-radius: 999px; white-space: nowrap;
+  }
+  .role-mgr .role-scope { color: var(--primary-hover); background: color-mix(in srgb, var(--primary-weak) 60%, var(--surface)); border-color: color-mix(in srgb, var(--border-strong) 80%, var(--control-border)); }
+  .card-wrap { background: color-mix(in srgb, var(--primary-weak) 18%, var(--surface)); border: 1px solid var(--border); border-top: 0; border-radius: 0 0 var(--radius) var(--radius); padding: 12px; }
+
+  /* ---------- 答案卡 ---------- */
+  .answer-card {
+    position: relative;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; box-shadow: 0 4px 16px var(--shadow-overlay);
+    animation: cardIn .28s ease both;
+  }
+  @keyframes cardIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .card-head { display: flex; align-items: flex-start; gap: 10px; justify-content: space-between; }
+  .q-line { font-size: 14.5px; font-weight: 700; line-height: 1.5; display: flex; gap: 8px; }
+  .q-mark {
+    flex: none; width: 22px; height: 22px; border-radius: 7px; background: var(--primary); color: var(--surface);
+    font-size: 11px; display: grid; place-items: center; margin-top: 2px;
+  }
+  .status {
+    flex: none; font-size: 11px; padding: 4px 9px; border-radius: 999px; white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .status.ok { color: var(--primary); background: var(--primary-weak); border-color: var(--border-strong); }
+  .status.denied { color: var(--danger); background: var(--danger-weak); border-color: color-mix(in srgb, var(--danger) 20%, var(--surface)); }
+  .status.warn { color: var(--warning); background: var(--warning-weak); border-color: color-mix(in srgb, var(--warning) 20%, var(--surface)); }
+
+  .hero-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; position: relative; }
+  .hero-num { font-size: 34px; font-weight: 800; letter-spacing: -.5px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .hero-num span { font-size: 14px; font-weight: 600; color: var(--fg-3); margin-left: 3px; }
+  .hero-label { font-size: 11.5px; color: var(--fg-3); margin-top: 6px; }
+  .badges { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; position: relative; }
+  .badge {
+    font-size: 10.5px; padding: 4px 8px; border-radius: 7px; border: 1px solid var(--border);
+    color: var(--fg-2); background: var(--neutral-weak); white-space: nowrap;
+  }
+  .badge.time { border-color: color-mix(in srgb, var(--primary-weak) 55%, var(--border-strong)); background: var(--neutral-weak); color: var(--fg-2); }
+  .badge.scope { border-color: color-mix(in srgb, var(--border-strong) 80%, var(--control-border)); background: color-mix(in srgb, var(--primary-weak) 45%, var(--surface)); color: var(--primary-hover); }
+
+  .viz { margin-top: 15px; }
+  .bar-row { display: grid; grid-template-columns: 86px 1fr 52px; gap: 9px; align-items: center; margin-top: 8px; }
+  .bar-label { font-size: 12px; color: var(--fg-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-track { height: 10px; background: color-mix(in srgb, var(--border-strong) 45%, var(--surface)); border-radius: 99px; overflow: hidden; }
+  .bar-fill { display: block; height: 100%; border-radius: 99px; background: var(--dv-1); }
+  .bar-fill.mgr { background: var(--dv-2); }
+  .bar-val { font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; color: var(--fg-2); }
+
+  table.data { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  table.data th, table.data td {
+    text-align: left; padding: 8px 9px; border-bottom: 1px solid color-mix(in srgb, var(--border-strong) 45%, var(--surface)); font-size: 12.5px;
+  }
+  table.data th { font-size: 11px; color: var(--fg-3); font-weight: 600; background: color-mix(in srgb, var(--primary-weak) 18%, var(--surface)); }
+  table.data td.num, table.data th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.data tr.own td { background: color-mix(in srgb, var(--warning-weak) 45%, var(--surface-2)); }
+  .own-tag {
+    font-size: 10px; color: var(--primary-hover); background: color-mix(in srgb, var(--primary-weak) 45%, var(--surface)); border: 1px solid color-mix(in srgb, var(--border-strong) 80%, var(--control-border));
+    border-radius: 999px; padding: 1px 6px; margin-left: 6px; white-space: nowrap;
+  }
+  .filter-note {
+    margin-top: 10px; font-size: 12px; color: var(--fg-3); background: var(--neutral-weak);
+    border: 1px dashed var(--border); border-radius: 9px; padding: 9px 11px; line-height: 1.6;
+  }
+  .table-foot { margin-top: 7px; font-size: 10.5px; color: var(--fg-3); }
+  .nodata {
+    display: inline-block; font-size: 11px; color: color-mix(in srgb, var(--fg-3) 75%, var(--bg)); background: var(--surface-2);
+    border: 1px dashed var(--border-strong); border-radius: 6px; padding: 2px 7px; white-space: nowrap;
+  }
+
+  details.caliber { margin-top: 14px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; position: relative; }
+  details.caliber summary {
+    list-style: none; cursor: pointer; padding: 9px 12px; font-size: 12px; color: var(--fg-2);
+    background: color-mix(in srgb, var(--primary-weak) 18%, var(--surface)); display: flex; justify-content: space-between; gap: 8px;
+  }
+  details.caliber summary::-webkit-details-marker { display: none; }
+  details.caliber summary::after { content: "▾"; color: var(--fg-3); }
+  details.caliber[open] summary::after { content: "▴"; }
+  .caliber-body { padding: 10px 12px 12px; font-size: 11.5px; color: var(--fg-3); line-height: 1.75; }
+  .caliber-body b { color: var(--fg-2); font-weight: 600; }
+
+  .source {
+    margin-top: 13px; font-size: 10.5px; color: var(--fg-3); line-height: 1.7;
+    padding-top: 11px; border-top: 1px dashed var(--border);
+  }
+  .source b { color: var(--fg-2); font-weight: 600; }
+  .actions { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 12px; }
+  .act {
+    border: 1px solid var(--border); background: var(--surface); color: var(--fg-2); font-size: 11.5px;
+    padding: 6px 10px; border-radius: 8px; cursor: pointer;
+  }
+  .act:hover { border-color: var(--control-border); color: var(--primary); }
+  .act.primary { background: var(--primary); border-color: var(--primary); color: var(--surface); }
+  .act.primary:hover { background: var(--primary-hover); color: var(--surface); }
+  .act:disabled { opacity: .45; cursor: not-allowed; }
+  .feedback { margin-top: 9px; font-size: 10.5px; color: color-mix(in srgb, var(--fg-3) 75%, var(--bg)); display: flex; gap: 10px; }
+  .feedback span { cursor: pointer; }
+  .feedback span:hover { color: var(--primary); }
+
+  .deny-box { text-align: center; padding: 18px 10px 8px; }
+  .deny-icon {
+    width: 54px; height: 54px; margin: 0 auto 12px; border-radius: 50%;
+    display: grid; place-items: center; background: var(--danger-weak); color: var(--danger);
+    font-size: 25px; font-weight: 700; border: 1px solid color-mix(in srgb, var(--danger) 20%, var(--surface));
+  }
+  .deny-title { font-size: 15px; font-weight: 700; }
+  .deny-text { font-size: 12px; color: var(--fg-3); line-height: 1.75; margin: 8px auto 0; max-width: 430px; }
+  .deny-steps {
+    margin: 14px auto 0; max-width: 440px; text-align: left; font-size: 11.5px; color: var(--fg-2);
+    background: color-mix(in srgb, var(--warning-weak) 55%, var(--surface)); border: 1px solid color-mix(in srgb, var(--warning) 18%, var(--surface)); border-radius: 10px; padding: 11px 13px; line-height: 1.9;
+  }
+  .deny-steps b { color: color-mix(in srgb, var(--warning) 90%, var(--fg)); }
+  .deny-cta { margin-top: 14px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+  .intercept {
+    border: 1px solid color-mix(in srgb, var(--danger) 20%, var(--surface)); background: color-mix(in srgb, var(--danger-weak) 45%, var(--surface));
+  }
+  .intercept .hero-num { color: var(--danger); font-size: 22px; line-height: 1.4; }
+
+  /* ---------- 审计面板 ---------- */
+  .audit {
+    margin-top: 16px; background: var(--primary); color: var(--border-strong); border-radius: var(--radius);
+    padding: 15px 17px; border: 1px solid color-mix(in srgb, var(--primary) 90%, var(--surface)); position: relative;
+  }
+  .audit-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .audit-title { font-size: 13px; font-weight: 700; letter-spacing: .5px; }
+  .audit-sub { font-size: 10.5px; color: color-mix(in srgb, var(--fg-3) 75%, var(--bg)); }
+  .audit-head .spacer { flex: 1; }
+  .audit-toggle {
+    font-size: 11px; color: var(--border-strong); background: transparent; border: 1px solid color-mix(in srgb, var(--primary) 85%, var(--surface));
+    border-radius: 7px; padding: 4px 9px; cursor: pointer;
+  }
+  .audit-list { list-style: none; margin: 11px 0 0; padding: 0; max-height: 168px; overflow: auto; }
+  .audit-list li {
+    display: flex; gap: 10px; font-size: 11px; padding: 6px 0; border-bottom: 1px dashed color-mix(in srgb, var(--primary) 92%, var(--surface));
+    font-family: "Cascadia Mono", Consolas, monospace; color: color-mix(in srgb, var(--border-strong) 70%, var(--control-border)); line-height: 1.5;
+  }
+  .audit-list li .t { color: color-mix(in srgb, var(--fg-3) 85%, var(--bg)); flex: none; }
+  .audit-list li .r { color: var(--border-strong); flex: none; }
+  .audit-list li .e { color: var(--border-strong); }
+  .audit-list li .e.block { color: color-mix(in srgb, var(--danger) 30%, var(--surface)); }
+  .audit-list li .e.flag { color: color-mix(in srgb, var(--warning) 35%, var(--surface)); }
+  .audit.collapsed .audit-list { display: none; }
+  .audit.collapsed { padding-bottom: 13px; }
+
+  .foot {
+    margin-top: 18px; font-size: 10.5px; color: var(--fg-3); line-height: 1.8;
+    display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+  }
+  .foot b { color: var(--fg-2); }
+
+  /* ---------- 设计注记 ---------- */
+  .notes-drawer {
+    position: fixed; top: 0; right: 0; height: 100vh; width: min(380px, 92vw);
+    background: color-mix(in srgb, var(--primary-weak) 12%, var(--surface)); border-left: 1px solid var(--border); box-shadow: -20px 0 50px color-mix(in srgb, var(--fg) 12%, transparent);
+    transform: translateX(105%); transition: transform .25s ease; z-index: 60;
+    padding: 18px 18px 26px; overflow: auto;
+  }
+  .notes-drawer.open { transform: none; }
+  .notes-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .notes-head h2 { font-size: 15px; margin: 0; }
+  .notes-close { border: 1px solid var(--border-strong); background: var(--surface); border-radius: 8px; padding: 5px 10px; cursor: pointer; color: var(--fg-2); }
+  .notes-intro { font-size: 11px; color: var(--fg-3); line-height: 1.7; margin: 8px 0 14px; }
+  .note-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--primary-weak); }
+  .note-item .n {
+    flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--primary-hover); color: var(--surface);
+    font-size: 11px; display: grid; place-items: center; font-weight: 700;
+  }
+  .note-item p { margin: 0; font-size: 11.5px; line-height: 1.7; color: color-mix(in srgb, var(--fg) 80%, var(--bg)); }
+  .note-item p b { color: var(--primary); }
+
+  body.notes-on [data-note] { outline: 2px dashed color-mix(in srgb, var(--fg) 45%, transparent); outline-offset: 3px; }
+  .note-badge {
+    position: absolute; top: -10px; right: -10px; z-index: 5;
+    min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px;
+    background: var(--primary-hover); color: var(--surface); font-size: 10.5px; font-weight: 700;
+    display: grid; place-items: center; box-shadow: 0 2px 7px color-mix(in srgb, var(--fg) 30%, transparent);
+    pointer-events: none;
+  }
+
+  /* ---------- 弹窗 / 提示 ---------- */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: var(--scrim); display: none;
+    align-items: center; justify-content: center; padding: 18px; z-index: 80;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--surface); border-radius: 16px; width: min(560px, 100%); max-height: 88vh; overflow: auto;
+    padding: 20px; box-shadow: 0 30px 70px var(--shadow-overlay); animation: cardIn .2s ease both;
+  }
+  .modal h3 { margin: 0 0 4px; font-size: 16px; }
+  .modal .modal-sub { font-size: 11.5px; color: var(--fg-3); margin: 0 0 14px; line-height: 1.7; }
+  .modal .step { border: 1px solid var(--border); border-radius: 10px; padding: 11px 13px; margin-top: 9px; }
+  .modal .step b { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .modal .step span { font-size: 11.5px; color: var(--fg-3); line-height: 1.7; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  .modal-actions button { border-radius: 9px; padding: 8px 13px; font-size: 12px; cursor: pointer; }
+  .modal-actions .cancel { background: var(--surface); border: 1px solid var(--border); color: var(--fg-2); }
+  .modal-actions .submit { background: var(--primary); border: 1px solid var(--primary); color: var(--surface); }
+  .modal-actions .submit:hover { background: var(--primary-hover); }
+  .modal-actions .submit:disabled { opacity: .5; cursor: not-allowed; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 16px);
+    background: var(--primary); color: color-mix(in srgb, var(--primary-weak) 50%, var(--surface)); padding: 10px 16px; border-radius: 10px;
+    font-size: 12px; opacity: 0; pointer-events: none; transition: all .22s ease; z-index: 90;
+    max-width: 86vw; text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 960px) {
+    .app { padding: 14px 12px 30px; }
+    .stage { grid-template-columns: 1fr; }
+    .stage.single-hrd, .stage.single-mgr { grid-template-columns: 1fr; }
+    .tool-row:first-child { align-items: flex-start; }
+    .budget-strip { gap: 9px; }
+    .hero-row { align-items: flex-start; }
+    .badges { justify-content: flex-start; }
+  }
+  @media (max-width: 560px) {
+    .topbar { flex-direction: column; align-items: stretch; gap: 12px; padding: 14px 16px; }
+    .brand h1 { font-size: 18px; line-height: 1.4; }
+    .brand p { font-size: 11px; line-height: 1.6; }
+    .brand-mark { width: 40px; height: 40px; font-size: 19px; }
+    .top-right { justify-content: flex-start; }
+    .role-head { flex-wrap: wrap; }
+    .role-meta { flex: 1 1 150px; }
+    .role-scope { margin-left: 0; }
+    .q-chip { width: 100%; justify-content: flex-start; }
+    .q-chips { width: 100%; }
+    .bar-row { grid-template-columns: 68px 1fr 44px; }
+    .card-head { flex-direction: column; align-items: flex-start; }
+    .tool-label { white-space: normal; }
+    .tool-label:last-child { max-width: 100%; word-break: break-word; }
+  }
+  @media print {
+    body { background: var(--surface); }
+    .topbar, .toolbar, .audit, .foot, .notes-drawer, .modal-backdrop, .toast { display: none !important; }
+    .stage { grid-template-columns: 1fr 1fr; }
+    .answer-card { break-inside: avoid; }
+  }
+</style>
+</head>
+<body><a class="pj-back" href="index.html">← 返回知数案例页</a><style>.pj-back{position:fixed;right:12px;bottom:12px;z-index:99999;background:#FFFFFF;color:#111111;font:13px/1 "Microsoft YaHei","PingFang SC",sans-serif;padding:9px 15px;border-radius:20px;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.14);border:1px solid #111111;opacity:.94}.pj-back:hover{opacity:1;background:#F0F0F0}@media print{.pj-back{display:none}}</style>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">知</div>
+      <div>
+        <h1>知数 · 双视角权限差异演示</h1>
+        <p>同一句提问，HRD 与直线经理各看到什么 —— 「AI 不越权」的可见证据</p>
+      </div>
+    </div>
+    <div class="top-right">
+      <span class="tenant">示例建设集团（虚构租户）</span>
+      <span class="demo-tag">演示数据 · 不含真实信息</span>
+      <button class="reset-btn" id="resetBtn" type="button">重置演示</button>
+    </div>
+  </header>
+
+  <section class="toolbar" aria-label="演示控制台">
+    <div class="tool-row">
+      <span class="tool-label">选择问题</span>
+      <div class="q-chips" id="qChips"></div>
+    </div>
+    <div class="tool-row">
+      <span class="tool-label">视角</span>
+      <div class="seg" role="group" aria-label="选择视角">
+        <button type="button" data-testid="mode-compare" data-mode="compare" class="active" aria-pressed="true">对比视图</button>
+        <button type="button" data-testid="mode-hrd" data-mode="hrd" aria-pressed="false">仅 HRD</button>
+        <button type="button" data-testid="mode-mgr" data-mode="mgr" aria-pressed="false">仅经理</button>
+      </div>
+      <div class="spacer"></div>
+      <button class="ghost-btn" id="notesBtn" data-testid="notes-toggle" type="button" aria-pressed="false">显示设计注记</button>
+    </div>
+    <div class="tool-row">
+      <div class="budget-strip">
+        <span>敏感查询预算（10 分钟窗口）：</span>
+        <span class="budget-meter">HRD <span class="meter-track"><span class="meter-fill" id="meter-hrd"></span></span> <b id="budget-hrd" data-testid="budget-hrd">0/20</b></span>
+        <span class="budget-meter">经理 <span class="meter-track"><span class="meter-fill" id="meter-mgr"></span></span> <b id="budget-mgr" data-testid="budget-mgr">0/20</b></span>
+        <label class="switch" data-note="8"><input type="checkbox" id="accel" data-testid="accel"> 演示加速：预算降为 3 次，超出即拦截</label>
+      </div>
+      <div class="spacer"></div>
+      <span class="tool-label">数据时点 2026-10-16 · 默认只记录不拦截 · 预算与差集族已开启阻断</span>
+    </div>
+  </section>
+
+  <main class="stage" id="stage">
+    <section class="role-col role-hrd" id="col-hrd" aria-label="HRD 视角">
+      <div class="role-head">
+        <div class="avatar">王</div>
+        <div class="role-meta">
+          <div class="role-name">王敏 <span class="badge">HRD</span></div>
+          <div class="role-title">人力资源总监 · 可查看全公司，薪酬仅限聚合分档</div>
+        </div>
+        <span class="role-scope">全公司 · 8 个部门</span>
+      </div>
+      <div class="card-wrap" id="card-hrd"></div>
+    </section>
+
+    <section class="role-col role-mgr" id="col-mgr" aria-label="直线经理视角">
+      <div class="role-head">
+        <div class="avatar">李</div>
+        <div class="role-meta">
+          <div class="role-name">李强 <span class="badge">直线经理</span></div>
+          <div class="role-title">工程部经理（P6）· 仅本人及下属团队，本人组按更严格阈值（内部规则）判定</div>
+        </div>
+        <span class="role-scope">工程部及下属 · 29 人</span>
+      </div>
+      <div class="card-wrap" id="card-mgr"></div>
+    </section>
+  </main>
+
+  <section class="audit" id="auditPanel" aria-label="审计视图">
+    <div class="audit-head">
+      <span class="audit-title">审计视图 · 合规管理员</span>
+      <span class="audit-sub">实时 · 仅审计角色可见（演示）</span>
+      <span class="spacer"></span>
+      <button class="audit-toggle" id="auditToggle" type="button">收起</button>
+      <button class="audit-toggle" id="auditClear" type="button">清空</button>
+    </div>
+    <ul class="audit-list" id="auditList" data-testid="audit-list"></ul>
+  </section>
+
+  <footer class="foot">
+    <div><b>演示说明：</b>本页面是<b>答案层双视角对照原型</b>（v1.2.1 安全语义），所有企业、人员与数据均为虚构；主 demo 见同目录 <code>saas-demo/</code>（v1.3 全模块 HCM 重建）。对应 PRD：《知数》v1.3.18（§5.2 答案卡、§5.3 权限规则、§6.8 API 契约）。</div>
+    <div>固定规则：k=5 · 本人组更严格阈值（内部规则，不对外宣传）· 抑制与无数据同文案 · 默认只记录不拦截、预算与差集族已开启阻断 · policy_version 为不可变快照 · 操作全量留痕</div>
+  </footer>
+</div>
+
+<aside class="notes-drawer" id="notesDrawer" aria-label="设计注记">
+  <div class="notes-head">
+    <h2>设计注记</h2>
+    <button class="notes-close" id="notesClose" type="button">关闭</button>
+  </div>
+  <p class="notes-intro">编号与页面中的橙色标记一一对应。注记不属于产品界面，仅用于评审与作品集讲解。</p>
+  <div id="notesList"></div>
+</aside>
+
+<div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <h3 id="modalTitle">点名审批（F6）· 演示</h3>
+    <p class="modal-sub" id="modalSub"></p>
+    <div id="modalSteps"></div>
+    <div class="modal-actions">
+      <button class="cancel" id="modalCancel" type="button">关闭</button>
+      <button class="submit" id="modalSubmit" type="button">提交演示申请</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------------- 演示数据（全部虚构） ----------------
+  const DEPTS = [
+    { name: "工程部", headcount: 29, ot: 18.2 },
+    { name: "研发部", headcount: 42, ot: 15.6 },
+    { name: "销售部", headcount: 45, ot: 12.4 },
+    { name: "人力行政部", headcount: 18, ot: 8.9 },
+    { name: "财务部", headcount: 12, ot: 7.5 },
+    { name: "供应链部", headcount: 24, ot: 11.1 },
+    { name: "质量安全部", headcount: 21, ot: 16.8 },
+    { name: "市场部", headcount: 16, ot: 10.3 }
+  ];
+  const COMPANY_TOTAL = DEPTS.reduce((s, d) => s + d.headcount, 0);
+  const COMPANY_OT = (DEPTS.reduce((s, d) => s + d.headcount * d.ot, 0) / COMPANY_TOTAL).toFixed(1);
+
+  const LEVELS = [
+    { level: "P4", n: 6 },
+    { level: "P5", n: 8 },
+    { level: "P6", n: 5, own: true },
+    { level: "P7", n: 7 },
+    { level: "P8", n: 3 }
+  ];
+  const BANDS = [
+    { label: "<8k", n: 1 },
+    { label: "8–12k", n: 5 },
+    { label: "12–18k", n: 9 },
+    { label: "18–25k", n: 5, own: true },
+    { label: "25–35k", n: 6 },
+    { label: ">35k", n: 3 }
+  ];
+
+  const ROLES = {
+    hrd: { key: "hrd", name: "王敏", label: "HRD 王敏", short: "HRD" },
+    mgr: { key: "mgr", name: "李强", label: "经理 李强", short: "经理" }
+  };
+
+  const QUESTIONS = [
+    { id: "q1", label: "各部门本月平均加班时长", sensitive: false },
+    { id: "q2", label: "工程部各职级人数分布", sensitive: false },
+    { id: "q3", label: "工程部平均薪酬（分档）", sensitive: true },
+    { id: "q4", label: "导出全员薪酬明细", sensitive: true }
+  ];
+
+  const NOTES = [
+    "数字旁固定同屏双徽标：数据时点 + 权限范围。答案被截屏转发后，仍能看出这个数字属于谁、是什么时点。",
+    "同一问题两种答案：k=5 抑制；直线经理本人所在分组按更严格阈值判定（内部设计能力，不对外宣传）。工程部 P6 恰好 5 人——HRD 看到「5」，经理看到「暂无可展示的数据」。",
+    "抑制与「无数据」对外文案完全一致，防止通过反复试探识别出谁被抑制（suppression oracle）。内部 suppression_flag 只在审计视图可见。",
+    "互补抑制：分项可反推出总数时，总数一并抑制。工程部合计显示为「暂无」，因为用 29 减去可见职级即可反推 P8 人数。",
+    "薪酬聚合默认返回 6 档区间，不返回精确均值；「为何以区间呈现」随卡说明。精确值需点名审批（F6）。",
+    "越权请求在权限执行层被拦截，不进入数据查询。经理无权发起个体薪酬审批；HRD 可发起但需限时、留痕、二次认证与水印。",
+    "分享与订阅按接收者权限重新计算：接收者看到的是自己权限下的重算值，不是分享者的原始数字（见 PRD §5.2 权限差异视图）。",
+    "敏感查询预算与差集检测：单用户 10 分钟内敏感指标查询 ≤20 次、维度组合 ≤10 种。默认只记录不拦截；本演示中预算与差集族已开启阻断，故表现为拦截。演示加速模式下降为 3 次，命中后统一文案并留痕。",
+    "每一次查看、无法展示、审批申请都会写审计事件，供合规管理员追溯。"
+  ];
+
+  // ---------------- 状态 ----------------
+  const state = {
+    q: "q1",
+    mode: "compare",
+    budget: { hrd: 0, mgr: 0 },
+    accel: false,
+    notes: false
+  };
+  const BUDGET_MAX = 20;
+  const ACCEL_MAX = 3;
+
+  // ---------------- 工具 ----------------
+  const $ = (sel, root) => (root || document).querySelector(sel);
+  const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  function nowTime() {
+    const d = new Date();
+    return [d.getHours(), d.getMinutes(), d.getSeconds()].map((v) => String(v).padStart(2, "0")).join(":");
+  }
+
+  function budgetMax() { return state.accel ? ACCEL_MAX : BUDGET_MAX; }
+
+  function toast(msg) {
+    const el = $("#toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => el.classList.remove("show"), 2600);
+  }
+
+  // ---------------- 审计 ----------------
+  const auditEntries = [];
+  function audit(role, event, detail, cls) {
+    auditEntries.unshift({
+      t: nowTime(),
+      r: role || "系统",
+      e: event + (detail ? " · " + detail : ""),
+      cls: cls || ""
+    });
+    if (auditEntries.length > 30) auditEntries.pop();
+    renderAudit();
+  }
+  function renderAudit() {
+    const list = $("#auditList");
+    list.innerHTML = auditEntries.map((x) =>
+      '<li><span class="t">' + esc(x.t) + '</span><span class="r">' + esc(x.r) + '</span><span class="e ' + x.cls + '">' + esc(x.e) + '</span></li>'
+    ).join("");
+  }
+
+  // ---------------- 片段 ----------------
+  function nodata() { return '<span class="nodata">暂无可展示的数据</span>'; }
+  function chipsTimeScope(role) {
+    const scope = role === "hrd" ? "全公司 8 个部门" : "工程部及下属团队 · 29 人";
+    return '<div class="badges" data-note="1">' +
+      '<span class="badge time">数据时点 2026-10-16</span>' +
+      '<span class="badge scope">权限范围：' + scope + '</span>' +
+      '</div>';
+  }
+  function caliber(role, text, forceOpen) {
+    const open = forceOpen ? " open" : "";
+    return '<details class="caliber"' + open + '><summary>口径与计算方式</summary><div class="caliber-body">' + text + '</div></details>';
+  }
+  const POLICY_VERSION = "sha256:4f2a9c7e8b1d";
+  function source(role, lineage) {
+    const scope = role === "hrd" ? "全公司（8 个部门）" : "工程部及下属团队（29 人）";
+    return '<div class="source"><b>数据来源：</b>知数 HCM · 演示数据快照 · 更新至 2026-10-16 02:00<br>' +
+      '<b>本答案按你的权限范围（' + scope + '）计算 · 表级血缘：</b>' + lineage + '<br>' +
+      '<b>策略版本：</b><span data-testid="policy-version">' + POLICY_VERSION + '</span>（不可变快照；策略变更即生成新版本，旧答案仍可按原版本复核）</div>';
+  }
+  function actions(role) {
+    return '<div class="actions">' +
+      '<button class="act" data-action="follow" type="button">追问下钻</button>' +
+      '<button class="act" data-action="subscribe" type="button">收藏为订阅</button>' +
+      '<button class="act" data-action="share" type="button">分享</button>' +
+      '<button class="act" data-action="export" type="button">导出（申请制）</button>' +
+      '</div>' +
+      '<div class="feedback"><span data-action="helpful">有帮助</span><span data-action="unhelpful">没帮助</span><span data-action="caliber-q">口径有疑问</span></div>';
+  }
+  function head(qText, statusText, statusCls) {
+    return '<div class="card-head"><div class="q-line"><span class="q-mark">问</span>' + qText + '</div>' +
+      '<span class="status ' + statusCls + '">' + statusText + '</span></div>';
+  }
+
+  // ---------------- 卡片渲染 ----------------
+  function q1Card(role) {
+    if (role === "hrd") {
+      const rows = DEPTS.map((d) =>
+        '<tr><td>' + d.name + '</td><td class="num">' + d.headcount + '</td><td class="num">' + d.ot.toFixed(1) + ' h</td></tr>'
+      ).join("");
+      const bars = DEPTS.map((d) =>
+        '<div class="bar-row"><span class="bar-label">' + d.name + '</span><span class="bar-track"><span class="bar-fill" style="width:' +
+        Math.round(d.ot / 20 * 100) + '%"></span></span><span class="bar-val">' + d.ot.toFixed(1) + 'h</span></div>'
+      ).join("");
+      return '<article class="answer-card" data-testid="card-hrd">' +
+        head("各部门本月平均加班时长是多少？", "已按权限口径返回", "ok") +
+        '<div class="hero-row"><div><div class="hero-num">' + COMPANY_OT + '<span>h / 人</span></div><div class="hero-label">全公司人均加班 · 本月 1–16 日 · 在岗 ' + COMPANY_TOTAL + ' 人</div></div>' + chipsTimeScope("hrd") + '</div>' +
+        '<div class="viz">' + bars + '</div>' +
+        '<table class="data"><thead><tr><th>部门</th><th class="num">在岗人数</th><th class="num">人均加班</th></tr></thead><tbody>' + rows +
+        '<tr><td><b>合计</b></td><td class="num"><b>' + COMPANY_TOTAL + '</b></td><td class="num"><b>' + COMPANY_OT + ' h</b></td></tr></tbody></table>' +
+        caliber("hrd", "<b>指标：</b>人均月度加班时长 = 当月审批通过的加班时长合计 ÷ 当月在岗人数。<br><b>统计范围：</b>全公司在岗员工；<b>时点：</b>2026-10-01 至 2026-10-16。<br><b>口径边界：</b>不含未审批的加班申请；跨月审批按审批归属日计入。") +
+        source("hrd", "hr.attendance_daily → dws.overtime_monthly") +
+        actions("hrd") + '</article>';
+    }
+    const d = DEPTS[0];
+    return '<article class="answer-card" data-testid="card-mgr">' +
+      head("各部门本月平均加班时长是多少？", "已按权限口径返回", "ok") +
+      '<div class="hero-row"><div><div class="hero-num">' + d.ot.toFixed(1) + '<span>h / 人</span></div><div class="hero-label">工程部人均加班 · 本月 1–16 日 · 团队 ' + d.headcount + ' 人</div></div>' + chipsTimeScope("mgr") + '</div>' +
+      '<table class="data"><thead><tr><th>部门</th><th class="num">在岗人数</th><th class="num">人均加班</th></tr></thead><tbody>' +
+      '<tr><td>工程部</td><td class="num">' + d.headcount + '</td><td class="num">' + d.ot.toFixed(1) + ' h</td></tr></tbody></table>' +
+      '<div class="filter-note">其余 7 个部门不在你的可见范围，已按权限过滤（不展示具体数值）。如需跨部门数据，请联系 HRBP。</div>' +
+      caliber("mgr", "<b>指标：</b>人均月度加班时长 = 当月审批通过的加班时长合计 ÷ 当月在岗人数。<br><b>统计范围：</b>你直接管理范围的 29 人；<b>时点：</b>2026-10-01 至 2026-10-16。<br><b>权限说明：</b>直线经理仅可见本人及下属团队；组织范围按查询时点的历史汇报关系计算。", true) +
+      source("mgr", "hr.attendance_daily → dws.overtime_monthly") +
+      actions("mgr") + '</article>';
+  }
+
+  function q2Card(role) {
+    const isMgr = role === "mgr";
+    const rows = LEVELS.map((lv) => {
+      const isSuppressed = (lv.n < 5) || (isMgr && lv.own);
+      const numCell = isSuppressed ? nodata() : lv.n;
+      const ownTag = isMgr && lv.own ? '<span class="own-tag">你所在分组</span>' : "";
+      return '<tr class="' + (isMgr && lv.own ? "own" : "") + '" data-testid="q2-row-' + lv.level + '"><td>' + lv.level + ownTag + '</td><td class="num num-cell">' + numCell + '</td></tr>';
+    }).join("");
+    return '<article class="answer-card" data-testid="card-' + role + '">' +
+      head("工程部各职级人数分布", "已按权限口径返回", "ok") +
+      '<div class="hero-row"><div><div class="hero-num">5<span>个职级</span></div><div class="hero-label">工程部按职级分布 · 时点 2026-10-16' + (isMgr ? " · 你的管理范围" : "") + '</div></div>' + chipsTimeScope(role) + '</div>' +
+      '<div class="viz" data-note="2,3"><table class="data"><thead><tr><th>职级</th><th class="num">人数</th></tr></thead><tbody>' + rows +
+      '<tr><td><b>合计</b></td><td class="num"><span class="nodata">暂无可展示的数据</span></td></tr></tbody></table></div>' +
+      '<div class="table-foot" data-note="4">合计与分项同源同时点；分项与合计按同一抑制规则处理。</div>' +
+      caliber(role, "<b>指标：</b>在职人数（按工号去重）。<br><b>分组：</b>职级；组织口径取 2026-10-16 当日组织快照。<br><b>规则：</b>分组样本量不足阈值时不展示该分组；无数据与不展示使用同一提示。", isMgr) +
+      source(role, "hr.employee_master → dim.org_snapshot") +
+      actions(role) + '</article>';
+  }
+
+  function q3Card(role) {
+    const isMgr = role === "mgr";
+    const rows = BANDS.map((b) => {
+      const isSuppressed = (b.n < 5) || (isMgr && b.own);
+      const numCell = isSuppressed ? nodata() : b.n;
+      const ownTag = isMgr && b.own ? '<span class="own-tag">你所在分组</span>' : "";
+      return '<tr class="' + (isMgr && b.own ? "own" : "") + '" data-testid="q3-row-' + b.label.replace(/[<>]/g, "") + '"><td>' + b.label + ownTag + '</td><td class="num num-cell">' + numCell + '</td></tr>';
+    }).join("");
+    return '<article class="answer-card" data-testid="card-' + role + '">' +
+      head("工程部平均薪酬（分档）", "已按权限口径返回", "ok") +
+      '<div class="hero-row"><div><div class="hero-num">29<span>人</span></div><div class="hero-label">工程部在岗人数 · 薪酬以 6 档区间呈现</div></div>' + chipsTimeScope(role) + '</div>' +
+      '<div class="viz" data-note="3,5"><table class="data"><thead><tr><th>月度固定薪资档位</th><th class="num">人数</th></tr></thead><tbody>' + rows +
+      '<tr><td><b>合计</b></td><td class="num"><b>29</b></td></tr></tbody></table></div>' +
+      caliber(role, "<b>指标：</b>月度固定薪资（不含奖金、补贴）。<br><b>呈现方式：</b>默认返回 6 档区间，不返回精确均值。<b>为何以区间呈现：</b>薪酬属敏感聚合，区间可满足管理判断并降低个体反推风险。<br><b>档位边界：</b>[0,8k)｜[8k,12k)｜[12k,18k)｜[18k,25k)｜[25k,35k)｜[35k,+∞)。<br><b>精确值：</b>仅点名审批（F6）下可见，限时、留痕、二次认证。", isMgr) +
+      source(role, "payroll.monthly_salary → dws.salary_band_masked") +
+      actions(role) + '</article>';
+  }
+
+  function q4Card(role) {
+    const isHrd = role === "hrd";
+    return '<article class="answer-card" data-testid="card-' + role + '" data-note="6">' +
+      head("导出全员薪酬明细", "需要审批", "denied") +
+      '<div style="display:flex;justify-content:flex-end;margin-top:9px">' + chipsTimeScope(role) + '</div>' +
+      '<div class="deny-box">' +
+      '<div class="deny-icon">!</div>' +
+      '<div class="deny-title">个体薪酬不在任何出口的可见范围</div>' +
+      '<div class="deny-text">该请求不在你的权限范围内，未进入数据查询。个体薪酬在问答、导出、订阅、分享、月报中均不可见，且不可经组合反推。</div>' +
+      (isHrd
+        ? '<div class="deny-steps"><b>如业务确需（F6 点名审批）：</b><br>① 填写申请对象与用途 → ② 审批（不可自批；申请 24h 内有效）→ ③ 二次认证 → ④ 限时访问（默认 ≤72h，带水印下载，绑定申请人）<br>到期自动失效；全过程留痕。</div>' +
+          '<div class="deny-cta"><button class="act primary" data-testid="approval-cta" data-action="approval" type="button">发起点名审批（演示）</button><button class="act" data-action="ask-hrbp" type="button">转交 HRBP 处理</button></div>'
+        : '<div class="deny-steps"><b>你的角色说明：</b>直线经理不具备个体薪酬查看权，也无权发起个体薪酬审批。<br>可申请：本团队聚合数据导出（按角色开关，需水印与留痕）。</div>' +
+          '<div class="deny-cta"><button class="act" disabled type="button">发起点名审批（无权限）</button><button class="act" data-action="aggregate-export" type="button">申请团队聚合导出</button></div>') +
+      '</div>' +
+      '<div class="source" style="margin-top:16px"><b>处理记录：</b>查看与导出均被拒绝 · 原因：敏感数据策略 · 策略版本 ' + POLICY_VERSION + ' · 已写入审计</div>' +
+      actions(role) + '</article>';
+  }
+
+  function budgetBlockCard(role) {
+    return '<article class="answer-card intercept" data-testid="card-' + role + '">' +
+      head("敏感查询请求", "无法按原条件完成", "denied") +
+      '<div class="hero-row"><div><div class="hero-num">当前查询无法按原条件完成，请调整查询条件</div><div class="hero-label">本次操作已记录审计；如需继续，请联系合规管理员。</div></div>' + chipsTimeScope(role) + '</div>' +
+      '<div class="deny-steps" style="max-width:none;margin-top:16px"><b>演示说明：</b>该提示由敏感查询预算 / 差集检测触发。默认仅记录、不阻断；本演示中预算/差集族已开启阻断。真实阈值为单用户 10 分钟内敏感指标查询 ≤20 次、维度组合 ≤10 种（客户只能下调）；演示加速模式下阈值降为 3 次。</div>' +
+      '<div class="source" style="margin-top:14px"><b>审计记录：</b>安全策略拦截（预算）· 触发原因：查询频次超出预算 · 执行方式：阻断（已开启）· 策略版本 ' + POLICY_VERSION + ' · 统一提示文案（不暴露检测规则细节）</div>' +
+      '</article>';
+  }
+
+  function renderCard(role) {
+    const sensitive = state.q === "q3" || state.q === "q4";
+    if (sensitive && state.budget[role] > budgetMax()) {
+      return budgetBlockCard(role);
+    }
+    if (state.budget[role] > budgetMax() && !sensitive) {
+      // 非敏感查询不受预算限制
+    }
+    switch (state.q) {
+      case "q1": return q1Card(role);
+      case "q2": return q2Card(role);
+      case "q3": return q3Card(role);
+      case "q4": return q4Card(role);
+      default: return q1Card(role);
+    }
+  }
+
+  // ---------------- 渲染 ----------------
+  function renderChips() {
+    $("#qChips").innerHTML = QUESTIONS.map((q, i) =>
+      '<button type="button" class="q-chip' + (state.q === q.id ? " active" : "") + '" data-testid="q-chip-' + q.id + '" data-q="' + q.id + '" aria-pressed="' + (state.q === q.id) + '">' +
+      '<span class="q-num">' + (i + 1) + '</span>' + esc(q.label) +
+      (q.sensitive ? '<span class="sensitive-tag">敏感</span>' : "") + '</button>'
+    ).join("");
+  }
+
+  function renderCards() {
+    $("#card-hrd").innerHTML = renderCard("hrd");
+    $("#card-mgr").innerHTML = renderCard("mgr");
+    applyNotes();
+  }
+
+  function renderBudget() {
+    const max = budgetMax();
+    const h = Math.min(state.budget.hrd / max, 1);
+    const m = Math.min(state.budget.mgr / max, 1);
+    const fh = $("#meter-hrd"), fm = $("#meter-mgr");
+    fh.style.width = (h * 100) + "%";
+    fm.style.width = (m * 100) + "%";
+    fh.classList.toggle("warn", h >= 0.7);
+    fm.classList.toggle("warn", m >= 0.7);
+    $("#budget-hrd").textContent = state.budget.hrd + "/" + max;
+    $("#budget-mgr").textContent = state.budget.mgr + "/" + max;
+  }
+
+  function renderMode() {
+    $("#stage").classList.remove("single-hrd", "single-mgr");
+    if (state.mode === "hrd") $("#stage").classList.add("single-hrd");
+    if (state.mode === "mgr") $("#stage").classList.add("single-mgr");
+    $$(".seg button").forEach((b) => {
+      const on = b.dataset.mode === state.mode;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+  }
+
+  function applyNotes() {
+    $$(".note-badge").forEach((el) => el.remove());
+    if (!state.notes) return;
+    $$("[data-note]").forEach((el) => {
+      const ids = el.getAttribute("data-note").split(",").map((s) => s.trim()).filter(Boolean);
+      if (!ids.length) return;
+      if (getComputedStyle(el).position === "static") el.style.position = "relative";
+      const badge = document.createElement("span");
+      badge.className = "note-badge";
+      badge.textContent = ids.join("·");
+      el.appendChild(badge);
+    });
+  }
+
+  // ---------------- 查询 ----------------
+  function isSensitive(qid) { return qid === "q3" || qid === "q4"; }
+
+  function runQuery(qid, opts) {
+    const options = opts || {};
+    state.q = qid;
+    const q = QUESTIONS.find((x) => x.id === qid);
+    const sensitive = isSensitive(qid);
+    const activeRoles = state.mode === "compare" ? ["hrd", "mgr"] : [state.mode];
+    activeRoles.forEach((role) => {
+      if (sensitive) state.budget[role] += 1;
+      const exceeded = sensitive && state.budget[role] > budgetMax();
+      const status = qid === "q4" ? "denied" : (exceeded ? "denied" : "ok");
+      const sup = (qid === "q2" || qid === "q3");
+      const supRule = qid === "q2"
+        ? (role === "mgr" ? "本组口径更严格" : "最小分组人数")
+        : (qid === "q3"
+          ? (role === "mgr" ? "本档口径更严格" : "最小档位人数")
+          : "");
+      const detail = "结果状态：" + (status === "ok" ? "正常" : "无权限")
+        + (sup ? " · 小样本抑制已触发（" + supRule + "）" : "")
+        + " · 策略版本 " + POLICY_VERSION;
+      audit(ROLES[role].label, exceeded ? "安全策略拦截（预算）" : "问数查询 · " + q.label, exceeded ? "触发原因：查询频次超出预算 · 执行方式：阻断（已开启）· 策略版本 " + POLICY_VERSION : detail, exceeded ? "block" : (sup ? "flag" : ""));
+    });
+    renderChips();
+    renderCards();
+    renderBudget();
+    if (options.silent) return;
+    const roleBlocked = ["hrd", "mgr"].filter((r) => sensitive && state.budget[r] > budgetMax());
+    if (roleBlocked.length) {
+      toast("演示：敏感查询预算已达阈值，当前查询无法按原条件完成并已留痕");
+    }
+  }
+
+  // ---------------- 交互 ----------------
+  $("#qChips").addEventListener("click", (e) => {
+    const chip = e.target.closest(".q-chip");
+    if (!chip) return;
+    runQuery(chip.dataset.q);
+  });
+
+  document.querySelector(".seg").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-mode]");
+    if (!btn) return;
+    state.mode = btn.dataset.mode;
+    renderMode();
+  });
+
+  $("#accel").addEventListener("change", (e) => {
+    state.accel = e.target.checked;
+    renderBudget();
+    toast(state.accel ? "演示加速已开启：敏感查询 3 次触发拦截" : "已恢复真实阈值：20 次 / 10 分钟");
+  });
+
+  document.getElementById("stage").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-action]");
+    if (!btn) return;
+    const action = btn.dataset.action;
+    const role = btn.closest("#col-hrd") ? "hrd" : "mgr";
+    if (action === "export") {
+      if (state.q === "q4" && role === "mgr") toast("当前角色无权发起个体薪酬审批");
+      else toast("导出按角色开关控制（默认关闭）；演示未开启实际导出");
+      audit(ROLES[role].label, "export_clicked", "policy_check=off（演示）");
+      return;
+    }
+    if (action === "approval") { openApproval(role); return; }
+    if (action === "aggregate-export") { toast("团队聚合导出：需水印 + 全量留痕（演示未生成文件）"); audit(ROLES[role].label, "export_requested", "scope=team_aggregate"); return; }
+    if (action === "ask-hrbp") { toast("已生成转交任务（演示）"); audit(ROLES[role].label, "handoff_requested", "to=HRBP"); return; }
+    if (action === "helpful" || action === "unhelpful" || action === "caliber-q") {
+      toast("反馈已记录，进入 bad case 闭环");
+      audit(ROLES[role].label, "feedback", "type=" + action);
+      return;
+    }
+    if (action === "follow") { toast("追问下钻：演示版未展开"); return; }
+    if (action === "subscribe") { toast("已收藏为订阅（演示）"); audit(ROLES[role].label, "subscription_created", "演示"); return; }
+    if (action === "share") { toast("分享按接收者权限重算（见设计注记 7）"); audit(ROLES[role].label, "share_preview_opened", "演示"); return; }
+  });
+
+  // ---------------- 审批弹窗 ----------------
+  function openApproval(role) {
+    $("#modalSub").textContent = "个体薪酬不可直接查看。点名审批为唯一出口：限时、留痕、二次认证、水印绑定申请人。本演示不会提交任何真实申请。";
+    $("#modalSteps").innerHTML =
+      '<div class="step"><b>① 申请对象与用途</b><span>指定被查询对象、数据字段、业务用途；系统自动校验申请人角色与范围。</span></div>' +
+      '<div class="step"><b>② 审批与时效</b><span>不可自批；申请 24h 内有效，过期自动失效；通过后访问权限默认 ≤72h。审批记录不可删除。</span></div>' +
+      '<div class="step"><b>③ 二次认证与下载</b><span>二次认证通过后方可下载；文件带申请人水印；水印生成失败即阻断导出。</span></div>';
+    $("#modalBackdrop").classList.add("open");
+    audit(ROLES[role].label, "approval_flow_opened", "F6 · 演示未提交");
+  }
+  function closeModal() { $("#modalBackdrop").classList.remove("open"); }
+  $("#modalCancel").addEventListener("click", closeModal);
+  $("#modalSubmit").addEventListener("click", () => {
+    closeModal();
+    toast("演示原型：申请未提交，未产生真实审批流");
+    audit("HRD 王敏", "approval_request_simulated", "演示未提交");
+  });
+  $("#modalBackdrop").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeModal(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeModal(); closeNotes(); } });
+
+  // ---------------- 设计注记 ----------------
+  function renderNotes() {
+    $("#notesList").innerHTML = NOTES.map((text, i) =>
+      '<div class="note-item"><span class="n">' + (i + 1) + '</span><p>' + text + '</p></div>'
+    ).join("");
+  }
+  function openNotes() {
+    state.notes = true;
+    $("#notesDrawer").classList.add("open");
+    $("#notesBtn").classList.add("on");
+    $("#notesBtn").setAttribute("aria-pressed", "true");
+    $("#notesBtn").textContent = "隐藏设计注记";
+    document.body.classList.add("notes-on");
+    applyNotes();
+  }
+  function closeNotes() {
+    state.notes = false;
+    $("#notesDrawer").classList.remove("open");
+    $("#notesBtn").classList.remove("on");
+    $("#notesBtn").setAttribute("aria-pressed", "false");
+    $("#notesBtn").textContent = "显示设计注记";
+    document.body.classList.remove("notes-on");
+    applyNotes();
+  }
+  $("#notesBtn").addEventListener("click", () => { state.notes ? closeNotes() : openNotes(); });
+  $("#notesClose").addEventListener("click", closeNotes);
+
+  // ---------------- 审计面板 ----------------
+  $("#auditToggle").addEventListener("click", () => {
+    const panel = $("#auditPanel");
+    panel.classList.toggle("collapsed");
+    $("#auditToggle").textContent = panel.classList.contains("collapsed") ? "展开" : "收起";
+  });
+  $("#auditClear").addEventListener("click", () => {
+    auditEntries.length = 0;
+    renderAudit();
+    audit("系统", "audit_view_cleared", "仅清空演示视图，不影响真实审计");
+  });
+
+  // ---------------- 重置 ----------------
+  $("#resetBtn").addEventListener("click", () => {
+    state.budget = { hrd: 0, mgr: 0 };
+    state.accel = false;
+    state.mode = "compare";
+    $("#accel").checked = false;
+    auditEntries.length = 0;
+    renderAudit();
+    audit("系统", "demo_reset", "预算与视图已重置");
+    renderBudget();
+    renderMode();
+    runQuery("q1", { silent: true });
+    toast("演示已重置");
+  });
+
+  // ---------------- 初始化 ----------------
+  function init() {
+    renderChips();
+    renderNotes();
+    renderMode();
+    renderBudget();
+    audit("系统", "系统就绪", "权限执行层 v1 · 审计写入正常");
+    audit("系统", "演示环境", "所有数据均为虚构示例");
+    runQuery("q1", { silent: true });
+    renderAudit();
+    applyNotes();
+  }
+  init();
+})();
+</script>
+</body>
+</html>

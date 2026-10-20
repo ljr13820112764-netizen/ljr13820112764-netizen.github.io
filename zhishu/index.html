@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>知数 · 可信答案驱动的 HR SaaS（HCM）| 刘久瑞作品集</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif;
+         color: #111111; background: #F0F0F0; border-top: 3px solid #111111; }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 20px; }
+  .hero { background: #FFFFFF; padding: 40px 0 34px; border-bottom: 1px solid #E8E8E8; }
+  .crumb { font-size: 12.5px; color: #8C8C8C; margin-bottom: 18px; }
+  .crumb a { color: #555555; text-decoration: none; }
+  .crumb a:hover { color: #111111; text-decoration: underline; }
+  h1 { font-size: 34px; letter-spacing: 1px; line-height: 1.3; }
+  .lead { margin-top: 14px; font-size: 15px; color: #333333; line-height: 1.85; max-width: 820px; }
+  .meta { margin-top: 16px; font-size: 12.5px; color: #6A6A6A; letter-spacing: .2px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap: 12px;
+          margin-top: 26px; }
+  .kpi { border: 1px solid #E0E0E0; border-radius: 8px; padding: 14px 16px; background: #FCFCFC; }
+  .kpi b { display: block; font-size: 26px; letter-spacing: .5px; line-height: 1.15; }
+  .kpi span { display: block; margin-top: 5px; font-size: 12px; color: #6A6A6A; }
+  main { padding: 8px 0 46px; }
+  .section { margin-top: 34px; }
+  .sec-h { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+  .sec-h em { font-style: normal; font-size: 11.5px; color: #9A9A9A; letter-spacing: 1.5px; }
+  .sec-h h2 { font-size: 20px; letter-spacing: .5px; }
+  .card { background: #FFFFFF; border: 1px solid #E0E0E0; border-radius: 8px; padding: 22px 24px; }
+  .card + .card { margin-top: 12px; }
+  .card p { font-size: 13.8px; color: #333333; line-height: 1.85; }
+  .card p + p { margin-top: 10px; }
+  .muted { color: #6A6A6A; font-size: 12.5px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .list { list-style: none; }
+  .list li { position: relative; padding-left: 15px; font-size: 13.5px; color: #333333;
+             line-height: 1.8; margin-bottom: 6px; }
+  .list li::before { content: ""; position: absolute; left: 0; top: .72em; width: 6px; height: 6px;
+                     border-radius: 50%; background: #B0B0B0; }
+  nav.groups { display: grid; grid-template-columns: repeat(auto-fit,minmax(210px,1fr)); gap: 10px; }
+  .group { border: 1px solid #E4E4E4; border-radius: 8px; padding: 14px 16px; background: #FCFCFC; }
+  .group b { font-size: 13.5px; display: block; margin-bottom: 8px; }
+  .group span { display: inline-block; font-size: 12px; color: #555555; background: #F2F2F2;
+                border: 1px solid #E4E4E4; border-radius: 20px; padding: 2px 9px; margin: 0 5px 6px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid #EDEDED; vertical-align: top; }
+  th { font-size: 12px; color: #6A6A6A; font-weight: 600; background: #FAFAFA; }
+  td:first-child { width: 120px; white-space: nowrap; color: #111111; font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  /* 双栏瀑布流：清除 lazy 后图片高度确定，column 布局不再塌缩 */
+  .shots { columns: 2; column-gap: 14px; }
+  figure { background: #FFFFFF; border: 1px solid #E0E0E0; border-radius: 8px; padding: 10px;
+           break-inside: avoid; -webkit-column-break-inside: avoid; margin: 0 0 14px; }
+  figure a { display: block; }
+  figure img { width: 100%; height: auto; display: block; border: 1px solid #EEEEEE; border-radius: 4px; }
+  figcaption { font-size: 12px; color: #666666; padding: 8px 2px 2px; }
+  figcaption b { color: #111111; font-weight: 600; }
+  pre { background: #111111; color: #E8E8E8; border-radius: 8px; padding: 16px 18px;
+        font: 12.5px/1.75 Consolas,"Courier New",monospace; overflow-x: auto; }
+  .btn { display: inline-block; background: #FFFFFF; color: #111111; border: 1px solid #111111;
+         text-decoration: none; font-size: 13px; padding: 9px 17px; border-radius: 6px;
+         transition: background .15s ease; }
+  .btn:hover { background: #F0F0F0; }
+  .btn.ghost { background: transparent; border-color: #C8C8C8; }
+  .notice { border-left: 3px solid #111111; background: #FCFCFC; padding: 13px 16px;
+            font-size: 13px; color: #444444; line-height: 1.8; }
+  footer { background: #111111; color: #B0B0B0; padding: 26px 0; font-size: 13px; }
+  .dim { opacity: .6; font-size: 12px; margin-top: 6px; }
+  @media (max-width: 720px) {
+    h1 { font-size: 26px; }
+    .two { grid-template-columns: 1fr; }
+    .shots { columns: 1; }
+    td:first-child { width: auto; white-space: normal; }
+    table { font-size: 12.5px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="crumb"><a href="../index.html">刘久瑞 · 作品集</a> / 知数</p>
+    <h1>知数 —— 可信答案驱动的 HR SaaS（HCM）</h1>
+    <p class="lead">全模块 HCM 是载体，<b>可信答案层</b>是差异化楔子：第一方 HR 数据在同一套权限口径下，变成权限内、可解释、可追溯的决策答案。本页是产品与工程实现说明——完整 SaaS Demo 由 Python 标准库 + SQLite 在本地运行，静态站内提供截图走查与一个可直接交互的权限对照原型。</p>
+    <p class="meta">PRD v1.3.19 · 2026-10 · 独立完成：产品定义 / PRD / 前后端实现 / 测试与设计系统</p>
+    <div class="kpis">
+      <div class="kpi"><b>18</b><span>个视图（17 页面 + 员工档案详情）</span></div>
+      <div class="kpi"><b>150</b><span>项 API 自检全部通过</span></div>
+      <div class="kpi"><b>67</b><span>项 UI 冒烟全部通过</span></div>
+      <div class="kpi"><b>23</b><span>张截图归档（三档宽度）</span></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section">
+    <div class="sec-h"><em>01</em><h2>问题与定位</h2></div>
+    <div class="card">
+      <p><b>“有数据”不等于“有答案”。</b>中型企业的 HR 数据分散在招聘、考勤、薪酬、绩效各自的小系统里；管理层要一个数字，通常要导出多张表、在会议前手工拼口径。数字一旦被追问“怎么算的、样本多少、谁看过”，就很难自证。</p>
+      <p>知数的解法是两层：<b>自有全模块 HCM</b> 承接第一方数据，解决接入与口径源头；<b>可信答案层</b>在同一套权限与策略下产出答案卡——数据口径、数据版本、策略版本、样本门槛与抑制说明同时给出。权限之外的人看到的是“被抑制”，而不是“猜出来的近似值”。</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-h"><em>02</em><h2>产品结构</h2></div>
+    <div class="card">
+      <p class="muted" style="margin-bottom:12px">侧边栏按 HCM 习惯分五组，只显示当前角色可用的项。角色可见性由服务端 bootstrap 下发，越权请求由服务端再拒一次。</p>
+      <nav class="groups" aria-label="产品信息架构">
+        <div class="group"><b>我的工作</b><span>工作台</span><span>员工自助</span><span>审批中心</span><span>通知</span></div>
+        <div class="group"><b>人才管理</b><span>员工目录</span><span>员工档案</span><span>组织架构</span><span>招聘</span><span>绩效</span><span>培训</span></div>
+        <div class="group"><b>人事运营</b><span>考勤</span><span>假期</span><span>薪酬</span><span>报表中心</span></div>
+        <div class="group"><b>数据与治理</b><span>问数</span><span>审计</span><span>设置</span></div>
+        <div class="group"><b>关于</b><span>关于演示</span></div>
+      </nav>
+      <ul class="list" style="margin-top:16px">
+        <li>9 个演示账号覆盖职责分离：HRD、HR 专员、薪酬专员、部门经理、员工、合规审计、安全管理员、租户管理员，外加 B 租户 HRD 验证隔离</li>
+        <li>10 条演示路线可从种子数据直接跑通：组织钻取、招聘到 Offer、考勤更正月结、请假审批、薪酬授权、绩效、培训、问数四连、审计案件、角色矩阵与租户隔离</li>
+        <li>交互层：命令面板（Ctrl / ⌘ + K）、筛选 chips、分页、保存视图、档案 tabs + 入转调离时间线、组织树与部门列表双视图</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-h"><em>03</em><h2>可信答案层</h2></div>
+    <div class="card">
+      <p style="margin-bottom:12px">答案卡是唯一事实源；同一张卡按接收者重算，展示口径与抑制原因，而不是把一套结果发给所有人。</p>
+      <table>
+        <thead><tr><th>机制</th><th>规则</th></tr></thead>
+        <tbody>
+          <tr><td>登录与会话</td><td>PBKDF2-HMAC-SHA256（120,000 次迭代）；会话 Cookie HttpOnly + SameSite=Lax，8 小时</td></tr>
+          <tr><td>角色与数据范围</td><td>服务端按角色与部门重算；字段掩码在服务端完成，前端只负责展示</td></tr>
+          <tr><td>k-匿名</td><td>任意可见单元格样本数 &lt; 5 一律抑制</td></tr>
+          <tr><td>本人组</td><td>经理本人所在组门槛提高到 n &lt; 6，并在答案卡显式标注</td></tr>
+          <tr><td>互补抑制</td><td>仅 1 个单元格被抑制时，追加抑制最小可见格，避免反推；失败关闭</td></tr>
+          <tr><td>抑制上限</td><td>每次最多 6 格，且不超过可见格的 30%</td></tr>
+          <tr><td>敏感预算</td><td>单用户 10 分钟 ≤ 20 次；演示加速档 ≤ 3 次（仅演示，不改真实阈值）</td></tr>
+          <tr><td>维度组合</td><td>10 分钟内不同维度组合 ≤ 10 种，超限统一拦截</td></tr>
+          <tr><td>幂等</td><td>查询带 request_id，重复提交返回同一结果，不重复计数</td></tr>
+          <tr><td>审批</td><td>24 小时未处理自动失效；不可自批；通过后限时访问 ≤ 72 小时；v1 单人审批</td></tr>
+          <tr><td>审计</td><td>登录、查询、拒绝、拦截、审批、设置变更、演示重置均落库，含数据版本与策略版本</td></tr>
+        </tbody>
+      </table>
+      <p class="muted" style="margin-top:12px">策略版本由规则内容计算 SHA-256；抑制与“无数据”对外使用同一文案，避免从文案差异反推真实值。对外不承诺“0 幻觉 / 100% 拦截 / 未被篡改”，只说“机制可验证、访问可追溯”。</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-h"><em>04</em><h2>工程实现与验证</h2></div>
+    <div class="card">
+      <ul class="list">
+        <li><b>技术栈：</b>Python 3 标准库 HTTP 服务 + SQLite；原生 ES modules 前端；ECharts 本地化；无 pip / npm / CDN 依赖</li>
+        <li><b>边界：</b>只监听 127.0.0.1；CSP 限定 <code>script-src 'self'</code>；数据全部虚构，仅存本机</li>
+        <li><b>后端：</b>8 张既有表扩展为 60+ 张表；约 50 个 API；RBAC × 数据范围 × 字段掩码统一入口；审批与审计贯通</li>
+        <li><b>前端：</b>18 个视图 + 抽屉 / 弹窗；hash 路由可刷新；三档响应式（&gt;1180 / ≤1180 / ≤760）</li>
+        <li><b>验证：</b>API 150/150、UI 67/67、静态原型 26/26；设计 token 四条门禁全绿（硬编码色值 0、内嵌 SHA-256 同源、语义色 ΔE00 阈值、`--dv-*` 成对区分）</li>
+        <li><b>性能：</b>本机抽测（207 人）主要列表与聚合接口 P95 &lt; 110ms，预算目标 500ms</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-h"><em>05</em><h2>截图走查</h2></div>
+    <p class="muted" style="margin-bottom:12px">23 张截图覆盖 17 个视图、三种角色视角与三档宽度。点击任意截图可查看原图。</p>
+    <div class="shots">
+      <figure><a href="shots/01-login.png" target="_blank" rel="noopener"><img src="shots/01-login.png" alt="登录页与演示账号"></a><figcaption><b>01 登录</b> · 账号卡片直接填充，密码统一 demo1234</figcaption></figure>
+      <figure><a href="shots/03b-employees.png" target="_blank" rel="noopener"><img src="shots/03b-employees.png" alt="员工目录"></a><figcaption><b>02 员工目录</b> · 搜索 / 筛选 chips / 分页 / 保存视图</figcaption></figure>
+      <figure><a href="shots/03-employees-dept.png" target="_blank" rel="noopener"><img src="shots/03-employees-dept.png" alt="员工目录部门视图"></a><figcaption><b>03 部门钻取</b> · 从工作台部门行进入员工目录</figcaption></figure>
+      <figure><a href="shots/04-employee-profile.png" target="_blank" rel="noopener"><img src="shots/04-employee-profile.png" alt="员工档案"></a><figcaption><b>04 员工档案</b> · 档案 / 任职 / 考勤 tabs + 入转调离时间线</figcaption></figure>
+      <figure><a href="shots/05-org.png" target="_blank" rel="noopener"><img src="shots/05-org.png" alt="组织架构"></a><figcaption><b>05 组织架构</b> · 组织树 + 部门列表双视图</figcaption></figure>
+      <figure><a href="shots/06-recruitment.png" target="_blank" rel="noopener"><img src="shots/06-recruitment.png" alt="招聘管道"></a><figcaption><b>06 招聘</b> · 职位需求 / 候选人管道 / 面试记录 / Offer</figcaption></figure>
+      <figure><a href="shots/07-attendance.png" target="_blank" rel="noopener"><img src="shots/07-attendance.png" alt="考勤"></a><figcaption><b>07 考勤</b> · 月度切换 / 异常筛选 / 更正申请 / 月结锁定</figcaption></figure>
+      <figure><a href="shots/08-leave.png" target="_blank" rel="noopener"><img src="shots/08-leave.png" alt="假期"></a><figcaption><b>08 假期</b> · 余额、申请、审批与撤销</figcaption></figure>
+      <figure><a href="shots/09-payroll.png" target="_blank" rel="noopener"><img src="shots/09-payroll.png" alt="薪酬"></a><figcaption><b>09 薪酬</b> · 带宽分析 / 精确值掩码 / 发薪运行</figcaption></figure>
+      <figure><a href="shots/10-performance.png" target="_blank" rel="noopener"><img src="shots/10-performance.png" alt="绩效"></a><figcaption><b>10 绩效</b> · 周期、目标权重、自评 / 经理评</figcaption></figure>
+      <figure><a href="shots/11-training.png" target="_blank" rel="noopener"><img src="shots/11-training.png" alt="培训"></a><figcaption><b>11 培训</b> · 课程 / 场次 / 报名 / 完成登记</figcaption></figure>
+      <figure><a href="shots/12-reports.png" target="_blank" rel="noopener"><img src="shots/12-reports.png" alt="报表中心"></a><figcaption><b>12 报表中心</b> · 运行、结果预览、CSV 导出与订阅</figcaption></figure>
+      <figure><a href="shots/13-ask.png" target="_blank" rel="noopener"><img src="shots/13-ask.png" alt="问数与答案卡"></a><figcaption><b>13 问数</b> · 答案卡：口径、样本门槛、抑制说明与预算</figcaption></figure>
+      <figure><a href="shots/14-approvals.png" target="_blank" rel="noopener"><img src="shots/14-approvals.png" alt="审批中心"></a><figcaption><b>14 审批中心</b> · 统一审批类型、自批拦截、24h 失效</figcaption></figure>
+      <figure><a href="shots/15-settings.png" target="_blank" rel="noopener"><img src="shots/15-settings.png" alt="设置与角色矩阵"></a><figcaption><b>15 设置</b> · 角色权限矩阵 / 数据范围 / 策略版本 / 成员</figcaption></figure>
+      <figure><a href="shots/16-about.png" target="_blank" rel="noopener"><img src="shots/16-about.png" alt="关于演示"></a><figcaption><b>16 关于演示</b> · L1/L2/L3 能力清单、账号、十条路线与安全语义</figcaption></figure>
+      <figure><a href="shots/17-manager-leave.png" target="_blank" rel="noopener"><img src="shots/17-manager-leave.png" alt="经理审批"></a><figcaption><b>17 经理视角</b> · 本部门请假审批与更窄的数据范围</figcaption></figure>
+      <figure><a href="shots/18-self.png" target="_blank" rel="noopener"><img src="shots/18-self.png" alt="员工自助"></a><figcaption><b>18 员工自助</b> · 本人信息、请假、自评与培训</figcaption></figure>
+      <figure><a href="shots/19-audit.png" target="_blank" rel="noopener"><img src="shots/19-audit.png" alt="审计"></a><figcaption><b>19 审计</b> · 事件筛选、详情与安全案件处置</figcaption></figure>
+      <figure><a href="shots/20-mobile-dashboard.png" target="_blank" rel="noopener"><img src="shots/20-mobile-dashboard.png" alt="移动端工作台"></a><figcaption><b>20 移动端</b> · 390px 工作台，KPI 与图表重排</figcaption></figure>
+      <figure><a href="shots/21-mobile-employees.png" target="_blank" rel="noopener"><img src="shots/21-mobile-employees.png" alt="移动端员工目录"></a><figcaption><b>21 移动端</b> · 表格转卡片，无横向溢出</figcaption></figure>
+      <figure><a href="shots/22-mobile-ask.png" target="_blank" rel="noopener"><img src="shots/22-mobile-ask.png" alt="移动端问数"></a><figcaption><b>22 移动端</b> · 问数答案卡与示例问题横滑</figcaption></figure>
+      <figure><a href="shots/23-1024-dashboard.png" target="_blank" rel="noopener"><img src="shots/23-1024-dashboard.png" alt="1024 宽工作台"></a><figcaption><b>23 1024 宽</b> · 单栏铺满，侧边栏收为抽屉</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-h"><em>06</em><h2>双视角权限原型（可直接交互）</h2></div>
+    <div class="card">
+      <p>同一句提问，HRD 与直线经理各看到什么——这是“AI 不越权”的可见证据。原型为单文件静态页，可直接在浏览器中操作：切换问题、切换视角，查看数据范围、抑制说明、策略版本与点名审批（F6）的差异。</p>
+      <div style="margin-top:14px">
+        <a class="btn" href="prototype.html">打开双视角原型 ↗</a>
+      </div>
+      <p class="muted" style="margin-top:12px">该原型是 v1.2.1 的权限语义对照件；v1.3 的完整 HCM Demo 为服务端运行版，见下方本地启动说明。</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-h"><em>07</em><h2>本地运行完整 Demo</h2></div>
+    <div class="card">
+      <p style="margin-bottom:12px">完整 Demo 的权限、抑制、审批与审计都在服务端执行，无法用静态托管承载。仓库内提供零依赖启动方式：</p>
+      <pre>cd saas-demo
+python -X utf8 server.py --reset --port 8770
+# 浏览器打开 http://127.0.0.1:8770/
+# 演示账号：a_hrd / a_mgr / a_emp / a_audit …
+# 密码统一：demo1234</pre>
+      <p class="muted" style="margin-top:12px">仅使用 Python 标准库，无需 pip 安装；服务只监听本机，数据全部虚构，首次启动自动建库并灌入种子数据。</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-h"><em>08</em><h2>诚实边界</h2></div>
+    <div class="card">
+      <ul class="list">
+        <li><b>保真度分层：</b>L1 真实可用（组织人事、考勤、假期、报表、问数、审批、审计、设置、自助、通知）；L2 规则简化（招聘手工管道、薪酬固定规则、绩效模板化、培训无 SCORM）；L3 仅展示入口（飞书 / 钉钉 / 银行代发 / 电子签 / 背调 / 多地区税务）</li>
+        <li><b>数据：</b>全部为虚构演示数据；租户 A 207 人 / 8 个部门，租户 B 63 人；不接入任何真实员工信息</li>
+        <li><b>能力边界：</b>不做多地区税务与社保引擎、招聘渠道 API、SCORM / xAPI、电子签 / 背调、AI 简历筛选、SSO / SCIM、计费与邮件邀请</li>
+        <li><b>评审口径：</b>项目经历多轮六角色模拟评审与定向复审，问题按阻断 / 重要分级逐条归属与修订；最近一次记录的定向复审判定为“不通过”，后续修订尚未再次复审——本页<b>不宣称任何模拟复审判定为「通过」</b>，也不把内部验收阈值当作对外保证</li>
+      </ul>
+      <div class="notice" style="margin-top:14px">本页是求职作品集的一部分。知数为个人独立完成的产品概念与演示实现，不代表任何真实企业系统；面对客户或面试官时，能力以 L1 / L2 清单与可复现的测试为准。</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-h"><em>09</em><h2>继续看</h2></div>
+    <div class="card">
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn" href="../index.html">← 返回作品集</a>
+        <a class="btn ghost" href="prototype.html">双视角权限原型 ↗</a>
+        <a class="btn ghost" href="../zhunsheng/index.html">「准绳」桌面端 Demo ↗</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>刘久瑞 · 15620268266 · 2210293312@qq.com</p>
+    <p class="dim">知数 · 个人求职作品集项目 · 全部演示数据为虚构内容。</p>
+  </div>
+</footer>
+
+</body>
+</html>

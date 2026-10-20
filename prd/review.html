@@ -13,7 +13,9 @@
    =========================================================== */
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:"Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif;color:#111111;
- background:#F0F0F0;line-height:1.95;letter-spacing:.01em;-webkit-text-size-adjust:100%}
+ background:#F0F0F0;line-height:1.95;letter-spacing:.01em;-webkit-text-size-adjust:100%;
+ overflow-wrap:break-word}
+code{overflow-wrap:anywhere}  /* 长标识符（如 EXPECTED_TOTAL）不得撑破表格与页面 */
 a{color:#111111;text-decoration:none}
 a:hover{color:#000}
 /* ---- 顶栏：毛玻璃 ---- */
@@ -76,6 +78,7 @@ a:hover{color:#000}
 @media (max-width:1000px){.docwrap{grid-template-columns:1fr;gap:0}.toc{display:none}.toc-mob{display:block}}
 @media (max-width:640px){.docbody{padding:26px 20px 34px;border-radius:14px}.docwrap{padding:4px 12px 60px}
  .dochd{padding:36px 0 22px}.dochd h1{font-size:23px}.topbar .brand span{display:none}}
+@media (max-width:520px){.topbar .in{gap:8px}.topbar .brand{display:none}.topbar nav a{padding:6px 9px;font-size:12.5px}}
 /* ---- markdown 正文 ---- */
 .docbody > h1{display:none}   /* 标题已在页首 hero 呈现，正文里不再重复 */
 .pnote{background:#F5F5F5;border-radius:14px;padding:20px 24px 21px;margin:0 0 34px;
@@ -198,17 +201,19 @@ details.fold .body{padding:8px 18px 18px}
 </div></div>
 <header class="dochd"><div class="in">
 <h1>「准绳」产品文档链 · 评审摘要</h1>
-<p class="meta">首轮：六角色模拟评审 → v2.1.0 修订 → 三组独立复评 → v2.1.1 收口 → <b>复评通过</b>；随后双端原型交付，216 项自动化断言全绿；v2.1.2 口径校正、v2.1.3 同步原型口径；v2.2.0 全工程化 + 笔记条文关联设计定稿；<b>第二轮：六角色评审（7 阻断）→ v2.2.1 修订 + 三组复评收口（16 处）</b>；<b>第三轮：六角色评审（5 组阻断）→ 修订闭环</b>，v2.2 落地 + v2.3 列表整理 + 6.3 验证点断言补写；v2.3 检查视图（汇总 / 检查包导出）双端落地与项目经理访谈扩充 + 整改照片对照表导出，双端 406 项断言全绿</p>
+<p class="meta">历次六角色模拟评审的完整链路：首轮（9 阻断）→ v2.1.0 修订 → 三组独立复评 → v2.1.1 收口 → <b>复评通过</b>；第二轮（7 阻断）→ v2.2.1 修订 + 16 处收口；v2.3 列表整理评审（5 组阻断）→ 修订闭环，双端 <b>418 项断言全绿</b>（179 + 239）；<b>v2.4 评审（15 号报告：7 阻断）→ 已逐项修订，尚未再次复审</b>。发布门 G2–G5 已关闭，<b>G1 规范库版权门仍未关闭</b>。评审为 AI 分角色模拟，不是真实评审委员会。</p>
 <div class="tagrow"><span class="tg bad">首轮 ❌ 不通过 · 9 项阻断</span><span class="tg">11 重要 / 7 建议</span>
-<span class="tg ok">复评 ✅ 通过 · 21 处收口</span>
+<span class="tg ok">首轮复评 ✅ 通过 · 21 处收口</span>
 <span class="tg ok">第二轮（v2.2.1）❌→✅ · 7 项阻断全采纳</span>
-<span class="tg ok">第三轮 ❌→✅ · 5 组阻断修订闭环</span></div>
+<span class="tg ok">v2.3 列表整理评审 ❌→✅ · 5 组阻断修订闭环</span>
+<span class="tg bad">v2.4 评审 ❌ 7 项阻断 → 已修订 · 未再复审</span>
+<span class="tg bad">发布门 G1 版权 🔴 未关闭</span></div>
 </div></header><div class="docwrap" style="grid-template-columns:1fr">
 <div>
-<div class="jump"><a href="#s1">这条链</a><a href="#s2">首轮评审</a><a href="#s3">9 项阻断</a><a href="#s4">重要 / 建议项</a><a href="#s5">复评收口</a><a href="#s6">方法与局限</a><a href="#s7">下一步</a><a href="index.html" class="go">读 PRD 全文 →</a></div><div class="rv">
+<div class="jump"><a href="#s1">这条链</a><a href="#s2">首轮评审</a><a href="#s3">9 项阻断</a><a href="#s4">重要 / 建议项</a><a href="#s5">复评收口</a><a href="#s6">方法与局限</a><a href="#s7">下一步</a><a href="#s8">v2.4 评审</a><a href="index.html" class="go">读 PRD 全文 →</a></div><div class="rv">
 <h2 id="s1">一、这条链是怎么跑的<span class="n">为什么值得看</span></h2>
 <p class="lead">一份 PRD 的质量，不取决于它写得多完整，而取决于它<b>被挑出过多少问题、又怎么闭环</b>。下面这条链是真实跑完的：评审不是走过场，首轮判定就是「不通过」。</p>
-<div class="chain"><div class="cnode"><p class="k">STEP 1</p><p class="t">PRD v2.0.0</p><p class="d">定位重构：从「笔记软件」收敛为整改留痕单点闭环</p></div><div class="cnode bad"><p class="k">STEP 2</p><p class="t">六角色评审 ❌</p><p class="d">9 阻断 / 11 重要 / 7 建议；方向获确认，卡在工程规格</p></div><div class="cnode mid"><p class="k">STEP 3</p><p class="t">v2.1.0 修订</p><p class="d">逐项修订 9 项阻断，并入全部重要项与建议项</p></div><div class="cnode mid"><p class="k">STEP 4</p><p class="t">三组独立复评</p><p class="d">按角色拆三组、各 spawn 独立核验，组间互不可见</p></div><div class="cnode"><p class="k">STEP 5</p><p class="t">v2.1.1 收口</p><p class="d">残余 21 处逐项修毕（核验发现 19 + 自查 2）</p></div><div class="cnode ok"><p class="k">STEP 6</p><p class="t">✅ 复评通过</p><p class="d">进入原型开发；双端原型随后交付（v2.1.3 时点累计 216 项断言全绿）</p></div><div class="cnode mid"><p class="k">STEP 7</p><p class="t">v2.2.0 全工程化</p><p class="d">演示数据多专业覆盖；笔记条文关联设计定稿</p></div><div class="cnode ok"><p class="k">STEP 8</p><p class="t">第二轮评审 → v2.2.1</p><p class="d">7 阻断 / 13 重要 / 8 建议修订闭环；16 处复评收口 ✅</p></div><div class="cnode ok"><p class="k">STEP 9</p><p class="t">第三轮评审 → v2.2 落地 + v2.3</p><p class="d">5 组阻断修订闭环；v2.2 全工程化与 v2.3 列表整理落地，6.3 验证点断言补写收口；v2.3 检查视图落地、项目经理访谈扩充 + 整改照片对照表导出，双端 406 项断言全绿 ✅</p></div></div>
+<div class="chain"><div class="cnode"><p class="k">STEP 1</p><p class="t">PRD v2.0.0</p><p class="d">定位重构：从「笔记软件」收敛为整改留痕单点闭环</p></div><div class="cnode bad"><p class="k">STEP 2</p><p class="t">六角色评审 ❌</p><p class="d">9 阻断 / 11 重要 / 7 建议；方向获确认，卡在工程规格</p></div><div class="cnode mid"><p class="k">STEP 3</p><p class="t">v2.1.0 修订</p><p class="d">逐项修订 9 项阻断，并入全部重要项与建议项</p></div><div class="cnode mid"><p class="k">STEP 4</p><p class="t">三组独立复评</p><p class="d">按角色拆三组、各 spawn 独立核验，组间互不可见</p></div><div class="cnode"><p class="k">STEP 5</p><p class="t">v2.1.1 收口</p><p class="d">残余 21 处逐项修毕（核验发现 19 + 自查 2）</p></div><div class="cnode ok"><p class="k">STEP 6</p><p class="t">✅ 首轮复评通过</p><p class="d">进入原型开发；双端原型随后交付（v2.1.3 时点累计 216 项断言全绿）</p></div><div class="cnode mid"><p class="k">STEP 7</p><p class="t">v2.2.0 全工程化</p><p class="d">演示数据多专业覆盖；笔记条文关联设计定稿</p></div><div class="cnode ok"><p class="k">STEP 8</p><p class="t">第二轮评审 → v2.2.1</p><p class="d">7 阻断 / 13 重要 / 8 建议修订闭环；16 处复评收口 ✅</p></div><div class="cnode ok"><p class="k">STEP 9</p><p class="t">v2.3 列表整理评审 → 落地</p><p class="d">5 组阻断修订闭环；v2.2 全工程化与 v2.3 列表整理落地，6.3 验证点断言补写收口；v2.3 检查视图落地、项目经理访谈扩充 + 整改照片对照表导出，双端 406 项断言全绿 ✅</p></div></div>
 </div>
 
 <div class="rv">
@@ -261,8 +266,25 @@ details.fold .body{padding:8px 18px 18px}
 
 <div class="rv">
 <h2 id="s7">七、下一步</h2>
-<p class="lead">9 项阻断全部关闭，满足首轮评审的「通过条件 1」；重要项已在 v2.1.0 并入 —— <b>PRD 达到进入原型开发状态</b>。此后按路线图推进：双端原型交付，整改模块新增 121 项断言；v2.2 迭代再经第二轮六角色评审（7 阻断 / 13 重要 / 8 建议），v2.2.1 修订 + 复评收口闭环；随后 v2.2 落地实现、v2.3 列表整理并入、6.3 表 19 行验证点断言补写收口，v2.3 检查视图（汇总 + 检查包导出）双端落地、项目经理访谈驱动规范库扩充（9 组 50 本）、整改照片对照表导出（双端 <b>406 项断言全绿</b>），第三轮六角色评审 5 组阻断修订闭环，三轮累计 21 项阻断全部关闭（2026-10-06）。</p>
+<p class="lead">前三轮累计 21 项阻断经复评闭环：v2.2 落地、v2.3 列表整理与检查视图、6.3 验证点断言补写、项目经理访谈扩充与整改照片对照表导出均已实现，双端 <b>418 项断言全绿</b>（179 + 239），发布门 G2–G5 关闭。v2.4 的 7 项阻断已逐项修订，但<b>尚未再次复审</b>；G1 版权门仍未关闭——当前状态是「已修订、待复评、G1 未关」，不是「通过」。</p>
 <p class="lead" style="margin-bottom:0">原型可直接在本站试用：<a href="../zhunsheng/index.html">桌面端 Demo ↗</a>　<a href="../zhunsheng/mobile.html">移动端 Demo ↗</a>　·　<a href="index.html">返回 PRD 全文 →</a></p>
+</div>
+
+<div class="rv">
+<h2 id="s8">八、v2.4 评审：7 项阻断与发布门<span class="n">2026-10-18 · 判定 ❌ 不通过 · 修订未再复审</span></h2>
+<p class="lead">本轮（v2.4，15 号报告）评审对象为 v2.2.1 正文 + 竞品分析 + 专家建议清单。方向（冻结扩张、收口边界、补法务）获五角色认可；<b>法务角色判定不通过</b>，其余五角色为「有条件通过」。去重后 7 项阻断：法务 3 项、跨角色 4 项。</p>
+<table class="rt"><colgroup><col style="width:44px"><col style="width:38%"><col style="width:150px"><col></colgroup>
+<thead><tr><th>#</th><th>问题</th><th>提出角色</th><th>v2.4.0 处置</th></tr></thead><tbody>
+<tr><td class="id">B1</td><td>规范库版权路径未定；公开构建与真实条文摘录混用</td><td>法务、研发、测试、产品</td><td>§7.5 三路径 + <code>text_origin</code> 构建门；公开构建只允许虚构文本（<b>G1 未关</b>）</td></tr>
+<tr><td class="id">B2</td><td>导出物「B.0.9 素材包」身份未定义，缺「问题情况 / 整改情况」核心字段</td><td>法务、研发、测试、UI、产品</td><td>§5.5 重写：B.0.9 仅用于单条导出；补字段映射、唯一页脚常量、多行 canvas、「复查代记」标识</td></tr>
+<tr><td class="id">B3</td><td>三套验证判据并存，样本窗口可重叠</td><td>测试、运营、产品</td><td>§4.4 V1a/V1b 唯一判据表，V1 作废；H1 只取 V1b，窗口互斥</td></tr>
+<tr><td class="id">B4</td><td>三个新指标不可采集或属二手证据</td><td>运营、研发、测试、产品</td><td>§8 补事件与参数；接收者接受率降为观察项，不作产品指标</td></tr>
+<tr><td class="id">B5</td><td>§2.5「二选一」没有落地，形成新的范围源</td><td>产品</td><td>明确选「卖个人风险自保，不卖项目部」；§2.5 只留交易模型 + 引用</td></tr>
+<tr><td class="id">B6</td><td>「离线可用」与原型 Tailwind CDN 依赖冲突</td><td>研发</td><td>Tailwind 本地化；验收以断网打开 + 0 远端请求为准（<b>G4 已关</b>）</td></tr>
+<tr><td class="id">B7</td><td>406 基线可假绿：无期望总数守卫，删断言也能全绿</td><td>测试</td><td>硬编码 <code>EXPECTED_TOTAL</code> + manifest；现口径 418（179 + 239，<b>G5 已关</b>）</td></tr>
+</tbody></table>
+<div class="verd bad">❌ 不通过 —— 7 项阻断；其中 B1 版权是上线阻断门，不是文档措辞问题</div>
+<p class="lead">G2–G5 已随制品收口关闭（导出断言、埋点与日志导出协议、断网 0 远端请求、回归日志与 manifest）；<b>G1 仍未关闭</b>：公开构建只允许虚构条文，而真实标准号替换与律师意见留档均未完成。本轮修订后没有再次组织复审，因此本页只写「已修订」，不写「复审通过」。</p>
 </div>
 
 </div>
