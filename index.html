@@ -17,7 +17,17 @@
   .tagline { margin-top: 18px; font-size: 14.5px; color: #333333; line-height: 1.7; }
   .hero-side { font-size: 12.5px; color: #6A6A6A; line-height: 2.05;
                border-left: 1px solid #D8D8D8; padding-left: 16px; align-self: flex-end; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(300px,1fr)); gap: 18px; margin: 36px 0 8px; }
+  /* 两件作品并排，设计稿与自动化各占一条整幅横带：auto-fit 会排成 3+1，落单的半格很突兀 */
+  .grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; margin: 36px 0 8px; }
+  .card.wide { grid-column: 1 / -1; }
+  .card.wide > ul { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 2px 30px; margin: 10px 0 14px; }
+  .band-body { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.12fr); gap: 28px; align-items: start; }
+  .band-body ul { margin: 8px 0 14px; }
+  @media (max-width: 820px) {
+    .grid { grid-template-columns: 1fr; }
+    .card.wide > ul { grid-template-columns: 1fr; }
+    .band-body { grid-template-columns: 1fr; gap: 4px; }
+  }
   .card { background: #FFFFFF; border: 1px solid #E0E0E0; border-radius: 8px;
           padding: 22px 22px 20px; display: flex; flex-direction: column;
           transition: transform .18s ease, box-shadow .18s ease; }
@@ -42,6 +52,11 @@
   .btn.ghost:hover { background: #F0F0F0; }
   .btn.doc { background: transparent; border-color: #C8C8C8; color: #6A6A6A; }
   .btn.doc:hover { background: #F0F0F0; color: #111111; }
+  .preview { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 4px; }
+  .preview figure { margin: 0; }
+  .preview a { display: block; border: 1px solid #E0E0E0; border-radius: 4px; overflow: hidden; line-height: 0; }
+  .preview img { width: 100%; height: auto; display: block; }
+  .preview figcaption { font-size: 11.5px; color: #8C8C8C; margin-top: 5px; line-height: 1.4; }
   .note { font-size: 12px; color: #8C8C8C; }
   footer { background: #111111; color: #B0B0B0; padding: 26px 0; font-size: 13px; }
   .dim { opacity: .6; font-size: 12px; margin-top: 6px; }
@@ -59,9 +74,9 @@
       <p class="tagline">一线工程背景 × 独立 AI 产品交付<br>把真实现场的痛点，做成可演示、可验证的产品。</p>
     </div>
     <div class="hero-side">
-      「准绳」规范驱动的整改留痕助手 —— 产品文档 + 双端原型 + 418 项断言<br>
-      「知数」可信答案驱动的 HR SaaS —— 全模块 HCM + 150 API / 67 UI 断言<br>
-      个人知识库 —— 来源 / 概念 / 实体页与 3D 关系图（本地系统）<br>
+      「准绳」规范驱动的整改留痕助手 —— 产品文档 + 双端设计稿 14 页 + 双端原型 + 418 项断言<br>
+      「知数」可信答案驱动的 HR SaaS —— 全模块 HCM + 双端设计稿 22 页 + 150 API / 67 UI 断言<br>
+      双端设计稿 —— 两件作品合计 36 页，两套设计系统，四视角评审 25 项修订<br>
       AI 自动化工作流 —— 日报汇总 · 企业调查 · 离线问答
     </div>
   </div>
@@ -76,6 +91,7 @@
       <p class="desc">面向施工现场的整改留痕工具：发现问题 → 挂条文依据 → 留前后照片 → 导出可发送的留档，单点闭环。</p>
       <ul>
         <li>独立完成 PRD v2.4.0：先做需求判断，再写 PRD；前三轮六角色模拟评审累计 21 项阻断全部修订闭环，v2.4 评审另列 7 项阻断并逐项修订</li>
+        <li>双端设计稿 14 页（桌面 11 / 移动 3，暖纸设计系统）——导航收敛为五入口，表格 / 看板 / 时间线 / 统计降为视图切换；与 Demo 同源同数据</li>
         <li>手写 HTML 双端高保真原型——本页 Demo 即原型，离线可用</li>
         <li>Playwright 418 项自动化断言全部通过（移动端 179 + 桌面端 239），覆盖三路径条文关联、四态状态机、导出链路与脱敏扫描</li>
         <li>v2.2 全工程化（本地持久化 / 三路径条文关联 / 笔记导出）；v2.3 列表整理（长按 / 多选 / 删除撤销）与检查视图（汇总 / 检查包导出 / 照片对照表）双端同构；v2.5「暖纸仪器」视觉焕新（砂纸台面 / 纸白图幅 / 钢灰批注 / 安全橙状态）</li>
@@ -88,6 +104,7 @@
       </div>
       <div class="links docs">
         <span class="note">产品文档</span>
+        <a class="btn doc" href="design/index.html#zs">设计稿 14 页 ↗</a>
         <a class="btn doc" href="prd/index.html">PRD 全文 ↗</a>
         <a class="btn doc" href="prd/review.html">评审摘要 ↗</a>
       </div>
@@ -102,6 +119,7 @@
         <li>Python 标准库 + SQLite 全链路可运行：登录、RBAC、数据范围、审批、审计、问数抑制全部由服务端真实执行，不是静态页面</li>
         <li>可信答案层：k=5、本人组 n&lt;6、互补抑制、敏感预算 20 次/10 分钟、维度组合上限、幂等、审批 24h/72h</li>
         <li>自动化验证：API 150/150、UI 67/67、静态原型 26/26、设计 token 四门禁全绿；23 张截图归档</li>
+        <li>双端设计稿 22 页（桌面 17 / 移动 5，冷白钢蓝单主色）——可信答案层落在答案卡上，薪酬先给带宽与聚合、个人精确值需审批后可见</li>
         <li>保真度分层 L1/L2/L3 明示边界；数据全部虚构，服务只监听本机</li>
       </ul>
       <div class="links">
@@ -109,11 +127,39 @@
         <a class="btn ghost" href="zhishu/prototype.html">双视角权限原型 ↗</a>
       </div>
       <div class="links docs">
+        <a class="btn doc" href="design/index.html#zhi">设计稿 22 页 ↗</a>
         <span class="note">完整 SaaS Demo 需本地启动（Python 标准库，无第三方依赖）</span>
       </div>
     </article>
 
-    <article class="card">
+    <article class="card wide">
+      <span class="badge">设计交付</span>
+      <h2>双端设计稿 36 页</h2>
+      <p class="desc">两个作品各有一套设计系统与双端设计稿，与可运行 Demo 同源同数据——不是另画一套图去配 Demo。</p>
+      <div class="band-body">
+        <div class="preview">
+          <figure>
+            <a href="design/index.html#zs"><img src="design/img/zs-d01.png" alt="准绳 整改详情 设计稿" loading="lazy"></a>
+            <figcaption>准绳 · 暖纸</figcaption>
+          </figure>
+          <figure>
+            <a href="design/index.html#zhi"><img src="design/img/zhi-d01.png" alt="知数 问数 设计稿" loading="lazy"></a>
+            <figcaption>知数 · 冷白钢蓝</figcaption>
+          </figure>
+        </div>
+        <ul>
+          <li>「准绳」14 页（桌面 11 / 移动 3，暖纸）：导航收敛为五入口，表格 / 看板 / 时间线 / 统计降为视图切换；01 详情故意保留专注模式</li>
+          <li>「知数」22 页（桌面 17 / 移动 5，冷白钢蓝单主色）：全模块 HCM 骨架 + 答案卡承载可信答案层 + 敏感信息的分寸</li>
+          <li>四视角评审（产品战略 / 研发测试 / 法务合规 / UI·UX）25 项修订全部闭环；未处理的对比度与跨页组件问题如实列出，不假装全清</li>
+          <li>桌面 1440 / 移动 390 双档画布定稿，Pixso 交付逐帧可编辑；图中规范名称与条文为演示示例，不构成原文转载</li>
+        </ul>
+      </div>
+      <div class="links">
+        <a class="btn" href="design/index.html">设计稿总览 ↗</a>
+      </div>
+    </article>
+
+    <article class="card wide">
       <span class="badge">企业日常在用</span>
       <h2>AI 自动化工作流</h2>
       <p class="desc">把重复工作工程化：翻资料、填表格、对数据的环节，能自动化的绝不手做。</p>
